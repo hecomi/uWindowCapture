@@ -16,13 +16,8 @@ using namespace Microsoft::WRL;
 
 IUnityInterfaces* g_unity = nullptr;
 ID3D11Texture2D* g_ptr = nullptr;
-
-ComPtr<IDXGISurface1> g_surface;
 ComPtr<ID3D11Texture2D> g_texture;
 int g_width = -1, g_height = -1;
-
-Buffer<BYTE> g_buffer;
-
 
 extern "C"
 {
