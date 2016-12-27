@@ -14,9 +14,6 @@ public enum DebugMode
 
 public static class Lib
 {
-    [DllImport("uWindowCapture")]
-    public static extern void SetWindowTexture(System.IntPtr texturePtr);
-
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void DebugLogDelegate(string str);
 
@@ -33,11 +30,15 @@ public static class Lib
     [DllImport("uWindowCapture")]
     public static extern System.IntPtr GetRenderEventFunc();
     [DllImport("uWindowCapture")]
-    public static extern System.IntPtr GetWindowTexture(ref int width, ref int height);
+    public static extern int AddWindow(System.IntPtr hwnd);
     [DllImport("uWindowCapture")]
-    public static extern int GetWidth();
+    public static extern void RemoveWindow(int id);
     [DllImport("uWindowCapture")]
-    public static extern int GetHeight();
+    public static extern void SetTexturePtr(int id, System.IntPtr texturePtr);
+    [DllImport("uWindowCapture")]
+    public static extern int GetWidth(int id);
+    [DllImport("uWindowCapture")]
+    public static extern int GetHeight(int id);
 }
 
 }

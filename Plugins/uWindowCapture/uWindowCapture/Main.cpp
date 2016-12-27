@@ -3,32 +3,60 @@
 #include <Windows.h>
 #include <wrl/client.h>
 #include <memory>
+#include <algorithm>
+#include <map>
 
 #include "IUnityInterface.h"
 #include "IUnityGraphics.h"
 
 #include "Common.h"
 #include "Debug.h"
+#include "Window.h"
+#include "WindowManager.h"
 
 #pragma comment(lib, "dxgi.lib")
 
-using namespace Microsoft::WRL;
 
+bool g_hasInitialized = false;
 IUnityInterfaces* g_unity = nullptr;
-ID3D11Texture2D* g_ptr = nullptr;
-ComPtr<ID3D11Texture2D> g_texture;
-int g_width = -1, g_height = -1;
+std::unique_ptr<WindowManager> g_manager = nullptr;
+
+
+bool CheckManager()
+{
+	if (!g_manager) 
+	{
+		Debug::Error("Manager has not been initialized.");
+		return false;
+	}
+	return true;
+}
+
+std::shared_ptr<Window> GetWindow(int id)
+{
+	if (!CheckManager()) return nullptr;
+	return g_manager->GetWindow(id);
+}
+
 
 extern "C"
 {
     UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API Initialize()
     {
+		if (g_hasInitialized) return;
+		g_hasInitialized = true;
+
         Debug::Initialize();
+		g_manager = std::make_unique<WindowManager>();
     }
 
     UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API Finalize()
     {
+		if (!g_hasInitialized) return;
+		g_hasInitialized = false;
+
         Debug::Finalize();
+		g_manager.reset();
     }
 
     void UNITY_INTERFACE_API OnGraphicsDeviceEvent(UnityGfxDeviceEventType event)
@@ -62,22 +90,6 @@ extern "C"
         g_unity = nullptr;
     }
 
-    void UNITY_INTERFACE_API OnRenderEvent(int id)
-    {
-        auto hwnd = GetForegroundWindow();
-
-        if (!IsWindow(hwnd))
-        {
-            Debug::Error("hwnd is not a window handle.");
-            return;
-        }
-    }
-
-    UNITY_INTERFACE_EXPORT UnityRenderingEvent UNITY_INTERFACE_API GetRenderEventFunc()
-    {
-        return OnRenderEvent;
-    }
-
     UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API SetDebugMode(Debug::Mode mode)
     {
         Debug::SetMode(mode);
@@ -93,24 +105,55 @@ extern "C"
         Debug::SetErrorFunc(func);
     }
 
-    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API SetWindowTexture(ID3D11Texture2D* ptr)
+    void UNITY_INTERFACE_API OnRenderEvent(int id)
     {
-        g_ptr = ptr;
+		if (auto window = GetWindow(id))
+		{
+			window->Capture();
+			window->Draw();
+		}
     }
 
-    UNITY_INTERFACE_EXPORT int UNITY_INTERFACE_API GetWidth()
+    UNITY_INTERFACE_EXPORT UnityRenderingEvent UNITY_INTERFACE_API GetRenderEventFunc()
     {
-        auto hwnd = GetForegroundWindow();
-        RECT rect;
-        GetWindowRect(hwnd, &rect);
-        return rect.right - rect.left;
+        return OnRenderEvent;
     }
 
-    UNITY_INTERFACE_EXPORT int UNITY_INTERFACE_API GetHeight()
+    UNITY_INTERFACE_EXPORT int UNITY_INTERFACE_API AddWindow(HWND hwnd)
     {
-        auto hwnd = GetForegroundWindow();
-        RECT rect;
-        GetWindowRect(hwnd, &rect);
-        return rect.bottom - rect.top;
+		if (!CheckManager()) return -1;
+		return g_manager->Add(hwnd);
+    }
+
+    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API RemoveWindow(int id)
+    {
+		if (!CheckManager()) return;
+		g_manager->Remove(id);
+    }
+
+    UNITY_INTERFACE_EXPORT UINT UNITY_INTERFACE_API GetWidth(int id)
+    {
+		if (auto window = GetWindow(id))
+		{
+			return window->GetWidth();
+		}
+		return 0;
+    }
+
+    UNITY_INTERFACE_EXPORT UINT UNITY_INTERFACE_API GetHeight(int id)
+    {
+		if (auto window = GetWindow(id))
+		{
+			return window->GetHeight();
+		}
+		return 0;
+    }
+
+    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API SetTexturePtr(int id, ID3D11Texture2D* ptr)
+    {
+		if (auto window = GetWindow(id))
+		{
+			return window->SetTexturePtr(ptr);
+		}
     }
 }
