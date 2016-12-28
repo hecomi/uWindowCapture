@@ -125,10 +125,10 @@ extern "C"
         return OnRenderEvent;
     }
 
-    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UpdateWindowList()
+    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API RequestUpdateWindowList()
     {
 		if (!CheckManager()) return;
-		g_manager->UpdateList();
+		g_manager->RequestUpdateList();
     }
 
     UNITY_INTERFACE_EXPORT int UNITY_INTERFACE_API GetWindowCount()
@@ -154,6 +154,24 @@ extern "C"
     {
 		if (!CheckManager()) return;
 		g_manager->Remove(id);
+    }
+	
+    UNITY_INTERFACE_EXPORT bool UNITY_INTERFACE_API IsAlive(int id)
+    {
+		if (auto window = GetWindow(id))
+		{
+			return window->IsWindow() > 0;
+		}
+		return false;
+    }
+
+    UNITY_INTERFACE_EXPORT HWND UNITY_INTERFACE_API GetHandle(int id)
+    {
+		if (auto window = GetWindow(id))
+		{
+			return window->GetHandle();
+		}
+		return nullptr;
     }
 
     UNITY_INTERFACE_EXPORT UINT UNITY_INTERFACE_API GetWidth(int id)

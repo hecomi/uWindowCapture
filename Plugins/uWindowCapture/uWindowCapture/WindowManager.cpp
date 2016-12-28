@@ -72,7 +72,13 @@ bool IsAltTabWindow(HWND hWnd)
 	}
 	if (hWndWalk != hWnd)
 	{
-		return FALSE;
+		return false;
+	}
+
+	// Tool window
+	if (GetWindowLong(hWnd, GWL_EXSTYLE) & WS_EX_TOOLWINDOW)
+	{
+        return false;
 	}
 
 	// Remove task tray programs
@@ -86,12 +92,6 @@ bool IsAltTabWindow(HWND hWnd)
 	if (titleBar.rgstate[0] & STATE_SYSTEM_INVISIBLE)
 	{
 		return false;
-	}
-
-	// Tool window
-	if (GetWindowLong(hWnd, GWL_EXSTYLE) & WS_EX_TOOLWINDOW)
-	{
-        return false;
 	}
 
     return true;
@@ -117,7 +117,7 @@ BOOL CALLBACK EnumWindowsCallback(HWND hWnd, LPARAM lParam)
 }
 
 
-void WindowManager::UpdateList()
+void WindowManager::RequestUpdateList()
 {
 	windowList_.clear();
 

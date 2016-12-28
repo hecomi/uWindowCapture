@@ -22,7 +22,7 @@ public:
 	const std::vector<WindowInfo>& GetWindowList() const;
 	int Add(HWND hwnd);
 	void Remove(int id);
-	void UpdateList();
+	void RequestUpdateList();
 	void AddWindowInfo(const WindowInfo& info);
 
 private:
