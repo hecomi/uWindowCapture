@@ -11,6 +11,11 @@ struct ID3D11Device;
 ID3D11Device* GetDevice();
 
 
+// Window manager getter
+class WindowManager;
+std::unique_ptr<WindowManager>& GetWindowManager();
+
+
 // Buffer
 template <class T>
 class Buffer

@@ -31,7 +31,13 @@ HWND Window::GetHandle() const
 
 BOOL Window::IsWindow() const
 {
-	return ::IsWindow(window_);
+	return ::IsWindow(window_) && ::IsWindowVisible(window_) && !::IsIconic(window_);
+}
+
+
+BOOL Window::IsVisible() const
+{
+	return ::IsWindow(window_) && ::IsWindowVisible(window_) && !::IsIconic(window_);
 }
 
 
@@ -60,12 +66,12 @@ UINT Window::GetHeight() const
 }
 
 
-std::string Window::GetTitle() const
+void Window::GetTitle(wchar_t* buf, int len) const
 {
-	const size_t size = 256;
-	char buf[size];
-	GetWindowText(window_, buf, size);
-	return buf;
+	if (!GetWindowTextW(window_, buf, len))
+	{
+		OutputApiError("GetWindowTextW");
+	}
 }
 
 
@@ -82,16 +88,9 @@ void Window::CreateBitmapIfNeeded(HDC hDc, UINT width, UINT height)
 }
 
 
-void Window::OutputApiError(const char* apiName) const
-{
-	const auto error = GetLastError();
-	Debug::Error(apiName, "() failed width error code: ", error);
-}
-
-
 void Window::DeleteBitmap()
 {
-	if (bitmap_) 
+	if (bitmap_ != nullptr) 
 	{
 		if (!DeleteObject(bitmap_)) OutputApiError("DeleteObject");
 		bitmap_ = nullptr;
@@ -113,26 +112,35 @@ void Window::Capture()
 		return;
 	}
 
-	auto hDc = GetDC(window_);
-	auto hDcMem = CreateCompatibleDC(hDc);
+	if (!IsVisible())
+	{
+		return;
+	}
 
-	const int width = GetWidth();
-	const int height = GetHeight();
+	auto hDc = GetDC(window_);
+
+	const auto width = GetWidth();
+	const auto height = GetHeight();
 	CreateBitmapIfNeeded(hDc, width, height);
 
+	auto hDcMem = CreateCompatibleDC(hDc);
 	HGDIOBJ preObject = SelectObject(hDcMem, bitmap_);
+
 	if (BitBlt(hDcMem, 0, 0, width_, height_, hDc, 0, 0, SRCCOPY))
 	{
-		BITMAPINFOHEADER bmi{};
-		bmi.biWidth       = width;
-		bmi.biHeight      = -height;
+		BITMAPINFOHEADER bmi {};
+		bmi.biWidth       = static_cast<LONG>(width);
+		bmi.biHeight      = -static_cast<LONG>(height);
 		bmi.biPlanes      = 1;
 		bmi.biSize        = sizeof(BITMAPINFOHEADER);
 		bmi.biBitCount    = 32;
 		bmi.biCompression = BI_RGB;
 		bmi.biSizeImage  = 0;
 
-		GetDIBits(hDcMem, bitmap_, 0, height, buffer_.Get(), reinterpret_cast<BITMAPINFO*>(&bmi), DIB_RGB_COLORS);
+		if (!GetDIBits(hDcMem, bitmap_, 0, height, buffer_.Get(), reinterpret_cast<BITMAPINFO*>(&bmi), DIB_RGB_COLORS))
+		{
+			OutputApiError("GetDIBits");
+		}
 	}
 	else
 	{
@@ -140,8 +148,9 @@ void Window::Capture()
 	}
 
 	SelectObject(hDcMem, preObject);
-	DeleteDC(hDcMem);
-	ReleaseDC(window_, hDc);
+
+	if (!DeleteDC(hDcMem)) OutputApiError("DeleteDC");
+	if (!ReleaseDC(window_, hDc)) OutputApiError("ReleaseDC");
 }
 
 
@@ -151,15 +160,10 @@ void Window::Draw()
 
 	D3D11_TEXTURE2D_DESC desc;
 	texture_->GetDesc(&desc);
-	if (desc.Width != width_ || desc.Height != height_)
-	{
-		Debug::Error("texture sizes of '", GetTitle(), "' does not match: (", width_, ", ", height_, ") != (", desc.Width, ", ", desc.Height, ").");
-		return;
-	}
+	if (desc.Width != width_ || desc.Height != height_) return;
 
 	auto device = GetDevice();
 	ComPtr<ID3D11DeviceContext> context;
 	device->GetImmediateContext(&context);
-
 	context->UpdateSubresource(texture_, 0, nullptr, buffer_.Get(), width_ * 4, 0);
 }

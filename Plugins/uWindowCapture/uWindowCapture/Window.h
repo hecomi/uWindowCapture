@@ -12,11 +12,12 @@ public:
 	~Window();
 
 	BOOL IsWindow() const;
+	BOOL IsVisible() const;
 	HWND GetHandle() const;
 	RECT GetRect() const;
 	UINT GetWidth() const;
 	UINT GetHeight() const;
-	std::string GetTitle() const;
+	void GetTitle(wchar_t* buf, int len) const;
 	void SetTexturePtr(ID3D11Texture2D* ptr);
 
 	void Capture();
@@ -25,11 +26,10 @@ public:
 private:
 	void CreateBitmapIfNeeded(HDC hDc, UINT width, UINT height);
 	void DeleteBitmap();
-	void OutputApiError(const char* apiName) const;
 
-	HWND window_;
+	HWND window_ = nullptr;
 	Buffer<BYTE> buffer_;
-	HBITMAP bitmap_;
+	HBITMAP bitmap_ = nullptr;
 	UINT width_ = 0;
 	UINT height_ = 0;
 	ID3D11Texture2D* texture_ = nullptr;

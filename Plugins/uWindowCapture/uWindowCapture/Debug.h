@@ -108,3 +108,7 @@ private:
     static DebugLogFuncPtr logFunc_;
     static DebugLogFuncPtr errFunc_;
 };
+
+
+// Error handling
+void OutputApiError(const char* apiName);

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdio>
+#include <Windows.h>
 #include "Debug.h"
 
 
@@ -28,4 +29,11 @@ void Debug::Finalize()
         Debug::Log("Stop");
         fs_.close();
     }
+}
+
+
+void OutputApiError(const char* apiName)
+{
+	const auto error = GetLastError();
+	Debug::Error(apiName, "() failed width error code: ", error);
 }

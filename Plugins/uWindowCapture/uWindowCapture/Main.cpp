@@ -4,6 +4,7 @@
 #include <wrl/client.h>
 #include <memory>
 #include <algorithm>
+#include <vector>
 #include <map>
 
 #include "IUnityInterface.h"
@@ -17,8 +18,13 @@
 #pragma comment(lib, "dxgi.lib")
 
 
+// flag to check if this plugin has initialized.
 bool g_hasInitialized = false;
+
+// unity interafece to access ID3D11Device.
 IUnityInterfaces* g_unity = nullptr;
+
+// window manager instance.
 std::unique_ptr<WindowManager> g_manager = nullptr;
 
 
@@ -119,6 +125,25 @@ extern "C"
         return OnRenderEvent;
     }
 
+    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UpdateWindowList()
+    {
+		if (!CheckManager()) return;
+		g_manager->UpdateList();
+    }
+
+    UNITY_INTERFACE_EXPORT int UNITY_INTERFACE_API GetWindowCount()
+    {
+		if (!CheckManager()) return -1;
+		return static_cast<int>(g_manager->GetWindowList().size());
+    }
+
+    UNITY_INTERFACE_EXPORT const WindowInfo* UNITY_INTERFACE_API GetWindowList()
+    {
+		if (!CheckManager()) return nullptr;
+		const auto& list = g_manager->GetWindowList();
+		return &list[0];
+    }
+
     UNITY_INTERFACE_EXPORT int UNITY_INTERFACE_API AddWindow(HWND hwnd)
     {
 		if (!CheckManager()) return -1;
@@ -147,6 +172,14 @@ extern "C"
 			return window->GetHeight();
 		}
 		return 0;
+    }
+
+    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API GetTitle(int id, wchar_t* buf, int len)
+    {
+        if (auto window = GetWindow(id))
+        {
+            window->GetTitle(buf, len);
+        }
     }
 
     UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API SetTexturePtr(int id, ID3D11Texture2D* ptr)
