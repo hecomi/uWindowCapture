@@ -1,4 +1,6 @@
-﻿using System.Runtime.InteropServices;
+﻿using System;
+using System.Text;
+using System.Runtime.InteropServices;
 
 #pragma warning disable 114, 465
 
@@ -16,7 +18,7 @@ public enum DebugMode
 public struct WindowInfo
 {
     [MarshalAs(UnmanagedType.I8)]
-    public System.IntPtr handle;
+    public IntPtr handle;
     [MarshalAs(UnmanagedType.ByValTStr, SizeConst=256)]
     public string title;
 }
@@ -37,23 +39,36 @@ public static class Lib
     [DllImport("uWindowCapture")]
     public static extern void SetErrorFunc(DebugLogDelegate func);
     [DllImport("uWindowCapture")]
-    public static extern System.IntPtr GetRenderEventFunc();
+    public static extern IntPtr GetRenderEventFunc();
     [DllImport("uWindowCapture")]
-    public static extern void UpdateWindowList();
+    public static extern void RequestUpdateWindowList();
     [DllImport("uWindowCapture")]
     public static extern int GetWindowCount();
     [DllImport("uWindowCapture")]
-    public static extern System.IntPtr GetWindowList();
+    public static extern IntPtr GetWindowList();
     [DllImport("uWindowCapture")]
-    public static extern int AddWindow(System.IntPtr hwnd);
+    public static extern int AddWindow(IntPtr hwnd);
     [DllImport("uWindowCapture")]
     public static extern void RemoveWindow(int id);
     [DllImport("uWindowCapture")]
-    public static extern void SetTexturePtr(int id, System.IntPtr texturePtr);
+    public static extern bool IsAlive(int id);
+    [DllImport("uWindowCapture")]
+    public static extern IntPtr GetHandle(int id);
+    [DllImport("uWindowCapture")]
+    public static extern string GetTitle(int id, StringBuilder buf, int len);
     [DllImport("uWindowCapture")]
     public static extern int GetWidth(int id);
     [DllImport("uWindowCapture")]
     public static extern int GetHeight(int id);
+    [DllImport("uWindowCapture")]
+    public static extern void SetTexturePtr(int id, IntPtr texturePtr);
+
+    public static string GetTitle(int id)
+    {
+        var buf = new StringBuilder(256);
+        GetTitle(id, buf, buf.Capacity);
+        return buf.ToString();
+    }
 }
 
 }
