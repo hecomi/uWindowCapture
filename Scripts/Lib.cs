@@ -12,6 +12,15 @@ public enum DebugMode
     UnityLog = 2, /* currently has bug when app exits. */
 }
 
+[StructLayout(LayoutKind.Sequential, CharSet=CharSet.Unicode)]
+public struct WindowInfo
+{
+    [MarshalAs(UnmanagedType.I8)]
+    public System.IntPtr handle;
+    [MarshalAs(UnmanagedType.ByValTStr, SizeConst=256)]
+    public string title;
+}
+
 public static class Lib
 {
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -29,6 +38,12 @@ public static class Lib
     public static extern void SetErrorFunc(DebugLogDelegate func);
     [DllImport("uWindowCapture")]
     public static extern System.IntPtr GetRenderEventFunc();
+    [DllImport("uWindowCapture")]
+    public static extern void UpdateWindowList();
+    [DllImport("uWindowCapture")]
+    public static extern int GetWindowCount();
+    [DllImport("uWindowCapture")]
+    public static extern System.IntPtr GetWindowList();
     [DllImport("uWindowCapture")]
     public static extern int AddWindow(System.IntPtr hwnd);
     [DllImport("uWindowCapture")]
