@@ -30,18 +30,18 @@ std::unique_ptr<WindowManager> g_manager = nullptr;
 
 bool CheckManager()
 {
-	if (!g_manager) 
-	{
-		Debug::Error("Manager has not been initialized.");
-		return false;
-	}
-	return true;
+    if (!g_manager)
+    {
+        Debug::Error("Manager has not been initialized.");
+        return false;
+    }
+    return true;
 }
 
 std::shared_ptr<Window> GetWindow(int id)
 {
-	if (!CheckManager()) return nullptr;
-	return g_manager->GetWindow(id);
+    if (!CheckManager()) return nullptr;
+    return g_manager->GetWindow(id);
 }
 
 
@@ -49,36 +49,36 @@ extern "C"
 {
     UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcInitialize()
     {
-		if (g_hasInitialized) return;
-		g_hasInitialized = true;
+        if (g_hasInitialized) return;
+        g_hasInitialized = true;
 
         Debug::Initialize();
-		g_manager = std::make_unique<WindowManager>();
+        g_manager = std::make_unique<WindowManager>();
     }
 
     UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcFinalize()
     {
-		if (!g_hasInitialized) return;
-		g_hasInitialized = false;
+        if (!g_hasInitialized) return;
+        g_hasInitialized = false;
 
         Debug::Finalize();
-		g_manager.reset();
+        g_manager.reset();
     }
 
     void UNITY_INTERFACE_API OnGraphicsDeviceEvent(UnityGfxDeviceEventType event)
     {
         switch (event)
         {
-            case kUnityGfxDeviceEventInitialize:
-            {
-                UwcInitialize();
-                break;
-            }
-            case kUnityGfxDeviceEventShutdown:
-            {
-                UwcFinalize();
-                break;
-            }
+        case kUnityGfxDeviceEventInitialize:
+        {
+            UwcInitialize();
+            break;
+        }
+        case kUnityGfxDeviceEventShutdown:
+        {
+            UwcFinalize();
+            break;
+        }
         }
     }
 
@@ -113,11 +113,11 @@ extern "C"
 
     void UNITY_INTERFACE_API OnRenderEvent(int id)
     {
-		if (auto window = GetWindow(id))
-		{
-			window->Capture();
-			window->Draw();
-		}
+        if (auto window = GetWindow(id))
+        {
+            window->Capture();
+            window->Draw();
+        }
     }
 
     UNITY_INTERFACE_EXPORT UnityRenderingEvent UNITY_INTERFACE_API UwcGetRenderEventFunc()
@@ -127,69 +127,69 @@ extern "C"
 
     UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcRequestUpdateWindowList()
     {
-		if (!CheckManager()) return;
-		g_manager->RequestUpdateList();
+        if (!CheckManager()) return;
+        g_manager->RequestUpdateList();
     }
 
     UNITY_INTERFACE_EXPORT int UNITY_INTERFACE_API UwcGetWindowCount()
     {
-		if (!CheckManager()) return -1;
-		return static_cast<int>(g_manager->GetWindowList().size());
+        if (!CheckManager()) return -1;
+        return static_cast<int>(g_manager->GetWindowList().size());
     }
 
     UNITY_INTERFACE_EXPORT const WindowInfo* UNITY_INTERFACE_API UwcGetWindowList()
     {
-		if (!CheckManager()) return nullptr;
-		const auto& list = g_manager->GetWindowList();
-		return &list[0];
+        if (!CheckManager()) return nullptr;
+        const auto& list = g_manager->GetWindowList();
+        return &list[0];
     }
 
     UNITY_INTERFACE_EXPORT int UNITY_INTERFACE_API UwcAddWindow(HWND hwnd)
     {
-		if (!CheckManager()) return -1;
-		return g_manager->Add(hwnd);
+        if (!CheckManager()) return -1;
+        return g_manager->Add(hwnd);
     }
 
     UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcRemoveWindow(int id)
     {
-		if (!CheckManager()) return;
-		g_manager->Remove(id);
+        if (!CheckManager()) return;
+        g_manager->Remove(id);
     }
-	
+
     UNITY_INTERFACE_EXPORT bool UNITY_INTERFACE_API UwcIsWindowVisible(int id)
     {
-		if (auto window = GetWindow(id))
-		{
-			return window->IsVisible() > 0;
-		}
-		return false;
+        if (auto window = GetWindow(id))
+        {
+            return window->IsVisible() > 0;
+        }
+        return false;
     }
 
     UNITY_INTERFACE_EXPORT HWND UNITY_INTERFACE_API UwcGetWindowHandle(int id)
     {
-		if (auto window = GetWindow(id))
-		{
-			return window->GetHandle();
-		}
-		return nullptr;
+        if (auto window = GetWindow(id))
+        {
+            return window->GetHandle();
+        }
+        return nullptr;
     }
 
     UNITY_INTERFACE_EXPORT UINT UNITY_INTERFACE_API UwcGetWindowWidth(int id)
     {
-		if (auto window = GetWindow(id))
-		{
-			return window->GetWidth();
-		}
-		return 0;
+        if (auto window = GetWindow(id))
+        {
+            return window->GetWidth();
+        }
+        return 0;
     }
 
     UNITY_INTERFACE_EXPORT UINT UNITY_INTERFACE_API UwcGetWindowHeight(int id)
     {
-		if (auto window = GetWindow(id))
-		{
-			return window->GetHeight();
-		}
-		return 0;
+        if (auto window = GetWindow(id))
+        {
+            return window->GetHeight();
+        }
+        return 0;
     }
 
     UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcGetWindowTitle(int id, WCHAR* buf, int len)
@@ -202,17 +202,17 @@ extern "C"
 
     UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcSetWindowTexturePtr(int id, ID3D11Texture2D* ptr)
     {
-		if (auto window = GetWindow(id))
-		{
-			return window->SetTexturePtr(ptr);
-		}
+        if (auto window = GetWindow(id))
+        {
+            return window->SetTexturePtr(ptr);
+        }
     }
 
     UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcSetWindowCaptureMode(int id, Window::CaptureMode mode)
     {
-		if (auto window = GetWindow(id))
-		{
-			return window->SetCaptureMode(mode);
-		}
+        if (auto window = GetWindow(id))
+        {
+            return window->SetCaptureMode(mode);
+        }
     }
 }

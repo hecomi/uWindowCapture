@@ -43,32 +43,32 @@ private:
     {
         switch (mode_)
         {
-            case Mode::None:
+        case Mode::None:
+        {
+            return;
+        }
+        case Mode::File:
+        {
+            if (fs_.good() && ss_.good())
             {
-                return;
+                const auto str = ss_.str();
+                fs_ << str << std::endl;
+                fs_.flush();
             }
-            case Mode::File:
+            break;
+        }
+        case Mode::UnityLog:
+        {
+            if (ss_.good())
             {
-                if (fs_.good() && ss_.good())
+                switch (level)
                 {
-                    const auto str = ss_.str();
-                    fs_ << str << std::endl;
-                    fs_.flush();
+                case Level::Log: logFunc_(ss_.str().c_str()); break;
+                case Level::Error: errFunc_(ss_.str().c_str()); break;
                 }
-                break;
             }
-            case Mode::UnityLog:
-            {
-                if (ss_.good())
-                {
-                    switch (level)
-                    {
-                        case Level::Log   : logFunc_(ss_.str().c_str()); break;
-                        case Level::Error : errFunc_(ss_.str().c_str()); break;
-                    }
-                }
-                break;
-            }
+            break;
+        }
         }
         ss_.str("");
         ss_.clear(std::stringstream::goodbit);

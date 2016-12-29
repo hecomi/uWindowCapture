@@ -25,5 +25,5 @@ ID3D11Device* GetDevice()
 
 std::unique_ptr<WindowManager>& GetWindowManager()
 {
-	return g_manager;
+    return g_manager;
 }
