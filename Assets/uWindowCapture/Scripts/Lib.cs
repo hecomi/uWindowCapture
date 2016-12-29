@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Text;
 using System.Runtime.InteropServices;
 
 #pragma warning disable 114, 465
@@ -14,6 +13,12 @@ public enum DebugMode
     UnityLog = 2, /* currently has bug when app exits. */
 }
 
+public enum CaptureMode
+{
+    PrintWindow = 0,
+    BitBlt = 1,
+}
+
 [StructLayout(LayoutKind.Sequential, CharSet=CharSet.Unicode)]
 public struct WindowInfo
 {
@@ -25,50 +30,45 @@ public struct WindowInfo
 
 public static class Lib
 {
+    public const string name = "uWindowCapture";
+
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void DebugLogDelegate(string str);
 
-    [DllImport("uWindowCapture")]
+    [DllImport(name, EntryPoint = "UwcInitialize")]
     public static extern void Initialize();
-    [DllImport("uWindowCapture")]
+    [DllImport(name, EntryPoint = "UwcFinalize")]
     public static extern void Finalize();
-    [DllImport("uWindowCapture")]
+    [DllImport(name, EntryPoint = "UwcSetDebugMode")]
     public static extern void SetDebugMode(DebugMode mode);
-    [DllImport("uWindowCapture")]
+    [DllImport(name, EntryPoint = "UwcSetLogFunc")]
     public static extern void SetLogFunc(DebugLogDelegate func);
-    [DllImport("uWindowCapture")]
+    [DllImport(name, EntryPoint = "UwcSetErrorFunc")]
     public static extern void SetErrorFunc(DebugLogDelegate func);
-    [DllImport("uWindowCapture")]
+    [DllImport(name, EntryPoint = "UwcGetRenderEventFunc")]
     public static extern IntPtr GetRenderEventFunc();
-    [DllImport("uWindowCapture")]
+    [DllImport(name, EntryPoint = "UwcRequestUpdateWindowList")]
     public static extern void RequestUpdateWindowList();
-    [DllImport("uWindowCapture")]
+    [DllImport(name, EntryPoint = "UwcGetWindowCount")]
     public static extern int GetWindowCount();
-    [DllImport("uWindowCapture")]
+    [DllImport(name, EntryPoint = "UwcGetWindowList")]
     public static extern IntPtr GetWindowList();
-    [DllImport("uWindowCapture")]
+    [DllImport(name, EntryPoint = "UwcAddWindow")]
     public static extern int AddWindow(IntPtr hwnd);
-    [DllImport("uWindowCapture")]
+    [DllImport(name, EntryPoint = "UwcRemoveWindow")]
     public static extern void RemoveWindow(int id);
-    [DllImport("uWindowCapture")]
-    public static extern bool IsAlive(int id);
-    [DllImport("uWindowCapture")]
-    public static extern IntPtr GetHandle(int id);
-    [DllImport("uWindowCapture")]
-    public static extern string GetTitle(int id, StringBuilder buf, int len);
-    [DllImport("uWindowCapture")]
-    public static extern int GetWidth(int id);
-    [DllImport("uWindowCapture")]
-    public static extern int GetHeight(int id);
-    [DllImport("uWindowCapture")]
-    public static extern void SetTexturePtr(int id, IntPtr texturePtr);
-
-    public static string GetTitle(int id)
-    {
-        var buf = new StringBuilder(256);
-        GetTitle(id, buf, buf.Capacity);
-        return buf.ToString();
-    }
+    [DllImport(name, EntryPoint = "UwcIsWindowVisible")]
+    public static extern bool IsWindowVisible(int id);
+    [DllImport(name, EntryPoint = "UwcGetWindowHandle")]
+    public static extern IntPtr GetWindowHandle(int id);
+    [DllImport(name, EntryPoint = "UwcGetWindowWidth")]
+    public static extern int GetWindowWidth(int id);
+    [DllImport(name, EntryPoint = "UwcGetWindowHeight")]
+    public static extern int GetWindowHeight(int id);
+    [DllImport(name, EntryPoint = "UwcSetWindowTexturePtr")]
+    public static extern void SetWindowTexturePtr(int id, IntPtr texturePtr);
+    [DllImport(name, EntryPoint = "UwcSetWindowCaptureMode")]
+    public static extern void SetWindowCaptureMode(int id, CaptureMode mode);
 }
 
 }

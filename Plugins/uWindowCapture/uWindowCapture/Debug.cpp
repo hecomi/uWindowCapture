@@ -34,6 +34,6 @@ void Debug::Finalize()
 
 void OutputApiError(const char* apiName)
 {
-	const auto error = GetLastError();
+	const auto error = ::GetLastError();
 	Debug::Error(apiName, "() failed width error code: ", error);
 }

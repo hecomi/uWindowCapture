@@ -36,19 +36,25 @@ public class Window
         set;
     }
 
+    public bool visible
+    {
+        get { return Lib.IsWindowVisible(id); }
+    }
+
     public string title
     {
-        get { return Lib.GetTitle(id); }
+        get; 
+        set; // from manager
     }
 
     public int width
     {
-        get { return Lib.GetWidth(id); }
+        get { return Lib.GetWindowWidth(id); }
     }
 
     public int height
     {
-        get { return Lib.GetHeight(id); }
+        get { return Lib.GetWindowHeight(id); }
     }
 
     public bool shouldBeUpdated
@@ -63,14 +69,20 @@ public class Window
         private set;
     }
 
+    public CaptureMode captureMode
+    {
+        set { Lib.SetWindowCaptureMode(id, value); }
+    }
+
     public void UpdateTextureIfNeeded()
     {
         var w = width;
         var h = height;
+        if (w == 0 || h == 0) return;
         if (!texture || texture.width != w || texture.height != h) {
             if (texture) Object.DestroyImmediate(texture);
             texture = new Texture2D(w, h, TextureFormat.BGRA32, false);
-            Lib.SetTexturePtr(id, texture.GetNativeTexturePtr());
+            Lib.SetWindowTexturePtr(id, texture.GetNativeTexturePtr());
         }
     }
 }

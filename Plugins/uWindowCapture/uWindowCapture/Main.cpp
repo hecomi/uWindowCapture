@@ -47,7 +47,7 @@ std::shared_ptr<Window> GetWindow(int id)
 
 extern "C"
 {
-    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API Initialize()
+    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcInitialize()
     {
 		if (g_hasInitialized) return;
 		g_hasInitialized = true;
@@ -56,7 +56,7 @@ extern "C"
 		g_manager = std::make_unique<WindowManager>();
     }
 
-    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API Finalize()
+    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcFinalize()
     {
 		if (!g_hasInitialized) return;
 		g_hasInitialized = false;
@@ -71,12 +71,12 @@ extern "C"
         {
             case kUnityGfxDeviceEventInitialize:
             {
-                Initialize();
+                UwcInitialize();
                 break;
             }
             case kUnityGfxDeviceEventShutdown:
             {
-                Finalize();
+                UwcFinalize();
                 break;
             }
         }
@@ -96,17 +96,17 @@ extern "C"
         g_unity = nullptr;
     }
 
-    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API SetDebugMode(Debug::Mode mode)
+    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcSetDebugMode(Debug::Mode mode)
     {
         Debug::SetMode(mode);
     }
 
-    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API SetLogFunc(Debug::DebugLogFuncPtr func)
+    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcSetLogFunc(Debug::DebugLogFuncPtr func)
     {
         Debug::SetLogFunc(func);
     }
 
-    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API SetErrorFunc(Debug::DebugLogFuncPtr func)
+    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcSetErrorFunc(Debug::DebugLogFuncPtr func)
     {
         Debug::SetErrorFunc(func);
     }
@@ -120,52 +120,52 @@ extern "C"
 		}
     }
 
-    UNITY_INTERFACE_EXPORT UnityRenderingEvent UNITY_INTERFACE_API GetRenderEventFunc()
+    UNITY_INTERFACE_EXPORT UnityRenderingEvent UNITY_INTERFACE_API UwcGetRenderEventFunc()
     {
         return OnRenderEvent;
     }
 
-    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API RequestUpdateWindowList()
+    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcRequestUpdateWindowList()
     {
 		if (!CheckManager()) return;
 		g_manager->RequestUpdateList();
     }
 
-    UNITY_INTERFACE_EXPORT int UNITY_INTERFACE_API GetWindowCount()
+    UNITY_INTERFACE_EXPORT int UNITY_INTERFACE_API UwcGetWindowCount()
     {
 		if (!CheckManager()) return -1;
 		return static_cast<int>(g_manager->GetWindowList().size());
     }
 
-    UNITY_INTERFACE_EXPORT const WindowInfo* UNITY_INTERFACE_API GetWindowList()
+    UNITY_INTERFACE_EXPORT const WindowInfo* UNITY_INTERFACE_API UwcGetWindowList()
     {
 		if (!CheckManager()) return nullptr;
 		const auto& list = g_manager->GetWindowList();
 		return &list[0];
     }
 
-    UNITY_INTERFACE_EXPORT int UNITY_INTERFACE_API AddWindow(HWND hwnd)
+    UNITY_INTERFACE_EXPORT int UNITY_INTERFACE_API UwcAddWindow(HWND hwnd)
     {
 		if (!CheckManager()) return -1;
 		return g_manager->Add(hwnd);
     }
 
-    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API RemoveWindow(int id)
+    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcRemoveWindow(int id)
     {
 		if (!CheckManager()) return;
 		g_manager->Remove(id);
     }
 	
-    UNITY_INTERFACE_EXPORT bool UNITY_INTERFACE_API IsAlive(int id)
+    UNITY_INTERFACE_EXPORT bool UNITY_INTERFACE_API UwcIsWindowVisible(int id)
     {
 		if (auto window = GetWindow(id))
 		{
-			return window->IsWindow() > 0;
+			return window->IsVisible() > 0;
 		}
 		return false;
     }
 
-    UNITY_INTERFACE_EXPORT HWND UNITY_INTERFACE_API GetHandle(int id)
+    UNITY_INTERFACE_EXPORT HWND UNITY_INTERFACE_API UwcGetWindowHandle(int id)
     {
 		if (auto window = GetWindow(id))
 		{
@@ -174,7 +174,7 @@ extern "C"
 		return nullptr;
     }
 
-    UNITY_INTERFACE_EXPORT UINT UNITY_INTERFACE_API GetWidth(int id)
+    UNITY_INTERFACE_EXPORT UINT UNITY_INTERFACE_API UwcGetWindowWidth(int id)
     {
 		if (auto window = GetWindow(id))
 		{
@@ -183,7 +183,7 @@ extern "C"
 		return 0;
     }
 
-    UNITY_INTERFACE_EXPORT UINT UNITY_INTERFACE_API GetHeight(int id)
+    UNITY_INTERFACE_EXPORT UINT UNITY_INTERFACE_API UwcGetWindowHeight(int id)
     {
 		if (auto window = GetWindow(id))
 		{
@@ -192,7 +192,7 @@ extern "C"
 		return 0;
     }
 
-    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API GetTitle(int id, wchar_t* buf, int len)
+    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcGetWindowTitle(int id, WCHAR* buf, int len)
     {
         if (auto window = GetWindow(id))
         {
@@ -200,11 +200,19 @@ extern "C"
         }
     }
 
-    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API SetTexturePtr(int id, ID3D11Texture2D* ptr)
+    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcSetWindowTexturePtr(int id, ID3D11Texture2D* ptr)
     {
 		if (auto window = GetWindow(id))
 		{
 			return window->SetTexturePtr(ptr);
+		}
+    }
+
+    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcSetWindowCaptureMode(int id, Window::CaptureMode mode)
+    {
+		if (auto window = GetWindow(id))
+		{
+			return window->SetCaptureMode(mode);
 		}
     }
 }

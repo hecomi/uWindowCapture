@@ -61,13 +61,13 @@ void WindowManager::Remove(int id)
 
 bool IsAltTabWindow(HWND hWnd)
 {
-    if (!IsWindowVisible(hWnd)) return false;
+    if (!::IsWindowVisible(hWnd)) return false;
 
 	// Ref: https://blogs.msdn.microsoft.com/oldnewthing/20071008-00/?p=24863/
-	HWND hWndWalk = GetAncestor(hWnd, GA_ROOTOWNER);
+	HWND hWndWalk = ::GetAncestor(hWnd, GA_ROOTOWNER);
 	HWND hWndTry;
-	while ((hWndTry = GetLastActivePopup(hWndWalk)) != hWndTry) {
-		if (IsWindowVisible(hWndTry)) break;
+	while ((hWndTry = ::GetLastActivePopup(hWndWalk)) != hWndTry) {
+		if (::IsWindowVisible(hWndTry)) break;
 		hWndWalk = hWndTry;
 	}
 	if (hWndWalk != hWnd)
@@ -76,7 +76,7 @@ bool IsAltTabWindow(HWND hWnd)
 	}
 
 	// Tool window
-	if (GetWindowLong(hWnd, GWL_EXSTYLE) & WS_EX_TOOLWINDOW)
+	if (::GetWindowLong(hWnd, GWL_EXSTYLE) & WS_EX_TOOLWINDOW)
 	{
         return false;
 	}
@@ -84,7 +84,7 @@ bool IsAltTabWindow(HWND hWnd)
 	// Remove task tray programs
 	TITLEBARINFO titleBar;
 	titleBar.cbSize = sizeof(TITLEBARINFO);
-	if (!GetTitleBarInfo(hWnd, &titleBar))
+	if (!::GetTitleBarInfo(hWnd, &titleBar))
 	{
 		OutputApiError("GetTitleBarInfo");
 		return false;

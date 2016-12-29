@@ -33,6 +33,8 @@ public class Manager : MonoBehaviour
     public static event Lib.DebugLogDelegate onDebugLog = msg => Debug.Log(msg);
     public static event Lib.DebugLogDelegate onDebugErr = msg => Debug.LogError(msg);
 
+    System.IntPtr renderEventFunc_;
+
     public Dictionary<System.IntPtr, Window> windows
     {
         get;
@@ -50,6 +52,7 @@ public class Manager : MonoBehaviour
         Lib.SetDebugMode(debugMode);
         Lib.Initialize();
 
+        renderEventFunc_ = Lib.GetRenderEventFunc();
         windows = new Dictionary<System.IntPtr, Window>();
         windowList = new HashSet<WindowInfo>();
     }
@@ -85,9 +88,8 @@ public class Manager : MonoBehaviour
             while (enumerator.MoveNext()) {
                 var window = enumerator.Current.Value;
                 if (window.shouldBeUpdated) {
-                    var id = enumerator.Current.Key;
                     window.UpdateTextureIfNeeded();
-                    GL.IssuePluginEvent(Lib.GetRenderEventFunc(), window.id);
+                    GL.IssuePluginEvent(renderEventFunc_, window.id);
                 }
             }
         }
@@ -116,16 +118,21 @@ public class Manager : MonoBehaviour
         var size = Marshal.SizeOf(typeof(WindowInfo));
 
         for (int i = 0; i < count; ++i) {
-            var data = new System.IntPtr(ptr.ToInt64() + size * i);
+            var data = new System.IntPtr(ptr.ToInt64() + (size * i));
             var info = (WindowInfo)Marshal.PtrToStructure(data, typeof(WindowInfo));
             var handle = info.handle;
+            var title = info.title;
 
             windowList.Add(info);
 
             if (windows.ContainsKey(handle)) {
-                windows[handle].alive = true;
+                var window = windows[handle];
+                window.alive = true;
+                window.title = title;
             } else {
-                windows.Add(handle, new Window(handle));
+                var window = new Window(handle);
+                window.title = title;
+                windows.Add(handle, window);
             }
         }
 

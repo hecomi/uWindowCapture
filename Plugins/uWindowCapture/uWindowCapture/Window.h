@@ -3,11 +3,19 @@
 #include <Windows.h>
 #include <d3d11.h>
 #include <string>
+#include <thread>
+#include <mutex>
 #include "Common.h"
 
 class Window
 {
 public:
+	enum class CaptureMode
+	{
+		PrintWindow = 0,
+		BitBlt = 1,
+	};
+
 	explicit Window(HWND hwnd);
 	~Window();
 
@@ -17,8 +25,9 @@ public:
 	RECT GetRect() const;
 	UINT GetWidth() const;
 	UINT GetHeight() const;
-	void GetTitle(wchar_t* buf, int len) const;
+	void GetTitle(WCHAR* buf, int len) const;
 	void SetTexturePtr(ID3D11Texture2D* ptr);
+	void SetCaptureMode(CaptureMode mode);
 
 	void Capture();
 	void Draw();
@@ -26,7 +35,12 @@ public:
 private:
 	void CreateBitmapIfNeeded(HDC hDc, UINT width, UINT height);
 	void DeleteBitmap();
+	void CaptureInternal();
 
+	CaptureMode mode_ = CaptureMode::PrintWindow;
+	std::thread captureThread_;
+	std::mutex mutex_;
+	bool hasCaptureFinished_ = true;
 	HWND window_ = nullptr;
 	Buffer<BYTE> buffer_;
 	HBITMAP bitmap_ = nullptr;

@@ -10,7 +10,7 @@ class Window;
 struct WindowInfo
 {
 	HWND handle;
-	wchar_t title[256];
+	WCHAR title[256];
 };
 
 class WindowManager
