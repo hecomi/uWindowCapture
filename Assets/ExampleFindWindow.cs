@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-public class Test : MonoBehaviour
+public class ExampleFindWindow : MonoBehaviour
 {
     uWindowCapture.Window window = null;
     public string target = "";

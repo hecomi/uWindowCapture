@@ -35,26 +35,19 @@ public class Manager : MonoBehaviour
 
     System.IntPtr renderEventFunc_;
 
-    public Dictionary<System.IntPtr, Window> windows
+    Dictionary<System.IntPtr, Window> windows_ = new Dictionary<System.IntPtr, Window>();
+    static public Dictionary<System.IntPtr, Window> windows
     {
-        get;
-        private set;
+        get { return instance.windows_; }
     }
 
-    public HashSet<WindowInfo> windowList
-    {
-        get;
-        private set;
-    }
+    HashSet<WindowInfo> windowList_ = new HashSet<WindowInfo>();
 
     void Awake()
     {
         Lib.SetDebugMode(debugMode);
         Lib.Initialize();
-
         renderEventFunc_ = Lib.GetRenderEventFunc();
-        windows = new Dictionary<System.IntPtr, Window>();
-        windowList = new HashSet<WindowInfo>();
     }
 
     void Start()
@@ -110,7 +103,7 @@ public class Manager : MonoBehaviour
             window.alive = false;
         }
 
-        windowList.Clear();
+        windowList_.Clear();
 
         // Check all window existence and add new windows to the list.
         var count = Lib.GetWindowCount();
@@ -123,7 +116,7 @@ public class Manager : MonoBehaviour
             var handle = info.handle;
             var title = info.title;
 
-            windowList.Add(info);
+            windowList_.Add(info);
 
             if (windows.ContainsKey(handle)) {
                 var window = windows[handle];
@@ -137,31 +130,33 @@ public class Manager : MonoBehaviour
         }
 
         // Remove all inactive windows.
+        var inactiveKeys = new List<System.IntPtr>();
         enumerator = windows.GetEnumerator();
         while (enumerator.MoveNext()) {
-            var window = enumerator.Current.Value;
-            if (!window.alive) {
-                windows.Remove(window.handle);
+            if (!enumerator.Current.Value.alive) {
+                inactiveKeys.Add(enumerator.Current.Key);
             }
+        }
+        foreach (var key in inactiveKeys) {
+            windows.Remove(key);
         }
     }
 
     static public Window Find(System.IntPtr handle)
     {
-        if (instance.windows.ContainsKey(handle)) {
-            return instance.windows[handle];
+        if (windows.ContainsKey(handle)) {
+            return windows[handle];
         }
         return null;
     }
 
     static public Window Find(string title)
     {
-        var enumerator = instance.windowList.GetEnumerator();
+        var enumerator = instance.windowList_.GetEnumerator();
         while (enumerator.MoveNext()) {
             var info = enumerator.Current;
             var handle = info.handle;
             if (info.title.IndexOf(title) != -1) {
-                var windows = instance.windows;
                 if (windows.ContainsKey(handle)) {
                     return windows[handle];
                 }
@@ -173,12 +168,11 @@ public class Manager : MonoBehaviour
     static public List<Window> FindAll(string title)
     {
         var list = new List<Window>();
-        var enumerator = instance.windowList.GetEnumerator();
+        var enumerator = instance.windowList_.GetEnumerator();
         while (enumerator.MoveNext()) {
             var info = enumerator.Current;
             var handle = info.handle;
             if (info.title.IndexOf(title) != -1) {
-                var windows = instance.windows;
                 if (windows.ContainsKey(handle)) {
                     list.Add(windows[handle]);
                 }
