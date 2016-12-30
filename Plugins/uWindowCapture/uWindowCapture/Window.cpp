@@ -90,7 +90,12 @@ void Window::CreateBitmapIfNeeded(HDC hDc, UINT width, UINT height)
     {
         std::lock_guard<std::mutex> lock(mutex_);
         buffer_.ExpandIfNeeded(width * height * 4);
-        DeleteBitmap();
+    }
+
+    DeleteBitmap();
+
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
         bitmap_ = ::CreateCompatibleBitmap(hDc, width, height);
     }
 }
