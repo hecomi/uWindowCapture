@@ -162,7 +162,7 @@ void Window::CaptureInternal()
     auto hDcMem = ::CreateCompatibleDC(hDc);
     HGDIOBJ preObject = ::SelectObject(hDcMem, bitmap_);
 
-    bool result = false;
+    BOOL result = false;
     switch (mode_)
     {
         case CaptureMode::PrintWindow:
