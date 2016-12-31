@@ -125,35 +125,22 @@ extern "C"
         return OnRenderEvent;
     }
 
-    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcRequestUpdateWindowList()
+    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcUpdate()
     {
         if (!CheckManager()) return;
-        g_manager->RequestUpdateList();
+        g_manager->Update();
     }
 
-    UNITY_INTERFACE_EXPORT int UNITY_INTERFACE_API UwcGetWindowCount()
+    UNITY_INTERFACE_EXPORT UINT UNITY_INTERFACE_API UwcGetMessageCount()
     {
-        if (!CheckManager()) return -1;
-        return static_cast<int>(g_manager->GetWindowList().size());
+        if (!CheckManager()) return 0;
+        return g_manager->GetMessageCount();
     }
 
-    UNITY_INTERFACE_EXPORT const WindowInfo* UNITY_INTERFACE_API UwcGetWindowList()
+    UNITY_INTERFACE_EXPORT const Message* UNITY_INTERFACE_API UwcGetMessages()
     {
         if (!CheckManager()) return nullptr;
-        const auto& list = g_manager->GetWindowList();
-        return &list[0];
-    }
-
-    UNITY_INTERFACE_EXPORT int UNITY_INTERFACE_API UwcAddWindow(HWND hwnd)
-    {
-        if (!CheckManager()) return -1;
-        return g_manager->Add(hwnd);
-    }
-
-    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcRemoveWindow(int id)
-    {
-        if (!CheckManager()) return;
-        g_manager->Remove(id);
+        return g_manager->GetMessages();
     }
 
     UNITY_INTERFACE_EXPORT bool UNITY_INTERFACE_API UwcIsWindowVisible(int id)
@@ -192,11 +179,20 @@ extern "C"
         return 0;
     }
 
-    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcGetWindowTitle(int id, WCHAR* buf, int len)
+    UNITY_INTERFACE_EXPORT UINT UNITY_INTERFACE_API UwcGetWindowTitleLength(int id)
     {
         if (auto window = GetWindow(id))
         {
-            window->GetTitle(buf, len);
+            return window->GetTitleLength();
+        }
+        return 0;
+    }
+
+    UNITY_INTERFACE_EXPORT const WCHAR* UNITY_INTERFACE_API UwcGetWindowTitle(int id, WCHAR* dst, int len)
+    {
+        if (auto window = GetWindow(id))
+        {
+            return window->GetTitle().c_str();
         }
     }
 

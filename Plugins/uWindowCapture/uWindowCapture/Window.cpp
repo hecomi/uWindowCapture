@@ -1,3 +1,5 @@
+#include <vector>
+#include <algorithm>
 #include <wrl/client.h>
 #include "Window.h"
 #include "Debug.h"
@@ -27,9 +29,39 @@ Window::~Window()
 }
 
 
+void Window::Update()
+{
+    // UpdateChildWindows();
+}
+
+
 HWND Window::GetHandle() const
 {
     return window_;
+}
+
+
+std::shared_ptr<Window> Window::GetParent()
+{
+    return parent_.lock();
+}
+
+
+void Window::SetParent(const std::shared_ptr<Window>& parent)
+{
+    parent_ = parent;
+}
+
+
+void Window::SetAlive(bool isAlive)
+{
+    isAlive_ = isAlive;
+}
+
+
+bool Window::IsAlive() const
+{
+    return isAlive_;
 }
 
 
@@ -70,12 +102,21 @@ UINT Window::GetHeight() const
 }
 
 
-void Window::GetTitle(WCHAR* buf, int len) const
+UINT Window::GetTitleLength() const
 {
-    if (!GetWindowTextW(window_, buf, len))
-    {
-        OutputApiError("GetWindowTextW");
-    }
+    return static_cast<UINT>(name_.length());
+}
+
+
+const std::wstring& Window::GetTitle() const
+{
+    return name_;
+}
+
+
+void Window::SetTitle(const WCHAR* title)
+{
+    name_ = title;
 }
 
 
@@ -195,7 +236,7 @@ void Window::CaptureInternal()
         bmi.biSize        = sizeof(BITMAPINFOHEADER);
         bmi.biBitCount    = 32;
         bmi.biCompression = BI_RGB;
-        bmi.biSizeImage  = 0;
+        bmi.biSizeImage   = 0;
 
         if (!::GetDIBits(hDcMem, bitmap_, 0, height, buffer_.Get(), reinterpret_cast<BITMAPINFO*>(&bmi), DIB_RGB_COLORS))
         {
@@ -215,6 +256,7 @@ void Window::Draw()
 {
     if (texture_ == nullptr) return;
 
+    // Check given texture size.
     D3D11_TEXTURE2D_DESC desc;
     texture_->GetDesc(&desc);
     if (desc.Width != width_ || desc.Height != height_) return;
@@ -227,4 +269,50 @@ void Window::Draw()
         std::lock_guard<std::mutex> lock(mutex_);
         context->UpdateSubresource(texture_, 0, nullptr, buffer_.Get(), width_ * 4, 0);
     }
+
+    /*
+    for (auto&& window : childWindows_)
+    {
+        window->Draw();
+    }
+    */
 }
+
+
+/*
+BOOL CALLBACK EnumChildWindowsCallback(HWND hWnd, LPARAM lParam)
+{
+    auto list = reinterpret_cast<std::vector<HWND>*>(lParam);
+    if (!IsWindow(hWnd)) return TRUE;
+    list->push_back(hWnd);
+    return TRUE;
+}
+
+
+void Window::AddChild(HWND hWnd)
+{
+    childWindows_.push_back(std::make_shared<Window>(hWnd));
+}
+
+
+void Window::UpdateChildWindows()
+{
+    childWindows_.clear();
+    std::vector<HWND> hWndList;
+    EnumChildWindows(window_, EnumChildWindowsCallback, reinterpret_cast<LPARAM>(&hWndList));
+    for (const auto& hWnd : hWndList)
+    {
+        const auto it = std::find_if(
+            childWindows_.begin(),
+            childWindows_.end(),
+            [hWnd](const auto& window) { window->GetHandle() == hWnd; });
+        if (it == childWindows_.end())
+        {
+            AddChild(hWnd);
+        }
+        else
+        {
+        }
+    }
+}
+*/

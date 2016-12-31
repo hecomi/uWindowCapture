@@ -15,6 +15,13 @@ WindowManager::~WindowManager()
 }
 
 
+void WindowManager::Update()
+{
+    UpdateMessages();
+    UpdateWindows();
+}
+
+
 std::shared_ptr<Window> WindowManager::GetWindow(int id) const
 {
     auto it = windows_.find(id);
@@ -27,35 +34,53 @@ std::shared_ptr<Window> WindowManager::GetWindow(int id) const
 }
 
 
-const std::vector<WindowInfo>& WindowManager::GetWindowList() const
-{
-    return windowList_;
-}
-
-
-int WindowManager::Add(HWND hwnd)
+std::shared_ptr<Window> WindowManager::FindOrAddWindow(HWND hWnd)
 {
     auto it = std::find_if(
         windows_.begin(),
         windows_.end(),
-        [hwnd](const auto& pair) { return pair.second->GetHandle() == hwnd; });
+        [hWnd](const auto& pair) { return pair.second->GetHandle() == hWnd; });
 
     if (it != windows_.end())
     {
-        Debug::Log("Given window handle has been already added.");
-        return it->first;
+        return it->second;
     }
 
     const auto id = currentId_++;
-    windows_.emplace(id, std::make_shared<Window>(hwnd));
+    auto window = std::make_shared<Window>(hWnd);
+    windows_.emplace(id, window);
 
-    return id;
+    Message msg;
+    msg.type = MessageType::WindowAdded;
+    msg.windowId = id;
+    msg.windowHandle = hWnd;
+    AddMessage(msg);
+
+    return window;
 }
 
 
-void WindowManager::Remove(int id)
+UINT WindowManager::GetMessageCount() const
 {
-    windows_.erase(id);
+    return static_cast<UINT>(messages_.size());
+}
+
+
+const Message* WindowManager::GetMessages() const
+{
+    return &messages_[0];
+}
+
+
+void WindowManager::AddMessage(Message message)
+{
+    messages_.push_back(message);
+}
+
+
+void WindowManager::UpdateMessages()
+{
+    messages_.clear();
 }
 
 
@@ -98,37 +123,55 @@ bool IsAltTabWindow(HWND hWnd)
 }
 
 
-BOOL CALLBACK EnumWindowsCallback(HWND hWnd, LPARAM lParam)
+void WindowManager::UpdateWindows()
 {
-    if (!IsAltTabWindow(hWnd)) return TRUE;
-
-    auto& manager = GetWindowManager();
-
-    WindowInfo info;
-    info.handle = hWnd;
-    if (!GetWindowTextW(hWnd, info.title, sizeof(info.title)))
+    using EnumWindowsCallbackType = BOOL(CALLBACK *)(HWND, LPARAM);
+    static const auto EnumWindowsCallback = [](HWND hWnd, LPARAM lParam) -> BOOL
     {
+        if (!IsAltTabWindow(hWnd)) return TRUE;
+
+        auto window = GetWindowManager()->FindOrAddWindow(hWnd);
+        window->SetAlive(true);
+
+        const auto titleLength = GetWindowTextLengthW(hWnd);
+        std::vector<WCHAR> buf(titleLength + 1);
+        if (!GetWindowTextW(hWnd, &buf[0], static_cast<int>(buf.size())))
+        {
+            OutputApiError("GetWindowTextW");
+        }
+        else
+        {
+            window->SetTitle(&buf[0]);
+        }
+
         return TRUE;
+    };
+
+    for (const auto& pair : windows_)
+    {
+        pair.second->SetAlive(false);
     }
 
-    manager->AddWindowInfo(info);
-
-    return TRUE;
-}
-
-
-void WindowManager::RequestUpdateList()
-{
-    windowList_.clear();
-
-    if (!EnumWindows(EnumWindowsCallback, 0))
+    if (!EnumWindows(static_cast<EnumWindowsCallbackType>(EnumWindowsCallback), 0))
     {
         OutputApiError("EnumWindows");
     }
-}
 
+    for (auto it = windows_.begin(); it != windows_.end();)
+    {
+        if (!it->second->IsAlive())
+        {
+            Message msg;
+            msg.type = MessageType::WindowRemoved;
+            msg.windowId = it->first;
+            msg.windowHandle = it->second->GetHandle();
+            AddMessage(msg);
 
-void WindowManager::AddWindowInfo(const WindowInfo& info)
-{
-    windowList_.push_back(info);
+            windows_.erase(it++);
+        }
+        else
+        {
+            it++;
+        }
+    }
 }

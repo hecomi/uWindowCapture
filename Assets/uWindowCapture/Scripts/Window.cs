@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections;
 
 namespace uWindowCapture
 {
@@ -12,16 +11,15 @@ public class Window
         private set; 
     }
 
-    public Window(System.IntPtr handle)
+    public Window(System.IntPtr handle, int id)
     {
-        this.id = Lib.AddWindow(handle);
         this.handle = handle;
+        this.id = id;
         this.alive = true;
     }
 
     ~Window()
     {
-        Lib.RemoveWindow(id);
     }
 
     public System.IntPtr handle
@@ -32,7 +30,7 @@ public class Window
 
     public bool alive
     {
-        get; 
+        get;
         set;
     }
 
@@ -43,8 +41,7 @@ public class Window
 
     public string title
     {
-        get; 
-        set; // from manager
+        get { return Lib.GetWindowTitle(id); } 
     }
 
     public int width
