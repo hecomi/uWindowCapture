@@ -41,8 +41,6 @@ public class Manager : MonoBehaviour
         get { return instance.windows_; }
     }
 
-    HashSet<WindowInfo> windowList_ = new HashSet<WindowInfo>();
-
     void Awake()
     {
         Lib.SetDebugMode(debugMode);
@@ -90,55 +88,37 @@ public class Manager : MonoBehaviour
 
     void Update()
     {
-        Lib.RequestUpdateWindowList();
-        UpdateWindows();
+        Lib.Update();
+        UpdateMessages();
     }
 
-    void UpdateWindows()
+    void UpdateMessages()
     {
-        // At first, mark all windows as inactive.
-        var enumerator = windows.GetEnumerator();
-        while (enumerator.MoveNext()) {
-            var window = enumerator.Current.Value;
-            window.alive = false;
-        }
-
-        windowList_.Clear();
-
-        // Check all window existence and add new windows to the list.
-        var count = Lib.GetWindowCount();
-        var ptr = Lib.GetWindowList();
-        var size = Marshal.SizeOf(typeof(WindowInfo));
-
-        for (int i = 0; i < count; ++i) {
-            var data = new System.IntPtr(ptr.ToInt64() + (size * i));
-            var info = (WindowInfo)Marshal.PtrToStructure(data, typeof(WindowInfo));
-            var handle = info.handle;
-            var title = info.title;
-
-            windowList_.Add(info);
-
-            if (windows.ContainsKey(handle)) {
-                var window = windows[handle];
-                window.alive = true;
-                window.title = title;
-            } else {
-                var window = new Window(handle);
-                window.title = title;
-                windows.Add(handle, window);
+        var messages = Lib.GetMessages();
+        for (int i = 0; i < messages.Length; ++i) {
+            var message = messages[i];
+            switch (message.type) {
+                case MessageType.WindowAdded:
+                {
+                    var window = new Window(message.windowHandle, message.windowId);
+                    windows.Add(message.windowHandle, window);
+                    break;
+                }
+                case MessageType.WindowRemoved:
+                {
+                    Window window;
+                    windows.TryGetValue(message.windowHandle, out window);
+                    if (window != null) {
+                        window.alive = false;
+                        windows.Remove(message.windowHandle);
+                    }
+                    break;
+                }
+                default:
+                {
+                    break;
+                }
             }
-        }
-
-        // Remove all inactive windows.
-        var inactiveKeys = new List<System.IntPtr>();
-        enumerator = windows.GetEnumerator();
-        while (enumerator.MoveNext()) {
-            if (!enumerator.Current.Value.alive) {
-                inactiveKeys.Add(enumerator.Current.Key);
-            }
-        }
-        foreach (var key in inactiveKeys) {
-            windows.Remove(key);
         }
     }
 
@@ -152,14 +132,11 @@ public class Manager : MonoBehaviour
 
     static public Window Find(string title)
     {
-        var enumerator = instance.windowList_.GetEnumerator();
+        var enumerator = windows.GetEnumerator();
         while (enumerator.MoveNext()) {
-            var info = enumerator.Current;
-            var handle = info.handle;
-            if (info.title.IndexOf(title) != -1) {
-                if (windows.ContainsKey(handle)) {
-                    return windows[handle];
-                }
+            var window = enumerator.Current.Value;
+            if (window.title.IndexOf(title) != -1) {
+                return window;
             }
         }
         return null;
@@ -168,14 +145,11 @@ public class Manager : MonoBehaviour
     static public List<Window> FindAll(string title)
     {
         var list = new List<Window>();
-        var enumerator = instance.windowList_.GetEnumerator();
+        var enumerator = windows.GetEnumerator();
         while (enumerator.MoveNext()) {
-            var info = enumerator.Current;
-            var handle = info.handle;
-            if (info.title.IndexOf(title) != -1) {
-                if (windows.ContainsKey(handle)) {
-                    list.Add(windows[handle]);
-                }
+            var window = enumerator.Current.Value;
+            if (window.title.IndexOf(title) != -1) {
+                list.Add(window);
             }
         }
         return list;

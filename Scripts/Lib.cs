@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using System.Runtime.InteropServices;
 
 #pragma warning disable 114, 465
@@ -19,13 +20,22 @@ public enum CaptureMode
     BitBlt = 1,
 }
 
-[StructLayout(LayoutKind.Sequential, CharSet=CharSet.Unicode)]
-public struct WindowInfo
+public enum MessageType
 {
+    None = -1,
+    WindowAdded = 0,
+    WindowRemoved = 1,
+}
+
+[StructLayout(LayoutKind.Sequential)]
+public struct Message
+{
+    [MarshalAs(UnmanagedType.I4)]
+    public MessageType type;
+    [MarshalAs(UnmanagedType.I4)]
+    public int windowId;
     [MarshalAs(UnmanagedType.I8)]
-    public IntPtr handle;
-    [MarshalAs(UnmanagedType.ByValTStr, SizeConst=256)]
-    public string title;
+    public System.IntPtr windowHandle;
 }
 
 public static class Lib
@@ -47,16 +57,12 @@ public static class Lib
     public static extern void SetErrorFunc(DebugLogDelegate func);
     [DllImport(name, EntryPoint = "UwcGetRenderEventFunc")]
     public static extern IntPtr GetRenderEventFunc();
-    [DllImport(name, EntryPoint = "UwcRequestUpdateWindowList")]
-    public static extern void RequestUpdateWindowList();
-    [DllImport(name, EntryPoint = "UwcGetWindowCount")]
-    public static extern int GetWindowCount();
-    [DllImport(name, EntryPoint = "UwcGetWindowList")]
-    public static extern IntPtr GetWindowList();
-    [DllImport(name, EntryPoint = "UwcAddWindow")]
-    public static extern int AddWindow(IntPtr hwnd);
-    [DllImport(name, EntryPoint = "UwcRemoveWindow")]
-    public static extern void RemoveWindow(int id);
+    [DllImport(name, EntryPoint = "UwcUpdate")]
+    public static extern void Update();
+    [DllImport(name, EntryPoint = "UwcGetMessageCount")]
+    private static extern int GetMessageCount();
+    [DllImport(name, EntryPoint = "UwcGetMessages")]
+    private static extern IntPtr GetMessages_Internal();
     [DllImport(name, EntryPoint = "UwcIsWindowVisible")]
     public static extern bool IsWindowVisible(int id);
     [DllImport(name, EntryPoint = "UwcGetWindowHandle")]
@@ -65,10 +71,36 @@ public static class Lib
     public static extern int GetWindowWidth(int id);
     [DllImport(name, EntryPoint = "UwcGetWindowHeight")]
     public static extern int GetWindowHeight(int id);
+    [DllImport(name, EntryPoint = "UwcGetWindowTitleLength")]
+    private static extern int GetWindowTitleLength(int id);
+    [DllImport(name, EntryPoint = "UwcGetWindowTitle", CharSet = CharSet.Unicode)]
+    private static extern IntPtr GetWindowTitle_Internal(int id);
     [DllImport(name, EntryPoint = "UwcSetWindowTexturePtr")]
     public static extern void SetWindowTexturePtr(int id, IntPtr texturePtr);
     [DllImport(name, EntryPoint = "UwcSetWindowCaptureMode")]
     public static extern void SetWindowCaptureMode(int id, CaptureMode mode);
+
+    public static Message[] GetMessages()
+    {
+        var count = GetMessageCount();
+        var ptr = GetMessages_Internal();
+        var size = Marshal.SizeOf(typeof(Message));
+
+        var messages = new Message[count];
+        for (int i = 0; i < count; ++i) {
+            var data = new System.IntPtr(ptr.ToInt64() + (size * i));
+            messages[i] = (Message)Marshal.PtrToStructure(data, typeof(Message));
+        }
+
+        return messages;
+    }
+
+    public static string GetWindowTitle(int id)
+    {
+        var len = GetWindowTitleLength(id);
+        var ptr = GetWindowTitle_Internal(id);
+        return Marshal.PtrToStringUni(ptr, len);
+    }
 }
 
 }
