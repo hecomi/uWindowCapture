@@ -16,6 +16,10 @@ class WindowManager;
 std::unique_ptr<WindowManager>& GetWindowManager();
 
 
+// Window utility
+bool IsAltTabWindow(HWND hWnd);
+
+
 // Buffer
 template <class T>
 class Buffer

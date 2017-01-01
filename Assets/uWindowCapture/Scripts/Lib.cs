@@ -16,6 +16,7 @@ public enum DebugMode
 
 public enum CaptureMode
 {
+    None = -1,
     PrintWindow = 0,
     BitBlt = 1,
 }
@@ -63,10 +64,10 @@ public static class Lib
     private static extern int GetMessageCount();
     [DllImport(name, EntryPoint = "UwcGetMessages")]
     private static extern IntPtr GetMessages_Internal();
-    [DllImport(name, EntryPoint = "UwcIsWindowVisible")]
-    public static extern bool IsWindowVisible(int id);
     [DllImport(name, EntryPoint = "UwcGetWindowHandle")]
     public static extern IntPtr GetWindowHandle(int id);
+    [DllImport(name, EntryPoint = "UwcGetWindowOwner")]
+    public static extern IntPtr GetWindowOwner(int id);
     [DllImport(name, EntryPoint = "UwcGetWindowWidth")]
     public static extern int GetWindowWidth(int id);
     [DllImport(name, EntryPoint = "UwcGetWindowHeight")]
@@ -75,10 +76,34 @@ public static class Lib
     private static extern int GetWindowTitleLength(int id);
     [DllImport(name, EntryPoint = "UwcGetWindowTitle", CharSet = CharSet.Unicode)]
     private static extern IntPtr GetWindowTitle_Internal(int id);
+    [DllImport(name, EntryPoint = "UwcGetWindowTexturePtr")]
+    public static extern IntPtr GetWindowTexturePtr(int id);
     [DllImport(name, EntryPoint = "UwcSetWindowTexturePtr")]
     public static extern void SetWindowTexturePtr(int id, IntPtr texturePtr);
+    [DllImport(name, EntryPoint = "UwcGetWindowCaptureMode")]
+    public static extern CaptureMode GetWindowCaptureMode(int id);
     [DllImport(name, EntryPoint = "UwcSetWindowCaptureMode")]
     public static extern void SetWindowCaptureMode(int id, CaptureMode mode);
+    [DllImport(name, EntryPoint = "UwcIsWindow")]
+    public static extern bool IsWindow(int id);
+    [DllImport(name, EntryPoint = "UwcIsWindowVisible")]
+    public static extern bool IsWindowVisible(int id);
+    [DllImport(name, EntryPoint = "UwcIsAltTabWindow")]
+    public static extern bool IsAltTabWindow(int id);
+    [DllImport(name, EntryPoint = "UwcIsDesktop")]
+    public static extern bool IsDesktop(int id);
+    [DllImport(name, EntryPoint = "UwcIsWindowEnabled")]
+    public static extern bool IsWindowEnabled(int id);
+    [DllImport(name, EntryPoint = "UwcIsWindowUnicode")]
+    public static extern bool IsWindowUnicode(int id);
+    [DllImport(name, EntryPoint = "UwcIsWindowZoomed")]
+    public static extern bool IsWindowZoomed(int id);
+    [DllImport(name, EntryPoint = "UwcIsWindowIconic")]
+    public static extern bool IsWindowIconic(int id);
+    [DllImport(name, EntryPoint = "UwcIsWindowHungUp")]
+    public static extern bool IsWindowHungUp(int id);
+    [DllImport(name, EntryPoint = "UwcIsWindowTouchable")]
+    public static extern bool IsWindowTouchable(int id);
 
     public static Message[] GetMessages()
     {

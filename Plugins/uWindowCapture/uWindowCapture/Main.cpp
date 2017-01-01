@@ -143,20 +143,20 @@ extern "C"
         return g_manager->GetMessages();
     }
 
-    UNITY_INTERFACE_EXPORT bool UNITY_INTERFACE_API UwcIsWindowVisible(int id)
-    {
-        if (auto window = GetWindow(id))
-        {
-            return window->IsVisible() > 0;
-        }
-        return false;
-    }
-
     UNITY_INTERFACE_EXPORT HWND UNITY_INTERFACE_API UwcGetWindowHandle(int id)
     {
         if (auto window = GetWindow(id))
         {
             return window->GetHandle();
+        }
+        return nullptr;
+    }
+
+    UNITY_INTERFACE_EXPORT HWND UNITY_INTERFACE_API UwcGetWindowOwner(int id)
+    {
+        if (auto window = GetWindow(id))
+        {
+            return window->GetOwner();
         }
         return nullptr;
     }
@@ -196,12 +196,30 @@ extern "C"
         }
     }
 
+    UNITY_INTERFACE_EXPORT ID3D11Texture2D* UNITY_INTERFACE_API UwcGetWindowTexturePtr(int id)
+    {
+        if (auto window = GetWindow(id))
+        {
+            return window->GetTexturePtr();
+        }
+        return nullptr;
+    }
+
     UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcSetWindowTexturePtr(int id, ID3D11Texture2D* ptr)
     {
         if (auto window = GetWindow(id))
         {
-            return window->SetTexturePtr(ptr);
+            window->SetTexturePtr(ptr);
         }
+    }
+
+    UNITY_INTERFACE_EXPORT Window::CaptureMode UNITY_INTERFACE_API UwcGetWindowCaptureMode(int id)
+    {
+        if (auto window = GetWindow(id))
+        {
+            return window->GetCaptureMode();
+        }
+        return Window::CaptureMode::None;
     }
 
     UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcSetWindowCaptureMode(int id, Window::CaptureMode mode)
@@ -210,5 +228,95 @@ extern "C"
         {
             return window->SetCaptureMode(mode);
         }
+    }
+
+    UNITY_INTERFACE_EXPORT bool UNITY_INTERFACE_API UwcIsWindow(int id)
+    {
+        if (auto window = GetWindow(id))
+        {
+            return window->IsWindow() > 0;
+        }
+        return false;
+    }
+
+    UNITY_INTERFACE_EXPORT bool UNITY_INTERFACE_API UwcIsAltTabWindow(int id)
+    {
+        if (auto window = GetWindow(id))
+        {
+            return window->IsAltTab();
+        }
+        return false;
+    }
+
+    UNITY_INTERFACE_EXPORT bool UNITY_INTERFACE_API UwcIsDesktop(int id)
+    {
+        if (auto window = GetWindow(id))
+        {
+            return window->IsDesktop();
+        }
+        return false;
+    }
+
+    UNITY_INTERFACE_EXPORT bool UNITY_INTERFACE_API UwcIsWindowVisible(int id)
+    {
+        if (auto window = GetWindow(id))
+        {
+            return window->IsVisible() > 0;
+        }
+        return false;
+    }
+
+    UNITY_INTERFACE_EXPORT bool UNITY_INTERFACE_API UwcIsWindowEnabled(int id)
+    {
+        if (auto window = GetWindow(id))
+        {
+            return window->IsEnabled() > 0;
+        }
+        return false;
+    }
+
+    UNITY_INTERFACE_EXPORT bool UNITY_INTERFACE_API UwcIsWindowUnicode(int id)
+    {
+        if (auto window = GetWindow(id))
+        {
+            return window->IsUnicode() > 0;
+        }
+        return false;
+    }
+
+    UNITY_INTERFACE_EXPORT bool UNITY_INTERFACE_API UwcIsWindowZoomed(int id)
+    {
+        if (auto window = GetWindow(id))
+        {
+            return window->IsZoomed() > 0;
+        }
+        return false;
+    }
+
+    UNITY_INTERFACE_EXPORT bool UNITY_INTERFACE_API UwcIsWindowIconic(int id)
+    {
+        if (auto window = GetWindow(id))
+        {
+            return window->IsIconic() > 0;
+        }
+        return false;
+    }
+
+    UNITY_INTERFACE_EXPORT bool UNITY_INTERFACE_API UwcIsWindowHungUp(int id)
+    {
+        if (auto window = GetWindow(id))
+        {
+            return window->IsHungUp() > 0;
+        }
+        return false;
+    }
+
+    UNITY_INTERFACE_EXPORT bool UNITY_INTERFACE_API UwcIsWindowTouchable(int id)
+    {
+        if (auto window = GetWindow(id))
+        {
+            return window->IsTouchable() > 0;
+        }
+        return false;
     }
 }

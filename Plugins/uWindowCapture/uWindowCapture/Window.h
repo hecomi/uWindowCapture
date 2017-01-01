@@ -11,38 +11,45 @@
 
 class Window
 {
+friend WindowManager;
 public:
     enum class CaptureMode
     {
+        None = -1,
         PrintWindow = 0,
         BitBlt = 1,
     };
 
     explicit Window(HWND hwnd);
     ~Window();
-    void Update();
 
-    BOOL IsWindow() const;
-    BOOL IsVisible() const;
     HWND GetHandle() const;
-    std::shared_ptr<Window> GetParent();
-    void SetParent(const std::shared_ptr<Window>& parent);
+    HWND GetOwner() const;
     RECT GetRect() const;
     UINT GetWidth() const;
     UINT GetHeight() const;
     UINT GetTitleLength() const;
     const std::wstring& GetTitle() const;
-    void SetTitle(const WCHAR* title);
+
     void SetTexturePtr(ID3D11Texture2D* ptr);
+    ID3D11Texture2D* GetTexturePtr() const;
+
     void SetCaptureMode(CaptureMode mode);
+    CaptureMode GetCaptureMode() const;
 
     void Capture();
     void Draw();
-    
-    // void UpdateChildWindows();
-    // void AddChild(HWND hWnd);
-    void SetAlive(bool isAlive);
-    bool IsAlive() const;
+
+    bool IsAltTab() const;
+    bool IsDesktop() const;
+    BOOL IsWindow() const;
+    BOOL IsVisible() const;
+    BOOL IsEnabled() const;
+    BOOL IsUnicode() const;
+    BOOL IsZoomed() const;
+    BOOL IsIconic() const;
+    BOOL IsHungUp() const;
+    BOOL IsTouchable() const;
 
 private:
     void CreateBitmapIfNeeded(HDC hDc, UINT width, UINT height);
@@ -56,14 +63,16 @@ private:
     bool hasCaptureFinished_ = true;
 
     HWND window_ = nullptr;
+    HWND owner_ = nullptr;
     Buffer<BYTE> buffer_;
     HBITMAP bitmap_ = nullptr;
     UINT width_ = 0;
     UINT height_ = 0;
     ID3D11Texture2D* texture_ = nullptr;
-    std::wstring name_;
+    std::wstring title_;
 
-    std::weak_ptr<Window> parent_;
     bool isAlive_ = true;
+    bool isDesktop_ = false;
+    bool isAltTabWindow_ = false;
 };
 

@@ -27,11 +27,24 @@ public class ExampleCreateWindows : MonoBehaviour
     {
         if (!windowPrefab) return;
 
-        var obj = Instantiate(windowPrefab, transform) as GameObject;
-        var renderer = obj.GetComponent<ExampleRenderWindow>();
-        if (renderer) {
-            renderer.window = window;
-            windows_.Add(window.handle, renderer);
+        if (window.isAltTabWindow || window.isDesktop) {
+            var obj = Instantiate(windowPrefab, transform) as GameObject;
+            var renderer = obj.GetComponent<ExampleRenderWindow>();
+            if (renderer) {
+                renderer.window = window;
+                windows_.Add(window.handle, renderer);
+            }
+        } else if (window.owner != System.IntPtr.Zero) {
+            if (windows_.ContainsKey(window.owner)) {
+                var owner = windows_[window.owner];
+                var obj = Instantiate(windowPrefab, transform) as GameObject;
+                obj.transform.SetParent(owner.transform);
+                var renderer = obj.GetComponent<ExampleRenderWindow>();
+                if (renderer) {
+                    renderer.window = window;
+                    windows_.Add(window.handle, renderer);
+                }
+            }
         }
     }
 
@@ -58,10 +71,19 @@ public class ExampleCreateWindows : MonoBehaviour
 
             var width = window.width / baseWidth;
             var height = window.height / baseWidth;
-            transform.localEulerAngles = new Vector3(-90f, 0f, 0f);
-            transform.localScale = new Vector3(width, 1f, height);
-            pos += new Vector3(10 * (preWidth + width) / 2, 0f, 0f);
-            transform.position = pos;
+            if (window.owner == System.IntPtr.Zero) {
+                transform.localEulerAngles = new Vector3(-90f, 0f, 0f);
+                transform.localScale = new Vector3(width, 1f, height);
+                pos += new Vector3(10 * (preWidth + width) / 2, 0f, 0f);
+                transform.position = pos;
+            } else {
+                if (windows_.ContainsKey(window.owner)) {
+                    var owner = windows_[window.owner];
+                    transform.localPosition = new Vector3(0f, 0.1f, 0f);
+                    transform.localRotation = Quaternion.identity;
+                    transform.localScale = (new Vector3(width / owner.transform.localScale.x, 1f, height / owner.transform.localScale.z));
+                }
+            }
             preWidth = width;
         }
     }

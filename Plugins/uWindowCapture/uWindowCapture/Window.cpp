@@ -29,39 +29,27 @@ Window::~Window()
 }
 
 
-void Window::Update()
-{
-    // UpdateChildWindows();
-}
-
-
 HWND Window::GetHandle() const
 {
     return window_;
 }
 
 
-std::shared_ptr<Window> Window::GetParent()
+HWND Window::GetOwner() const
 {
-    return parent_.lock();
+    return GetWindow(window_, GW_OWNER);
 }
 
 
-void Window::SetParent(const std::shared_ptr<Window>& parent)
+bool Window::IsAltTab() const
 {
-    parent_ = parent;
+    return isAltTabWindow_;
 }
 
 
-void Window::SetAlive(bool isAlive)
+bool Window::IsDesktop() const
 {
-    isAlive_ = isAlive;
-}
-
-
-bool Window::IsAlive() const
-{
-    return isAlive_;
+    return isDesktop_;
 }
 
 
@@ -73,7 +61,43 @@ BOOL Window::IsWindow() const
 
 BOOL Window::IsVisible() const
 {
-    return ::IsWindowVisible(window_) && !::IsIconic(window_) && GetWidth() != 0 && GetHeight() != 0;
+    return ::IsWindowVisible(window_);
+}
+
+
+BOOL Window::IsEnabled() const
+{
+    return ::IsWindowEnabled(window_);
+}
+
+
+BOOL Window::IsUnicode() const
+{
+    return ::IsWindowUnicode(window_);
+}
+
+
+BOOL Window::IsZoomed() const
+{
+    return ::IsZoomed(window_);
+}
+
+
+BOOL Window::IsIconic() const
+{
+    return ::IsIconic(window_);
+}
+
+
+BOOL Window::IsHungUp() const
+{
+    return ::IsHungAppWindow(window_);
+}
+
+
+BOOL Window::IsTouchable() const
+{
+    return ::IsTouchWindow(window_, NULL);
 }
 
 
@@ -104,19 +128,13 @@ UINT Window::GetHeight() const
 
 UINT Window::GetTitleLength() const
 {
-    return static_cast<UINT>(name_.length());
+    return static_cast<UINT>(title_.length());
 }
 
 
 const std::wstring& Window::GetTitle() const
 {
-    return name_;
-}
-
-
-void Window::SetTitle(const WCHAR* title)
-{
-    name_ = title;
+    return title_;
 }
 
 
@@ -160,9 +178,21 @@ void Window::SetTexturePtr(ID3D11Texture2D* ptr)
 }
 
 
+ID3D11Texture2D* Window::GetTexturePtr() const
+{
+    return texture_;
+}
+
+
 void Window::SetCaptureMode(CaptureMode mode)
 {
     mode_ = mode;
+}
+
+
+Window::CaptureMode Window::GetCaptureMode() const
+{
+    return mode_;
 }
 
 
@@ -174,7 +204,7 @@ void Window::Capture()
         return;
     }
 
-    if (!IsVisible())
+    if (!IsVisible() || IsIconic() || GetWidth() == 0)
     {
         return;
     }
@@ -184,11 +214,14 @@ void Window::Capture()
         if (captureThread_.joinable()) {
             captureThread_.join();
         }
-        captureThread_ = std::thread([&] {
-            hasCaptureFinished_ = false;
-            CaptureInternal();
-            hasCaptureFinished_ = true;
-        });
+        if (mode_ != CaptureMode::None)
+        {
+            captureThread_ = std::thread([&] {
+                hasCaptureFinished_ = false;
+                CaptureInternal();
+                hasCaptureFinished_ = true;
+            });
+        }
     }
 }
 
@@ -221,6 +254,10 @@ void Window::CaptureInternal()
         {
             result = ::BitBlt(hDcMem, 0, 0, width_, height_, hDc, 0, 0, SRCCOPY);
             if (!result) OutputApiError("BitBlt");
+            break;
+        }
+        default:
+        {
             break;
         }
     }
@@ -269,50 +306,4 @@ void Window::Draw()
         std::lock_guard<std::mutex> lock(mutex_);
         context->UpdateSubresource(texture_, 0, nullptr, buffer_.Get(), width_ * 4, 0);
     }
-
-    /*
-    for (auto&& window : childWindows_)
-    {
-        window->Draw();
-    }
-    */
 }
-
-
-/*
-BOOL CALLBACK EnumChildWindowsCallback(HWND hWnd, LPARAM lParam)
-{
-    auto list = reinterpret_cast<std::vector<HWND>*>(lParam);
-    if (!IsWindow(hWnd)) return TRUE;
-    list->push_back(hWnd);
-    return TRUE;
-}
-
-
-void Window::AddChild(HWND hWnd)
-{
-    childWindows_.push_back(std::make_shared<Window>(hWnd));
-}
-
-
-void Window::UpdateChildWindows()
-{
-    childWindows_.clear();
-    std::vector<HWND> hWndList;
-    EnumChildWindows(window_, EnumChildWindowsCallback, reinterpret_cast<LPARAM>(&hWndList));
-    for (const auto& hWnd : hWndList)
-    {
-        const auto it = std::find_if(
-            childWindows_.begin(),
-            childWindows_.end(),
-            [hWnd](const auto& window) { window->GetHandle() == hWnd; });
-        if (it == childWindows_.end())
-        {
-            AddChild(hWnd);
-        }
-        else
-        {
-        }
-    }
-}
-*/

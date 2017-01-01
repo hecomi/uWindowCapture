@@ -1,3 +1,4 @@
+#include <cassert>
 #include <algorithm>
 #include "WindowManager.h"
 #include "Window.h"
@@ -84,54 +85,24 @@ void WindowManager::UpdateMessages()
 }
 
 
-bool IsAltTabWindow(HWND hWnd)
-{
-    if (!::IsWindowVisible(hWnd)) return false;
-
-    // Ref: https://blogs.msdn.microsoft.com/oldnewthing/20071008-00/?p=24863/
-    HWND hWndWalk = ::GetAncestor(hWnd, GA_ROOTOWNER);
-    HWND hWndTry;
-    while ((hWndTry = ::GetLastActivePopup(hWndWalk)) != hWndTry) {
-        if (::IsWindowVisible(hWndTry)) break;
-        hWndWalk = hWndTry;
-    }
-    if (hWndWalk != hWnd)
-    {
-        return false;
-    }
-
-    // Tool window
-    if (::GetWindowLong(hWnd, GWL_EXSTYLE) & WS_EX_TOOLWINDOW)
-    {
-        return false;
-    }
-
-    // Remove task tray programs
-    TITLEBARINFO titleBar;
-    titleBar.cbSize = sizeof(TITLEBARINFO);
-    if (!::GetTitleBarInfo(hWnd, &titleBar))
-    {
-        OutputApiError("GetTitleBarInfo");
-        return false;
-    }
-    if (titleBar.rgstate[0] & STATE_SYSTEM_INVISIBLE)
-    {
-        return false;
-    }
-
-    return true;
-}
-
-
 void WindowManager::UpdateWindows()
 {
     static const auto _EnumWindowsCallback = [](HWND hWnd, LPARAM lParam) -> BOOL
     {
-        if (!(IsAltTabWindow(hWnd) || ::GetWindow(hWnd, GW_HWNDFIRST) == hWnd)) return TRUE;
+        if (!::IsWindowVisible(hWnd) || !::IsWindow(hWnd))
+        {
+            return TRUE;
+        }
 
         auto window = GetWindowManager()->FindOrAddWindow(hWnd);
-        window->SetAlive(true);
+        assert(window != nullptr);
 
+        // set properties
+        window->isAlive_ = true;
+        window->owner_ = ::GetWindow(hWnd, GW_OWNER);
+        window->isAltTabWindow_ = IsAltTabWindow(hWnd);
+
+        // set title
         const auto titleLength = GetWindowTextLengthW(hWnd);
         std::vector<WCHAR> buf(titleLength + 1);
         if (!GetWindowTextW(hWnd, &buf[0], static_cast<int>(buf.size())))
@@ -140,61 +111,42 @@ void WindowManager::UpdateWindows()
         }
         else
         {
-            window->SetTitle(&buf[0]);
+            window->title_ = &buf[0];
         }
-
-        return TRUE;
-    };
-
-    static const auto _EnumChildWindowsCallback = [](HWND hWnd, LPARAM lParam) -> BOOL
-    {
-        return TRUE;
-
-        if (!::IsWindowVisible(hWnd)) return TRUE;
-
-        auto window = GetWindowManager()->FindOrAddWindow(hWnd);
-        window->SetAlive(true);
-
-        auto ptr = reinterpret_cast<std::shared_ptr<Window>*>(lParam);
-        window->SetParent(*ptr);
 
         return TRUE;
     };
 
     using EnumWindowsCallbackType = BOOL(CALLBACK *)(HWND, LPARAM);
     static const auto EnumWindowsCallback = static_cast<EnumWindowsCallbackType>(_EnumWindowsCallback);
-    static const auto EnumChildWindowsCallback = static_cast<EnumWindowsCallbackType>(_EnumChildWindowsCallback);
 
+    // mark all window as inactive
     for (const auto& pair : windows_)
     {
-        pair.second->SetAlive(false);
+        pair.second->isAlive_ = false;
     }
 
+    // add desktop
     if (auto desktop = FindOrAddWindow(GetDesktopWindow()))
     {
-        desktop->SetTitle(L"Desktop");
-        desktop->SetAlive(true);
+        desktop->title_ = L"Desktop";
+        desktop->isAlive_ = true;
+        desktop->isDesktop_ = true;
+
+        // desktop image can be get through BitBlt.
+        desktop->SetCaptureMode(Window::CaptureMode::BitBlt);
     }
 
-    if (!EnumWindows(EnumWindowsCallback, 0))
+    // add new windows and mark registered windows as alive
+    if (!::EnumWindows(EnumWindowsCallback, 0))
     {
         OutputApiError("EnumWindows");
     }
 
-    for (const auto& pair : windows_)
-    {
-        const auto hParentWnd = pair.second->GetHandle();
-        if (hParentWnd == GetDesktopWindow()) continue;
-        const auto lParam = reinterpret_cast<LPARAM>(&pair.second);
-        if (!EnumChildWindows(hParentWnd, EnumChildWindowsCallback, lParam))
-        {
-            OutputApiError("EnumChildWindows");
-        }
-    }
-
+    // remove inactive windows
     for (auto it = windows_.begin(); it != windows_.end();)
     {
-        if (!it->second->IsAlive())
+        if (!it->second->isAlive_)
         {
             Message msg;
             msg.type = MessageType::WindowRemoved;
