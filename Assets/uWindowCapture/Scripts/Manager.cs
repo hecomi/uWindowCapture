@@ -32,6 +32,20 @@ public class Manager : MonoBehaviour
     public static event Lib.DebugLogDelegate onDebugLog = msg => Debug.Log(msg);
     public static event Lib.DebugLogDelegate onDebugErr = msg => Debug.LogError(msg);
 
+    public delegate void Event(Window window);
+
+    public static Event onWindowAdded
+    {
+        get;
+        set;
+    }
+
+    public static Event onWindowRemoved
+    {
+        get;
+        set;
+    }
+
     System.IntPtr renderEventFunc_;
 
     Dictionary<System.IntPtr, Window> windows_ = new Dictionary<System.IntPtr, Window>();
@@ -101,6 +115,7 @@ public class Manager : MonoBehaviour
                 {
                     var window = new Window(message.windowHandle, message.windowId);
                     windows.Add(message.windowHandle, window);
+                    if (onWindowAdded != null) onWindowAdded(window);
                     break;
                 }
                 case MessageType.WindowRemoved:
@@ -109,6 +124,7 @@ public class Manager : MonoBehaviour
                     windows.TryGetValue(message.windowHandle, out window);
                     if (window != null) {
                         window.alive = false;
+                        if (onWindowRemoved != null) onWindowRemoved(window);
                         windows.Remove(message.windowHandle);
                     }
                     break;

@@ -27,7 +27,7 @@ std::shared_ptr<Window> WindowManager::GetWindow(int id) const
     auto it = windows_.find(id);
     if (it == windows_.end())
     {
-        Debug::Error("Window whose id is", id, " does not exist.");
+        Debug::Error("Window whose id is ", id, " does not exist.");
         return nullptr;
     }
     return it->second;
@@ -125,10 +125,9 @@ bool IsAltTabWindow(HWND hWnd)
 
 void WindowManager::UpdateWindows()
 {
-    using EnumWindowsCallbackType = BOOL(CALLBACK *)(HWND, LPARAM);
-    static const auto EnumWindowsCallback = [](HWND hWnd, LPARAM lParam) -> BOOL
+    static const auto _EnumWindowsCallback = [](HWND hWnd, LPARAM lParam) -> BOOL
     {
-        if (!IsAltTabWindow(hWnd)) return TRUE;
+        if (!(IsAltTabWindow(hWnd) || ::GetWindow(hWnd, GW_HWNDFIRST) == hWnd)) return TRUE;
 
         auto window = GetWindowManager()->FindOrAddWindow(hWnd);
         window->SetAlive(true);
@@ -147,14 +146,50 @@ void WindowManager::UpdateWindows()
         return TRUE;
     };
 
+    static const auto _EnumChildWindowsCallback = [](HWND hWnd, LPARAM lParam) -> BOOL
+    {
+        return TRUE;
+
+        if (!::IsWindowVisible(hWnd)) return TRUE;
+
+        auto window = GetWindowManager()->FindOrAddWindow(hWnd);
+        window->SetAlive(true);
+
+        auto ptr = reinterpret_cast<std::shared_ptr<Window>*>(lParam);
+        window->SetParent(*ptr);
+
+        return TRUE;
+    };
+
+    using EnumWindowsCallbackType = BOOL(CALLBACK *)(HWND, LPARAM);
+    static const auto EnumWindowsCallback = static_cast<EnumWindowsCallbackType>(_EnumWindowsCallback);
+    static const auto EnumChildWindowsCallback = static_cast<EnumWindowsCallbackType>(_EnumChildWindowsCallback);
+
     for (const auto& pair : windows_)
     {
         pair.second->SetAlive(false);
     }
 
-    if (!EnumWindows(static_cast<EnumWindowsCallbackType>(EnumWindowsCallback), 0))
+    if (auto desktop = FindOrAddWindow(GetDesktopWindow()))
+    {
+        desktop->SetTitle(L"Desktop");
+        desktop->SetAlive(true);
+    }
+
+    if (!EnumWindows(EnumWindowsCallback, 0))
     {
         OutputApiError("EnumWindows");
+    }
+
+    for (const auto& pair : windows_)
+    {
+        const auto hParentWnd = pair.second->GetHandle();
+        if (hParentWnd == GetDesktopWindow()) continue;
+        const auto lParam = reinterpret_cast<LPARAM>(&pair.second);
+        if (!EnumChildWindows(hParentWnd, EnumChildWindowsCallback, lParam))
+        {
+            OutputApiError("EnumChildWindows");
+        }
     }
 
     for (auto it = windows_.begin(); it != windows_.end();)
