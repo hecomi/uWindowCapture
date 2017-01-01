@@ -28,6 +28,11 @@ public class Window
         private set;
     }
 
+    public System.IntPtr owner
+    {
+        get { return Lib.GetWindowOwner(id); }
+    }
+
     public bool alive
     {
         get;
@@ -37,6 +42,46 @@ public class Window
     public bool visible
     {
         get { return Lib.IsWindowVisible(id); }
+    }
+
+    public bool isAltTabWindow
+    {
+        get { return Lib.IsAltTabWindow(id); }
+    }
+
+    public bool isDesktop
+    {
+        get { return Lib.IsDesktop(id); }
+    }
+
+    public bool enabled
+    {
+        get { return Lib.IsWindowEnabled(id); }
+    }
+
+    public bool unicode
+    {
+        get { return Lib.IsWindowUnicode(id); }
+    }
+
+    public bool zoomed 
+    {
+        get { return Lib.IsWindowZoomed(id); }
+    }
+
+    public bool iconic
+    {
+        get { return Lib.IsWindowIconic(id); }
+    }
+
+    public bool hungup
+    {
+        get { return Lib.IsWindowHungUp(id); }
+    }
+
+    public bool touchable
+    {
+        get { return Lib.IsWindowTouchable(id); }
     }
 
     public string title
@@ -68,6 +113,7 @@ public class Window
 
     public CaptureMode captureMode
     {
+        get { return Lib.GetWindowCaptureMode(id); }
         set { Lib.SetWindowCaptureMode(id, value); }
     }
 
