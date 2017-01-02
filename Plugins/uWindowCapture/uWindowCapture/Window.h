@@ -26,8 +26,11 @@ public:
     HWND GetHandle() const;
     HWND GetOwner() const;
     RECT GetRect() const;
+    UINT GetX() const;
+    UINT GetY() const;
     UINT GetWidth() const;
     UINT GetHeight() const;
+    UINT GetZOrder() const;
     UINT GetTitleLength() const;
     const std::wstring& GetTitle() const;
 

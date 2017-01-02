@@ -112,6 +112,20 @@ RECT Window::GetRect() const
 }
 
 
+UINT Window::GetX() const
+{
+    const auto rect = GetRect();
+    return rect.left;
+}
+
+
+UINT Window::GetY() const
+{
+    const auto rect = GetRect();
+    return rect.top;
+}
+
+
 UINT Window::GetWidth() const
 {
     const auto rect = GetRect();
@@ -123,6 +137,19 @@ UINT Window::GetHeight() const
 {
     const auto rect = GetRect();
     return rect.bottom - rect.top;
+}
+
+
+UINT Window::GetZOrder() const
+{
+    int z = 0;
+    auto hWnd = GetWindow(window_, GW_HWNDPREV);
+    while (hWnd != NULL)
+    {
+        hWnd = GetWindow(hWnd, GW_HWNDPREV);
+        ++z;
+    }
+    return z;
 }
 
 

@@ -161,6 +161,24 @@ extern "C"
         return nullptr;
     }
 
+    UNITY_INTERFACE_EXPORT UINT UNITY_INTERFACE_API UwcGetWindowX(int id)
+    {
+        if (auto window = GetWindow(id))
+        {
+            return window->GetX();
+        }
+        return 0;
+    }
+
+    UNITY_INTERFACE_EXPORT UINT UNITY_INTERFACE_API UwcGetWindowY(int id)
+    {
+        if (auto window = GetWindow(id))
+        {
+            return window->GetY();
+        }
+        return 0;
+    }
+
     UNITY_INTERFACE_EXPORT UINT UNITY_INTERFACE_API UwcGetWindowWidth(int id)
     {
         if (auto window = GetWindow(id))
@@ -175,6 +193,15 @@ extern "C"
         if (auto window = GetWindow(id))
         {
             return window->GetHeight();
+        }
+        return 0;
+    }
+
+    UNITY_INTERFACE_EXPORT UINT UNITY_INTERFACE_API UwcGetWindowZOrder(int id)
+    {
+        if (auto window = GetWindow(id))
+        {
+            return window->GetZOrder();
         }
         return 0;
     }
