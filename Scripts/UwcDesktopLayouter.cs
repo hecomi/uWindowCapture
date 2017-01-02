@@ -4,13 +4,13 @@ using System.Collections.Generic;
 namespace uWindowCapture
 {
 
-public class UwcHorizontalLayouter : UwcLayouter
+public class UwcDesktopLayouter : UwcLayouter
 {
     [SerializeField] 
     [Tooltip("meter / 1000 pixel")]
     float scale = 1f;
 
-    public override void Layout(Dictionary<System.IntPtr, UwcTexture> windows)
+    public override void Layout(Dictionary<System.IntPtr, UwcWindowObject> windows)
     {
         var pos = Vector3.zero;
         var preWidth = 0f;

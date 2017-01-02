@@ -1,0 +1,75 @@
+﻿using UnityEngine;
+using UnityEngine.Assertions;
+using System.Collections.Generic;
+
+namespace uWindowCapture
+{
+
+public class UwcWindowManager : MonoBehaviour
+{
+    [SerializeField] GameObject windowPrefab;
+
+    Dictionary<System.IntPtr, UwcWindowObject> windows_ = new Dictionary<System.IntPtr, UwcWindowObject>();
+    public Dictionary<System.IntPtr, UwcWindowObject> windows
+    {
+        get { return windows_; }
+    }
+
+    void Start()
+    {
+        UwcManager.onWindowAdded += OnWindowAdded;
+        UwcManager.onWindowRemoved += OnWindowRemoved;
+
+        foreach (var pair in UwcManager.windows) {
+            OnWindowAdded(pair.Value);
+        }
+    }
+
+    void AddWindowObject(Window window, Transform parent)
+    {
+        if (!windowPrefab) return;
+
+        var obj = Instantiate(windowPrefab, parent) as GameObject;
+        var windowObject = obj.GetComponent<UwcWindowObject>();
+        Assert.IsNotNull(windowObject, "Prefab must have UwcWindowObject component.");
+        windowObject.window = window;
+        windows_.Add(window.handle, windowObject);
+    }
+
+    void OnWindowAdded(Window window)
+    {
+        if (windows_.ContainsKey(window.owner)) {
+            var owner = windows_[window.owner];
+            Debug.Log(owner.name);
+            AddWindowObject(window, owner.transform);
+        } else if (window.isAltTabWindow) {
+            AddWindowObject(window, transform);
+        } else {
+            Debug.LogFormat("Unhandled window: {0} {1}", window.handle, window.title);
+        }
+    }
+
+    void RemoveChildWindowsRecursively(System.IntPtr handle, Transform transform)
+    {
+        for (int i = 0; i < transform.childCount; ++i) {
+            var child = transform.GetChild(i);
+            var windowObject = child.GetComponent<UwcWindowObject>();
+            if (windowObject) {
+                RemoveChildWindowsRecursively(windowObject.window.handle, child);
+            }
+        }
+        windows_.Remove(handle);
+    }
+
+    void OnWindowRemoved(System.IntPtr handle)
+    {
+        UwcWindowObject windowObject;
+        windows_.TryGetValue(handle, out windowObject);
+        if (windowObject) {
+            RemoveChildWindowsRecursively(handle, windowObject.transform);
+            Destroy(windowObject.gameObject);
+        }
+    }
+}
+
+}
