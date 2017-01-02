@@ -19,7 +19,7 @@ public abstract class UwcLayouter : MonoBehaviour
         Layout(manager_.windows);
     }
 
-    public abstract void Layout(Dictionary<System.IntPtr, UwcTexture> windows);
+    public abstract void Layout(Dictionary<System.IntPtr, UwcWindowObject> windows);
 }
 
 }

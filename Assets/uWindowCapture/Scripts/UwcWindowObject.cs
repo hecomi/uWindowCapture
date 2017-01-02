@@ -3,7 +3,7 @@
 namespace uWindowCapture
 {
 
-public class UwcTexture : MonoBehaviour
+public class UwcWindowObject : MonoBehaviour
 {
     public Window window { get; set; }
     public CaptureMode mode = CaptureMode.PrintWindow;
