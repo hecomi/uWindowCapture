@@ -49,11 +49,14 @@ public class UwcWindowManager : MonoBehaviour
         }
     }
 
-    void OnWindowRemoved(Window window)
+    void OnWindowRemoved(System.IntPtr handle)
     {
-        if (windows_.ContainsKey(window.handle)) {
-            Destroy(windows_[window.handle].gameObject);
-            windows_.Remove(window.handle);
+        if (windows_.ContainsKey(handle)) {
+            var texture = windows_[handle];
+            if (texture) {
+                Destroy(texture.gameObject);
+                windows_.Remove(handle);
+            }
         }
     }
 }

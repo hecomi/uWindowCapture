@@ -17,6 +17,7 @@ public class UwcHorizontalLayouter : UwcLayouter
 
         var enumerator = windows.GetEnumerator();
         while (enumerator.MoveNext()) {
+            if (enumerator.Current.Value == null) continue;
             var window = enumerator.Current.Value.window;
             var transform = enumerator.Current.Value.transform;
             var baseWidth = transform.GetComponent<MeshFilter>().sharedMesh.bounds.extents.x * 1000f / scale;

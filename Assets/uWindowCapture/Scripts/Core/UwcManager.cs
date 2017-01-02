@@ -32,15 +32,15 @@ public class UwcManager : MonoBehaviour
     public static event Lib.DebugLogDelegate onDebugLog = msg => Debug.Log(msg);
     public static event Lib.DebugLogDelegate onDebugErr = msg => Debug.LogError(msg);
 
-    public delegate void Event(Window window);
-
-    public static Event onWindowAdded
+    public delegate void WindowAddedHandler(Window window);
+    public static WindowAddedHandler onWindowAdded
     {
         get;
         set;
     }
 
-    public static Event onWindowRemoved
+    public delegate void WindowRemovedHandler(System.IntPtr handle);
+    public static WindowRemovedHandler onWindowRemoved
     {
         get;
         set;
@@ -108,29 +108,27 @@ public class UwcManager : MonoBehaviour
     void UpdateMessages()
     {
         var messages = Lib.GetMessages();
+
         for (int i = 0; i < messages.Length; ++i) {
             var message = messages[i];
             switch (message.type) {
-                case MessageType.WindowAdded:
-                {
+                case MessageType.WindowAdded: {
                     var window = new Window(message.windowHandle, message.windowId);
                     windows.Add(message.windowHandle, window);
                     if (onWindowAdded != null) onWindowAdded(window);
                     break;
                 }
-                case MessageType.WindowRemoved:
-                {
+                case MessageType.WindowRemoved: {
                     Window window;
                     windows.TryGetValue(message.windowHandle, out window);
                     if (window != null) {
                         window.alive = false;
-                        if (onWindowRemoved != null) onWindowRemoved(window);
+                        if (onWindowRemoved != null) onWindowRemoved(message.windowHandle);
                         windows.Remove(message.windowHandle);
                     }
                     break;
                 }
-                default:
-                {
+                default: {
                     break;
                 }
             }
