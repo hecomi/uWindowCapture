@@ -68,10 +68,16 @@ public static class Lib
     public static extern IntPtr GetWindowHandle(int id);
     [DllImport(name, EntryPoint = "UwcGetWindowOwner")]
     public static extern IntPtr GetWindowOwner(int id);
+    [DllImport(name, EntryPoint = "UwcGetWindowX")]
+    public static extern int GetWindowX(int id);
+    [DllImport(name, EntryPoint = "UwcGetWindowY")]
+    public static extern int GetWindowY(int id);
     [DllImport(name, EntryPoint = "UwcGetWindowWidth")]
     public static extern int GetWindowWidth(int id);
     [DllImport(name, EntryPoint = "UwcGetWindowHeight")]
     public static extern int GetWindowHeight(int id);
+    [DllImport(name, EntryPoint = "UwcGetWindowZOrder")]
+    public static extern int GetWindowZOrder(int id);
     [DllImport(name, EntryPoint = "UwcGetWindowTitleLength")]
     private static extern int GetWindowTitleLength(int id);
     [DllImport(name, EntryPoint = "UwcGetWindowTitle", CharSet = CharSet.Unicode)]
