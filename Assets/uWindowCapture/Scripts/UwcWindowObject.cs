@@ -7,7 +7,8 @@ namespace uWindowCapture
 public class UwcWindowObject : MonoBehaviour
 {
     public Window window { get; set; }
-    public CaptureMode mode = CaptureMode.PrintWindow;
+    public int lastUpdatedTime { get; set; }
+    public CaptureMode captureMode = CaptureMode.PrintWindow;
 
     public int skipFrame = 10;
     int updatedFrame = 0;
@@ -17,11 +18,11 @@ public class UwcWindowObject : MonoBehaviour
 
     IEnumerator Start()
     {
-        mode = window.captureMode;
+        captureMode = window.captureMode;
         material_ = GetComponent<Renderer>().material; // clone
         window.onSizeChanged += OnSizeChanged;
 
-        yield return new WaitForSeconds(0.1f + Random.value);
+        yield return new WaitForSeconds(0.1f);
         window.onCaptured += OnCaptured;
     }
 
@@ -44,7 +45,7 @@ public class UwcWindowObject : MonoBehaviour
 
     void OnWillRenderObject()
     {
-        window.captureMode = mode;
+        window.captureMode = captureMode;
 
         if (window.handle != Lib.GetForegroundWindow()) return;
         if (window.isHungup) return;

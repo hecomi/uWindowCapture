@@ -66,7 +66,7 @@ public class UwcWindowManager : MonoBehaviour
         } else if (window.isVisible && window.isEnabled) {
             AddWindowObject(window, transform);
         } else {
-            Debug.LogFormat("Unhandled window: {0} {1}", window.handle, window.title);
+            // Debug.LogFormat("Unhandled window: {0} {1}", window.handle, window.title);
         }
     }
 
