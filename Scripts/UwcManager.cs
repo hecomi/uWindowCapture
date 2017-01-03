@@ -123,7 +123,7 @@ public class UwcManager : MonoBehaviour
                     Window window;
                     windows.TryGetValue(message.windowHandle, out window);
                     if (window != null) {
-                        window.alive = false;
+                        window.isAlive = false;
                         if (onWindowRemoved != null) onWindowRemoved(message.windowHandle);
                         windows.Remove(message.windowHandle);
                     }

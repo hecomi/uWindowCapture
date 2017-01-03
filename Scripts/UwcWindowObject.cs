@@ -47,7 +47,7 @@ public class UwcWindowObject : MonoBehaviour
         window.captureMode = mode;
 
         if (window.handle != Lib.GetForegroundWindow()) return;
-        if (window.hungup) return;
+        if (window.isHungup) return;
 
         if (updatedFrame % skipFrame == 0) {
             window.shouldBeUpdated = true;

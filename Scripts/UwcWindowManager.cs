@@ -41,9 +41,7 @@ public class UwcWindowManager : MonoBehaviour
         var obj = Instantiate(windowPrefab, parent) as GameObject;
 
         var title = window.title;
-        if (!string.IsNullOrEmpty(title)) {
-            obj.name = title;
-        }
+        obj.name = !string.IsNullOrEmpty(title) ? title : ("-No Name- (" + window.handle.ToString() + ")");
 
         var windowObject = obj.GetComponent<UwcWindowObject>();
         Assert.IsNotNull(windowObject, "Prefab must have UwcWindowObject component.");
@@ -60,11 +58,12 @@ public class UwcWindowManager : MonoBehaviour
 
     void OnWindowAdded(Window window)
     {
-        if (windows_.ContainsKey(window.owner)) {
+        if (window.isDesktop) {
+            // skip
+        } else if (windows_.ContainsKey(window.owner)) {
             var owner = windows_[window.owner];
             AddWindowObject(window, owner.transform);
-        } else if (window.isDesktop) {
-        } else if (window.visible) {
+        } else if (window.isVisible && window.isEnabled) {
             AddWindowObject(window, transform);
         } else {
             Debug.LogFormat("Unhandled window: {0} {1}", window.handle, window.title);

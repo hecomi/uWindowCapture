@@ -54,23 +54,21 @@ public class UwcDesktopLayouter : UwcLayouter
             targetPos);
     }
 
-    void ScaleWindow(UwcWindowObject windowObject, Transform parent)
+    void ScaleWindow(UwcWindowObject windowObject)
     {
         var window = windowObject.window;
+
         var w = window.width / basePixel;
         var h = window.height / basePixel;
 
-        var parentScale = parent.localScale;
-        windowObject.transform.localScale = new Vector3(
-            w  / parentScale.x, 
-            h  / parentScale.y, 
-            1f / parentScale.z);
+        var parent = windowObject.transform.parent;
+        windowObject.transform.localScale = parent.worldToLocalMatrix.MultiplyVector(new Vector3(w, h, 1f));
     }
 
     public override void InitWindow(UwcWindowObject windowObject)
     {
         MoveWindow(windowObject, false);
-        ScaleWindow(windowObject, transform);
+        ScaleWindow(windowObject);
     }
 
     public override void UpdateLayout(Dictionary<System.IntPtr, UwcWindowObject> windows)
@@ -86,16 +84,7 @@ public class UwcDesktopLayouter : UwcLayouter
             }
 
             MoveWindow(windowObject, true);
-
-            /*
-            UwcWindowObject parent;
-            windows.TryGetValue(window.owner, out parent);
-            if (parent) {
-                ScaleWindow(windowObject, parent.transform);
-            } else {
-                ScaleWindow(windowObject, transform);
-            }
-            */
+            ScaleWindow(windowObject);
         }
     }
 }
