@@ -6,43 +6,96 @@ namespace uWindowCapture
 
 public class UwcDesktopLayouter : UwcLayouter
 {
+    const float BASE_PIXEL = 1000f;
+
     [SerializeField] 
     [Tooltip("meter / 1000 pixel")]
     float scale = 1f;
 
-    public override void Layout(Dictionary<System.IntPtr, UwcWindowObject> windows)
-    {
-        var pos = Vector3.zero;
-        var preWidth = 0f;
+    [SerializeField] 
+    [Tooltip("z-margin distance between windows")]
+    float zMargin = 0.1f;
 
+    [SerializeField] 
+    [Tooltip("Smoothing filter")]
+    float filter = 0.3f;
+
+    float basePixel
+    {
+        get { return BASE_PIXEL / scale; }
+    }
+
+    Vector3 offset
+    {
+        get 
+        { 
+            return new Vector3(
+                -Lib.GetScreenWidth() / (2 * basePixel),
+                0f,
+                0f);
+        }
+    }
+
+    void MoveWindow(UwcWindowObject windowObject, bool useFilter)
+    {
+        var window = windowObject.window;
+
+        var w = window.width / basePixel;
+        var h = window.height / basePixel;
+        var l = window.x / basePixel;
+        var t = window.y / basePixel;
+        var x = (l + w / 2);
+        var y = (Screen.height / basePixel) - (t + h / 2);
+        var z = window.zOrder * zMargin;
+
+        var targetPos = offset + new Vector3(x, y, z);
+        windowObject.transform.position = (useFilter ? 
+            Vector3.Slerp(windowObject.transform.position, targetPos, filter) :
+            targetPos);
+    }
+
+    void ScaleWindow(UwcWindowObject windowObject, Transform parent)
+    {
+        var window = windowObject.window;
+        var w = window.width / basePixel;
+        var h = window.height / basePixel;
+
+        var parentScale = parent.localScale;
+        windowObject.transform.localScale = new Vector3(
+            w  / parentScale.x, 
+            h  / parentScale.y, 
+            1f / parentScale.z);
+    }
+
+    public override void InitWindow(UwcWindowObject windowObject)
+    {
+        MoveWindow(windowObject, false);
+        ScaleWindow(windowObject, transform);
+    }
+
+    public override void UpdateLayout(Dictionary<System.IntPtr, UwcWindowObject> windows)
+    {
         var enumerator = windows.GetEnumerator();
         while (enumerator.MoveNext()) {
-            if (enumerator.Current.Value == null) continue;
-            var window = enumerator.Current.Value.window;
-            var transform = enumerator.Current.Value.transform;
-            var baseWidth = transform.GetComponent<MeshFilter>().sharedMesh.bounds.extents.x * 1000f / scale;
+            var windowObject = enumerator.Current.Value;
+            var window = windowObject.window;
 
             var title = window.title;
-            transform.name = !string.IsNullOrEmpty(title) ? title : "-No Name-";
-
-            var width = window.width / baseWidth;
-            var height = window.height / baseWidth;
-            var offset = new Vector3(10 * (preWidth + width) / 2, 0f, 0f);
-
-            if (window.owner == System.IntPtr.Zero) {
-                transform.localScale = new Vector3(width, 1f, height);
-                pos += offset;
-                transform.position = pos;
-            } else {
-                if (windows.ContainsKey(window.owner)) {
-                    var owner = windows[window.owner];
-                    transform.localPosition = new Vector3(0f, 0.1f, 0f);
-                    transform.localRotation = Quaternion.identity;
-                    transform.localScale = (new Vector3(width / owner.transform.localScale.x, 1f, height / owner.transform.localScale.z));
-                }
+            if (!string.IsNullOrEmpty(title)) {
+                windowObject.transform.name = title;
             }
 
-            preWidth = width;
+            MoveWindow(windowObject, true);
+
+            /*
+            UwcWindowObject parent;
+            windows.TryGetValue(window.owner, out parent);
+            if (parent) {
+                ScaleWindow(windowObject, parent.transform);
+            } else {
+                ScaleWindow(windowObject, transform);
+            }
+            */
         }
     }
 }

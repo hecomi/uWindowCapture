@@ -16,10 +16,16 @@ public abstract class UwcLayouter : MonoBehaviour
 
     void LateUpdate()
     {
-        Layout(manager_.windows);
+        UpdateLayout(manager_.windows);
     }
 
-    public abstract void Layout(Dictionary<System.IntPtr, UwcWindowObject> windows);
+    public virtual void InitWindow(UwcWindowObject window)
+    {
+    }
+
+    public virtual void UpdateLayout(Dictionary<System.IntPtr, UwcWindowObject> windows)
+    {
+    }
 }
 
 }
