@@ -331,6 +331,12 @@ void Window::CaptureInternal()
             if (!result) OutputApiError("BitBlt");
             break;
         }
+        case CaptureMode::BitBltAlpha:
+        {
+            result = ::BitBlt(hDcMem, 0, 0, width_, height_, hDc, 0, 0, SRCCOPY | CAPTUREBLT);
+            if (!result) OutputApiError("BitBlt");
+            break;
+        }
         default:
         {
             break;

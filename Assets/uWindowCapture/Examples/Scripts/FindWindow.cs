@@ -9,7 +9,7 @@ public class FindWindow : MonoBehaviour
 
     void Update()
     {
-        if (window == null || !window.alive) {
+        if (window == null || !window.isAlive) {
             window = UwcManager.Find(target);
         }
 

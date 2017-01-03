@@ -15,7 +15,7 @@ public class Window
     {
         this.handle = handle;
         this.id = id;
-        this.alive = true;
+        this.isAlive = true;
     }
 
     ~Window()
@@ -33,7 +33,7 @@ public class Window
         get { return Lib.GetWindowOwner(id); }
     }
 
-    public bool alive
+    public bool isAlive
     {
         get;
         set;
@@ -44,7 +44,12 @@ public class Window
         get { return owner != System.IntPtr.Zero; }
     }
 
-    public bool visible
+    public bool isRoot
+    {
+        get { return owner == System.IntPtr.Zero; }
+    }
+
+    public bool isVisible
     {
         get { return Lib.IsWindowVisible(id); }
     }
@@ -59,42 +64,42 @@ public class Window
         get { return Lib.IsDesktop(id); }
     }
 
-    public bool enabled
+    public bool isEnabled
     {
         get { return Lib.IsWindowEnabled(id); }
     }
 
-    public bool unicode
+    public bool isUnicode
     {
         get { return Lib.IsWindowUnicode(id); }
     }
 
-    public bool zoomed 
+    public bool isZoomed 
     {
         get { return Lib.IsWindowZoomed(id); }
     }
 
-    public bool maximized
+    public bool isMaximized
     {
-        get { return zoomed; }
+        get { return isZoomed; }
     }
 
-    public bool iconic
+    public bool isIconic
     {
         get { return Lib.IsWindowIconic(id); }
     }
 
-    public bool minimized
+    public bool isMinimized
     {
-        get { return iconic; }
+        get { return isIconic; }
     }
 
-    public bool hungup
+    public bool isHungup
     {
         get { return Lib.IsWindowHungUp(id); }
     }
 
-    public bool touchable
+    public bool isTouchable
     {
         get { return Lib.IsWindowTouchable(id); }
     }
