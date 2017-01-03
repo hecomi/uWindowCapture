@@ -2,14 +2,16 @@
 #include <algorithm>
 #include <wrl/client.h>
 #include "Window.h"
+#include "WindowManager.h"
 #include "Debug.h"
 
 using namespace Microsoft::WRL;
 
 
 
-Window::Window(HWND hwnd)
+Window::Window(HWND hwnd, int id)
     : window_(hwnd)
+    , id_(id)
 {
     if (!IsWindow())
     {
@@ -26,6 +28,41 @@ Window::~Window()
         captureThread_.join();
     }
     DeleteBitmap();
+}
+
+
+void Window::Update()
+{
+    isAlive_ = true;
+    owner_ = ::GetWindow(window_, GW_OWNER);
+    isAltTabWindow_ = IsAltTabWindow(window_);
+
+    // set title
+    const auto titleLength = GetWindowTextLengthW(window_);
+    std::vector<WCHAR> buf(titleLength + 1);
+    if (!GetWindowTextW(window_, &buf[0], static_cast<int>(buf.size())))
+    {
+        OutputApiError("GetWindowTextW");
+    }
+    else
+    {
+        title_ = &buf[0];
+    }
+
+    // message handling
+    if (!hasCaptureMessageSent_) 
+    {
+        Message message;
+        message.type = MessageType::WindowCaptured;
+        message.windowId = id_;
+        message.windowHandle = window_;
+        if (auto& manager = GetWindowManager())
+        {
+            manager->AddMessage(message);
+        }
+
+        hasCaptureMessageSent_ = true;
+    }
 }
 
 
@@ -174,6 +211,14 @@ void Window::CreateBitmapIfNeeded(HDC hDc, UINT width, UINT height)
     height_ = height;
 
     {
+        Message message;
+        message.type = MessageType::WindowSizeChanged;
+        message.windowId = id_;
+        message.windowHandle = window_;
+        GetWindowManager()->AddMessage(message);
+    }
+
+    {
         std::lock_guard<std::mutex> lock(mutex_);
         buffer_.ExpandIfNeeded(width * height * 4);
     }
@@ -241,12 +286,15 @@ void Window::Capture()
         if (captureThread_.joinable()) {
             captureThread_.join();
         }
+
         if (mode_ != CaptureMode::None)
         {
-            captureThread_ = std::thread([&] {
+            captureThread_ = std::thread([&] 
+            {
                 hasCaptureFinished_ = false;
                 CaptureInternal();
                 hasCaptureFinished_ = true;
+                hasCaptureMessageSent_ = false;
             });
         }
     }

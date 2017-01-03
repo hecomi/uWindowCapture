@@ -17,12 +17,21 @@ public class UwcWindowManager : MonoBehaviour
 
     void Start()
     {
-        UwcManager.onWindowAdded += OnWindowAdded;
-        UwcManager.onWindowRemoved += OnWindowRemoved;
-
         foreach (var pair in UwcManager.windows) {
             OnWindowAdded(pair.Value);
         }
+    }
+
+    void OnEnable()
+    {
+        UwcManager.onWindowAdded += OnWindowAdded;
+        UwcManager.onWindowRemoved += OnWindowRemoved;
+    }
+
+    void OnDisable()
+    {
+        UwcManager.onWindowAdded -= OnWindowAdded;
+        UwcManager.onWindowRemoved -= OnWindowRemoved;
     }
 
     void AddWindowObject(Window window, Transform parent)
@@ -30,9 +39,22 @@ public class UwcWindowManager : MonoBehaviour
         if (!windowPrefab) return;
 
         var obj = Instantiate(windowPrefab, parent) as GameObject;
+
+        var title = window.title;
+        if (!string.IsNullOrEmpty(title)) {
+            obj.name = title;
+        }
+
         var windowObject = obj.GetComponent<UwcWindowObject>();
         Assert.IsNotNull(windowObject, "Prefab must have UwcWindowObject component.");
         windowObject.window = window;
+
+        var layouters = GetComponents<UwcLayouter>();
+        for (int i = 0; i < layouters.Length; ++i) {
+            if (!layouters[i].enabled) continue;
+            layouters[i].InitWindow(windowObject);
+        }
+
         windows_.Add(window.handle, windowObject);
     }
 
@@ -40,9 +62,9 @@ public class UwcWindowManager : MonoBehaviour
     {
         if (windows_.ContainsKey(window.owner)) {
             var owner = windows_[window.owner];
-            Debug.Log(owner.name);
             AddWindowObject(window, owner.transform);
-        } else if (window.isAltTabWindow) {
+        } else if (window.isDesktop) {
+        } else if (window.visible) {
             AddWindowObject(window, transform);
         } else {
             Debug.LogFormat("Unhandled window: {0} {1}", window.handle, window.title);

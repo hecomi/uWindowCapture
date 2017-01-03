@@ -12,7 +12,7 @@ public class UwcHorizontalLayouter : UwcLayouter
     [Tooltip("meter / 1000 pixel")]
     float scale = 1f;
 
-    public override void Layout(Dictionary<System.IntPtr, UwcWindowObject> windows)
+    public override void UpdateLayout(Dictionary<System.IntPtr, UwcWindowObject> windows)
     {
         var pos = Vector3.zero;
         var preWidth = 0f;
@@ -24,13 +24,15 @@ public class UwcHorizontalLayouter : UwcLayouter
             var baseWidth = transform.GetComponent<MeshFilter>().sharedMesh.bounds.extents.x * WINDOW_BASE_PIXEL / scale;
 
             var title = window.title;
-            transform.name = !string.IsNullOrEmpty(title) ? title : "-No Name-";
+            if (!string.IsNullOrEmpty(title)) {
+                transform.name = title;
+            }
 
             var width = window.width / baseWidth;
             var height = window.height / baseWidth;
             var offset = new Vector3(10 * (preWidth + width) / 2, 0f, 0f);
 
-            if (window.owner == System.IntPtr.Zero) {
+            if (window.isChild) {
                 transform.localScale = new Vector3(width, 1f, height);
                 pos += offset;
                 transform.position = pos;

@@ -346,4 +346,19 @@ extern "C"
         }
         return false;
     }
+
+    UNITY_INTERFACE_EXPORT HWND UNITY_INTERFACE_API UwcGetForegroundWindow()
+    {
+        return GetForegroundWindow();
+    }
+
+    UNITY_INTERFACE_EXPORT UINT UNITY_INTERFACE_API UwcGetScreenWidth()
+    {
+        return GetSystemMetrics(SM_CXVIRTUALSCREEN);
+    }
+
+    UNITY_INTERFACE_EXPORT UINT UNITY_INTERFACE_API UwcGetScreenHeight()
+    {
+        return GetSystemMetrics(SM_CYVIRTUALSCREEN);
+    }
 }

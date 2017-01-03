@@ -1,4 +1,3 @@
-#include <cassert>
 #include <algorithm>
 #include "WindowManager.h"
 #include "Window.h"
@@ -48,7 +47,7 @@ std::shared_ptr<Window> WindowManager::FindOrAddWindow(HWND hWnd)
     }
 
     const auto id = currentId_++;
-    auto window = std::make_shared<Window>(hWnd);
+    auto window = std::make_shared<Window>(hWnd, id);
     windows_.emplace(id, window);
 
     Message msg;
@@ -63,24 +62,28 @@ std::shared_ptr<Window> WindowManager::FindOrAddWindow(HWND hWnd)
 
 UINT WindowManager::GetMessageCount() const
 {
+    std::lock_guard<std::mutex> lock(messageMutex_);
     return static_cast<UINT>(messages_.size());
 }
 
 
 const Message* WindowManager::GetMessages() const
 {
+    std::lock_guard<std::mutex> lock(messageMutex_);
     return &messages_[0];
 }
 
 
-void WindowManager::AddMessage(Message message)
+void WindowManager::AddMessage(const Message& message)
 {
+    std::lock_guard<std::mutex> lock(messageMutex_);
     messages_.push_back(message);
 }
 
 
 void WindowManager::UpdateMessages()
 {
+    std::lock_guard<std::mutex> lock(messageMutex_);
     messages_.clear();
 }
 
@@ -94,24 +97,9 @@ void WindowManager::UpdateWindows()
             return TRUE;
         }
 
-        auto window = GetWindowManager()->FindOrAddWindow(hWnd);
-        assert(window != nullptr);
-
-        // set properties
-        window->isAlive_ = true;
-        window->owner_ = ::GetWindow(hWnd, GW_OWNER);
-        window->isAltTabWindow_ = IsAltTabWindow(hWnd);
-
-        // set title
-        const auto titleLength = GetWindowTextLengthW(hWnd);
-        std::vector<WCHAR> buf(titleLength + 1);
-        if (!GetWindowTextW(hWnd, &buf[0], static_cast<int>(buf.size())))
+        if (auto window = GetWindowManager()->FindOrAddWindow(hWnd))
         {
-            OutputApiError("GetWindowTextW");
-        }
-        else
-        {
-            window->title_ = &buf[0];
+            window->Update();
         }
 
         return TRUE;

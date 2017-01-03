@@ -92,6 +92,7 @@ public class UwcManager : MonoBehaviour
             while (enumerator.MoveNext()) {
                 var window = enumerator.Current.Value;
                 if (window.shouldBeUpdated) {
+                    window.shouldBeUpdated = false;
                     window.UpdateTextureIfNeeded();
                     GL.IssuePluginEvent(renderEventFunc_, window.id);
                 }
@@ -125,6 +126,22 @@ public class UwcManager : MonoBehaviour
                         window.alive = false;
                         if (onWindowRemoved != null) onWindowRemoved(message.windowHandle);
                         windows.Remove(message.windowHandle);
+                    }
+                    break;
+                }
+                case MessageType.WindowCaptured: {
+                    Window window;
+                    windows.TryGetValue(message.windowHandle, out window);
+                    if (window != null && window.onCaptured != null) {
+                        window.onCaptured();
+                    }
+                    break;
+                }
+                case MessageType.WindowSizeChanged: {
+                    Window window;
+                    windows.TryGetValue(message.windowHandle, out window);
+                    if (window != null && window.onSizeChanged != null) {
+                        window.onSizeChanged();
                     }
                     break;
                 }

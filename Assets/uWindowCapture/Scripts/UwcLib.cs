@@ -26,6 +26,8 @@ public enum MessageType
     None = -1,
     WindowAdded = 0,
     WindowRemoved = 1,
+    WindowCaptured = 2,
+    WindowSizeChanged = 3,
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -110,6 +112,12 @@ public static class Lib
     public static extern bool IsWindowHungUp(int id);
     [DllImport(name, EntryPoint = "UwcIsWindowTouchable")]
     public static extern bool IsWindowTouchable(int id);
+    [DllImport(name, EntryPoint = "UwcGetForegroundWindow")]
+    public static extern System.IntPtr GetForegroundWindow();
+    [DllImport(name, EntryPoint = "UwcGetScreenWidth")]
+    public static extern int GetScreenWidth();
+    [DllImport(name, EntryPoint = "UwcGetScreenHeight")]
+    public static extern int GetScreenHeight();
 
     public static Message[] GetMessages()
     {

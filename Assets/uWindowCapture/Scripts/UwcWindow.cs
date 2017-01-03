@@ -39,6 +39,11 @@ public class Window
         set;
     }
 
+    public bool isChild
+    {
+        get { return owner != System.IntPtr.Zero; }
+    }
+
     public bool visible
     {
         get { return Lib.IsWindowVisible(id); }
@@ -69,9 +74,19 @@ public class Window
         get { return Lib.IsWindowZoomed(id); }
     }
 
+    public bool maximized
+    {
+        get { return zoomed; }
+    }
+
     public bool iconic
     {
         get { return Lib.IsWindowIconic(id); }
+    }
+
+    public bool minimized
+    {
+        get { return iconic; }
     }
 
     public bool hungup
@@ -130,6 +145,20 @@ public class Window
     {
         get { return Lib.GetWindowCaptureMode(id); }
         set { Lib.SetWindowCaptureMode(id, value); }
+    }
+
+    public delegate void Event();
+
+    public Event onCaptured
+    {
+        get;
+        set;
+    }
+
+    public Event onSizeChanged
+    {
+        get;
+        set;
     }
 
     public void UpdateTextureIfNeeded()

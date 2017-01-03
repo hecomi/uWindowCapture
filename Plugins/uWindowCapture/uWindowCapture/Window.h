@@ -20,8 +20,9 @@ public:
         BitBlt = 1,
     };
 
-    explicit Window(HWND hwnd);
+    Window(HWND hwnd, int id);
     ~Window();
+    void Update();
 
     HWND GetHandle() const;
     HWND GetOwner() const;
@@ -64,7 +65,9 @@ private:
     std::thread captureThread_;
     std::mutex mutex_;
     bool hasCaptureFinished_ = true;
+    bool hasCaptureMessageSent_ = true;
 
+    int id_ = -1;
     HWND window_ = nullptr;
     HWND owner_ = nullptr;
     Buffer<BYTE> buffer_;
