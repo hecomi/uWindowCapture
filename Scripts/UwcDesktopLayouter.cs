@@ -17,6 +17,14 @@ public class UwcDesktopLayouter : UwcLayouter
     float zMargin = 0.1f;
 
     [SerializeField] 
+    [Tooltip("Use position filter")]
+    bool usePositionFilter = true;
+
+    [SerializeField] 
+    [Tooltip("Use scale filter")]
+    bool useScaleFilter = false;
+
+    [SerializeField] 
     [Tooltip("Smoothing filter")]
     float filter = 0.3f;
 
@@ -27,13 +35,7 @@ public class UwcDesktopLayouter : UwcLayouter
 
     Vector3 offset
     {
-        get 
-        { 
-            return new Vector3(
-                -Lib.GetScreenWidth() / (2 * basePixel),
-                0f,
-                0f);
-        }
+        get { return new Vector3(-Lib.GetScreenWidth() / (2 * basePixel), 0f, 0f); }
     }
 
     void MoveWindow(UwcWindowObject windowObject, bool useFilter)
@@ -54,7 +56,7 @@ public class UwcDesktopLayouter : UwcLayouter
             targetPos);
     }
 
-    void ScaleWindow(UwcWindowObject windowObject)
+    void ScaleWindow(UwcWindowObject windowObject, bool useFilter)
     {
         var window = windowObject.window;
 
@@ -62,13 +64,23 @@ public class UwcDesktopLayouter : UwcLayouter
         var h = window.height / basePixel;
 
         var parent = windowObject.transform.parent;
-        windowObject.transform.localScale = parent.worldToLocalMatrix.MultiplyVector(new Vector3(w, h, 1f));
+        var targetWorldScale = new Vector3(w, h, 1f);
+        var targetLocalScale = parent.worldToLocalMatrix.MultiplyVector(targetWorldScale);
+
+        windowObject.transform.localScale = (useFilter ?
+            Vector3.Slerp(windowObject.transform.localScale, targetLocalScale, filter) :
+            targetLocalScale);
     }
 
     public override void InitWindow(UwcWindowObject windowObject)
     {
         MoveWindow(windowObject, false);
-        ScaleWindow(windowObject);
+
+        if (useScaleFilter) {
+            windowObject.transform.localScale = Vector3.zero;
+        } else {
+            ScaleWindow(windowObject, false);
+        }
     }
 
     public override void UpdateLayout(Dictionary<System.IntPtr, UwcWindowObject> windows)
@@ -83,8 +95,8 @@ public class UwcDesktopLayouter : UwcLayouter
                 windowObject.transform.name = title;
             }
 
-            MoveWindow(windowObject, true);
-            ScaleWindow(windowObject);
+            MoveWindow(windowObject, usePositionFilter);
+            ScaleWindow(windowObject, useScaleFilter);
         }
     }
 }
