@@ -246,13 +246,13 @@ void Window::DeleteBitmap()
 void Window::SetTexturePtr(ID3D11Texture2D* ptr)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    texture_ = ptr;
+    unityTexture_ = ptr;
 }
 
 
 ID3D11Texture2D* Window::GetTexturePtr() const
 {
-    return texture_;
+    return unityTexture_;
 }
 
 
@@ -372,11 +372,11 @@ void Window::CaptureInternal()
 
 void Window::Draw()
 {
-    if (texture_ == nullptr) return;
+    if (unityTexture_ == nullptr) return;
 
     // Check given texture size.
     D3D11_TEXTURE2D_DESC desc;
-    texture_->GetDesc(&desc);
+    unityTexture_->GetDesc(&desc);
     if (desc.Width != width_ || desc.Height != height_) return;
 
     auto device = GetDevice();
@@ -385,6 +385,6 @@ void Window::Draw()
 
     {
         std::lock_guard<std::mutex> lock(mutex_);
-        context->UpdateSubresource(texture_, 0, nullptr, buffer_.Get(), width_ * 4, 0);
+        context->UpdateSubresource(unityTexture_, 0, nullptr, buffer_.Get(), width_ * 4, 0);
     }
 }

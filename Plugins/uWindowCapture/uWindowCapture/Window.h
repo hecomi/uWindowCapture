@@ -75,7 +75,7 @@ private:
     HBITMAP bitmap_ = nullptr;
     UINT width_ = 0;
     UINT height_ = 0;
-    ID3D11Texture2D* texture_ = nullptr;
+    ID3D11Texture2D* unityTexture_ = nullptr;
     std::wstring title_;
 
     bool isAlive_ = true;

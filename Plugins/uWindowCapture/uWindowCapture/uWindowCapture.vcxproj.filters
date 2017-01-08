@@ -19,6 +19,7 @@
     <ClInclude Include="Debug.h" />
     <ClInclude Include="Window.h" />
     <ClInclude Include="WindowManager.h" />
+    <ClInclude Include="Device.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp" />
@@ -26,5 +27,6 @@
     <ClCompile Include="Debug.cpp" />
     <ClCompile Include="Window.cpp" />
     <ClCompile Include="WindowManager.cpp" />
+    <ClCompile Include="Device.cpp" />
   </ItemGroup>
 </Project>
