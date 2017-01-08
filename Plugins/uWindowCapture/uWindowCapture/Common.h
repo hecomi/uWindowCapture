@@ -1,6 +1,8 @@
 #pragma once
 
 #include <memory>
+#include <functional>
+#include <chrono>
 
 
 // Unity interface and ID3D11Device getters
@@ -100,3 +102,30 @@ private:
     UINT size_ = 0;
 };
 
+
+// Releaser
+class ScopedReleaser
+{
+public:
+    using ReleaseFuncType = std::function<void()>;
+    ScopedReleaser(ReleaseFuncType&& func) : func_(func) {}
+    ~ScopedReleaser() { func_(); }
+
+private:
+    const ReleaseFuncType func_;
+};
+
+
+// Timer
+class ScopedTimer
+{
+public:
+    using microseconds = std::chrono::microseconds;
+    using TimerFuncType = std::function<void(microseconds)>;
+    ScopedTimer(TimerFuncType&& func);
+    ~ScopedTimer();
+
+private:
+    const TimerFuncType func_;
+    const std::chrono::time_point<std::chrono::steady_clock> start_;
+};
