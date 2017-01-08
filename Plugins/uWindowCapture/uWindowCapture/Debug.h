@@ -1,7 +1,21 @@
 #pragma once
+
+#include <time.h>
 #include <fstream>
 #include <sstream>
+#include <mutex>
+
+#include "Common.h"
 #include "IUnityInterface.h"
+
+
+// Debug flag
+#define UWC_DEBUG_ON
+
+
+// Error handling
+void OutputApiError(const char* apiName);
+
 
 // Logging
 class Debug
@@ -43,32 +57,36 @@ private:
     {
         switch (mode_)
         {
-        case Mode::None:
-        {
-            return;
-        }
-        case Mode::File:
-        {
-            if (fs_.good() && ss_.good())
+            case Mode::None:
             {
-                const auto str = ss_.str();
-                fs_ << str << std::endl;
-                fs_.flush();
+                return;
             }
-            break;
-        }
-        case Mode::UnityLog:
-        {
-            if (ss_.good())
+            case Mode::File:
             {
-                switch (level)
+                if (fs_.good() && ss_.good())
                 {
-                case Level::Log: logFunc_(ss_.str().c_str()); break;
-                case Level::Error: errFunc_(ss_.str().c_str()); break;
+                    const auto str = ss_.str();
+                    fs_ << str << std::endl;
+                    fs_.flush();
                 }
+                break;
             }
-            break;
-        }
+            case Mode::UnityLog:
+            {
+                if (ss_.good())
+                {
+                    switch (level)
+                    {
+                        case Level::Log   : 
+                            if (logFunc_) logFunc_(ss_.str().c_str()); 
+                            break;
+                        case Level::Error : 
+                            if (errFunc_) errFunc_(ss_.str().c_str()); 
+                            break;
+                    }
+                }
+                break;
+            }
         }
         ss_.str("");
         ss_.clear(std::stringstream::goodbit);
@@ -86,29 +104,62 @@ private:
         Flush(level);
     }
 
+    static void OutputTime()
+    {
+        auto t = time(nullptr);
+        tm tm;
+        localtime_s(&tm, &t);
+        char buf[64];
+        strftime(buf, 64, "%F %T", &tm);
+        Output("[");;
+        Output(buf);
+        Output("]");
+    }
+
 public:
     template <class Arg, class... RestArgs>
     static void Log(Arg&& arg, RestArgs&&... restArgs)
     {
-        Output("[uDD::Log] ");
+        std::lock_guard<std::mutex> lock(mutex_);
+        Output("[uWC::Log]");
+        OutputTime();
+        Output(" ");
         _Log(Level::Log, std::forward<Arg>(arg), std::forward<RestArgs>(restArgs)...);
     }
 
     template <class Arg, class... RestArgs>
     static void Error(Arg&& arg, RestArgs&&... restArgs)
     {
-        Output("[uDD::Err] ");
+        std::lock_guard<std::mutex> lock(mutex_);
+        Output("[uWC::Err]");
+        OutputTime();
+        Output(" ");
         _Log(Level::Error, std::forward<Arg>(arg), std::forward<RestArgs>(restArgs)...);
     }
 
 private:
+    static bool isInitialized_;
     static Mode mode_;
     static std::ofstream fs_;
     static std::ostringstream ss_;
     static DebugLogFuncPtr logFunc_;
     static DebugLogFuncPtr errFunc_;
+    static std::mutex mutex_;
 };
 
 
-// Error handling
-void OutputApiError(const char* apiName);
+#ifdef UWC_DEBUG_ON
+#define UWC_FUNCTION_SCOPE_TIMER \
+    ScopedTimer _timer_##__COUNTER__([](std::chrono::microseconds us) \
+    { \
+        Debug::Log(__FUNCTION__, "@", __FILE__, ":", __LINE__, " => ", us.count(), " [us]"); \
+    });
+#define UWC_SCOPE_TIMER(Name) \
+    ScopedTimer _timer_##__COUNTER__([](std::chrono::microseconds us) \
+    { \
+        Debug::Log(#Name, " => ", us.count(), " [us]"); \
+    });
+#else
+#define UWC_FUNCTION_SCOPE_TIMER
+#define UWC_SCOPE_TIMER(Name)
+#endif
