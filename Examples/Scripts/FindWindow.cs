@@ -11,12 +11,13 @@ public class FindWindow : MonoBehaviour
     {
         if (window == null || !window.isAlive) {
             window = UwcManager.Find(target);
+            Debug.Log(window);
         }
 
         if (window != null) {
             GetComponent<Renderer>().material.mainTexture = window.texture;
-            window.shouldBeUpdated = true;
             window.captureMode = mode;
+            window.Capture();
         }
     }
 }

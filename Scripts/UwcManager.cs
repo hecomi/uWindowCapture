@@ -87,16 +87,7 @@ public class UwcManager : MonoBehaviour
     {
         for (;;) {
             yield return new WaitForEndOfFrame();
-
-            var enumerator = windows.GetEnumerator();
-            while (enumerator.MoveNext()) {
-                var window = enumerator.Current.Value;
-                if (window.shouldBeUpdated) {
-                    window.shouldBeUpdated = false;
-                    window.UpdateTextureIfNeeded();
-                    GL.IssuePluginEvent(renderEventFunc_, window.id);
-                }
-            }
+            GL.IssuePluginEvent(renderEventFunc_, 0);
         }
     }
 
