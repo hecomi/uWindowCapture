@@ -426,7 +426,11 @@ void Window::Render()
     {
         ComPtr<ID3D11DeviceContext> context;
         GetUnityDevice()->GetImmediateContext(&context);
-        context->CopyResource(unityTexture_, sharedTexture_.Get());
+
+        ComPtr<ID3D11Texture2D> tmpTexture;
+        GetUnityDevice()->OpenSharedResource(sharedTexture_.Get(), __uuidof(ID3D11Texture2D), &tmpTexture);
+
+        context->CopyResource(unityTexture_, tmpTexture.Get());
         //context->UpdateSubresource(unityTexture_, 0, nullptr, buffer_.Get(), width_ * 4, 0);
     }
 }

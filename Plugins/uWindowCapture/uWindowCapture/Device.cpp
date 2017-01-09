@@ -79,7 +79,7 @@ Microsoft::WRL::ComPtr<ID3D11Texture2D> IsolatedD3D11Device::CreateSharedTexture
     desc.SampleDesc.Quality = 0;
     desc.Usage              = D3D11_USAGE_DYNAMIC;
     desc.BindFlags          = 0;
-    desc.CPUAccessFlags     = D3D11_CPU_ACCESS_READ | D3D11_CPU_ACCESS_WRITE;
+    desc.CPUAccessFlags     = D3D11_CPU_ACCESS_WRITE;
     desc.MiscFlags          = D3D11_RESOURCE_MISC_SHARED;
 
     if (FAILED(device_->CreateTexture2D(&desc, nullptr, &texture)))
