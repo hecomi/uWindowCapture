@@ -71,6 +71,8 @@ public static class Lib
     public static extern IntPtr GetWindowHandle(int id);
     [DllImport(name, EntryPoint = "UwcGetWindowOwner")]
     public static extern IntPtr GetWindowOwner(int id);
+    [DllImport(name, EntryPoint = "UwcCaptureWindow")]
+    public static extern void CaptureWindow(int id);
     [DllImport(name, EntryPoint = "UwcGetWindowX")]
     public static extern int GetWindowX(int id);
     [DllImport(name, EntryPoint = "UwcGetWindowY")]
@@ -123,10 +125,13 @@ public static class Lib
     public static Message[] GetMessages()
     {
         var count = GetMessageCount();
+        var messages = new Message[count];
+
+        if (count == 0) return messages;
+
         var ptr = GetMessages_Internal();
         var size = Marshal.SizeOf(typeof(Message));
 
-        var messages = new Message[count];
         for (int i = 0; i < count; ++i) {
             var data = new System.IntPtr(ptr.ToInt64() + (size * i));
             messages[i] = (Message)Marshal.PtrToStructure(data, typeof(Message));
@@ -139,7 +144,11 @@ public static class Lib
     {
         var len = GetWindowTitleLength(id);
         var ptr = GetWindowTitle_Internal(id);
-        return Marshal.PtrToStringUni(ptr, len);
+        if (ptr != System.IntPtr.Zero) {
+            return Marshal.PtrToStringUni(ptr, len);
+        } else {
+            return "";
+        }
     }
 }
 

@@ -3,9 +3,6 @@
 #include <Windows.h>
 #include <wrl/client.h>
 #include <memory>
-#include <algorithm>
-#include <vector>
-#include <map>
 
 #include "IUnityInterface.h"
 #include "IUnityGraphics.h"
@@ -113,11 +110,8 @@ extern "C"
 
     void UNITY_INTERFACE_API OnRenderEvent(int id)
     {
-        if (auto window = GetWindow(id))
-        {
-            window->Capture();
-            window->Draw();
-        }
+        if (!CheckManager()) return;
+        g_manager->Render();
     }
 
     UNITY_INTERFACE_EXPORT UnityRenderingEvent UNITY_INTERFACE_API UwcGetRenderEventFunc()
@@ -150,6 +144,14 @@ extern "C"
             return window->GetHandle();
         }
         return nullptr;
+    }
+
+    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcCaptureWindow(int id)
+    {
+        if (auto window = GetWindow(id))
+        {
+            window->Capture();
+        }
     }
 
     UNITY_INTERFACE_EXPORT HWND UNITY_INTERFACE_API UwcGetWindowOwner(int id)
@@ -215,12 +217,13 @@ extern "C"
         return 0;
     }
 
-    UNITY_INTERFACE_EXPORT const WCHAR* UNITY_INTERFACE_API UwcGetWindowTitle(int id, WCHAR* dst, int len)
+    UNITY_INTERFACE_EXPORT const WCHAR* UNITY_INTERFACE_API UwcGetWindowTitle(int id)
     {
         if (auto window = GetWindow(id))
         {
             return window->GetTitle().c_str();
         }
+        return nullptr;
     }
 
     UNITY_INTERFACE_EXPORT ID3D11Texture2D* UNITY_INTERFACE_API UwcGetWindowTexturePtr(int id)

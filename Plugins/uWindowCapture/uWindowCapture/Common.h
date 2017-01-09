@@ -10,7 +10,7 @@ struct IUnityInterfaces;
 IUnityInterfaces* GetUnity();
 
 struct ID3D11Device;
-ID3D11Device* GetDevice();
+ID3D11Device* GetUnityDevice();
 
 
 // Window manager getter

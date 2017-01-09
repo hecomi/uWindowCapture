@@ -2,6 +2,7 @@
 
 #include <Windows.h>
 #include <d3d11.h>
+#include <wrl/client.h>
 #include <string>
 #include <thread>
 #include <mutex>
@@ -43,7 +44,8 @@ public:
     CaptureMode GetCaptureMode() const;
 
     void Capture();
-    void Draw();
+    void Render();
+    void UploadTextureToGpu(const std::shared_ptr<class IsolatedD3D11Device>& device);
 
     bool IsAltTab() const;
     bool IsDesktop() const;
@@ -64,8 +66,9 @@ private:
     CaptureMode mode_ = CaptureMode::PrintWindow;
 
     std::thread captureThread_;
-    std::mutex mutex_;
+    Microsoft::WRL::ComPtr<ID3D11Texture2D> sharedTexture_;
     bool hasCaptureFinished_ = true;
+    bool hasNewTextureUploaded_ = false;
     bool hasCaptureMessageSent_ = true;
 
     int id_ = -1;
@@ -77,6 +80,7 @@ private:
     UINT height_ = 0;
     ID3D11Texture2D* unityTexture_ = nullptr;
     std::wstring title_;
+    std::mutex mutex_;
 
     bool isAlive_ = true;
     bool isDesktop_ = false;

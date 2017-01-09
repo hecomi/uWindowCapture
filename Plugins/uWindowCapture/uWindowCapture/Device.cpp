@@ -65,42 +65,28 @@ ComPtr<ID3D11Device> IsolatedD3D11Device::GetDevice()
 }
 
 
-Microsoft::WRL::ComPtr<ID3D11Texture2D> IsolatedD3D11Device::GetCachedSharedTexture(UINT width, UINT height)
+Microsoft::WRL::ComPtr<ID3D11Texture2D> IsolatedD3D11Device::CreateSharedTexture(UINT width, UINT height)
 {
-    if (cachedSharedTexture_ && width == width_ && height_ == height)
-    {
-        return cachedSharedTexture_;
-    }
-
-    cachedSharedTexture_ = nullptr;
-    width_ = 0;
-    height_ = 0;
-
     ComPtr<ID3D11Texture2D> texture;
-    {
-        D3D11_TEXTURE2D_DESC desc;
-        desc.Width              = width;
-        desc.Height             = height;
-        desc.MipLevels          = 1;
-        desc.ArraySize          = 1;
-        desc.Format             = DXGI_FORMAT_B8G8R8A8_UNORM;
-        desc.SampleDesc.Count   = 1;
-        desc.SampleDesc.Quality = 0;
-        desc.Usage              = D3D11_USAGE_STAGING;
-        desc.BindFlags          = 0;
-        desc.CPUAccessFlags     = D3D11_CPU_ACCESS_READ;
-        desc.MiscFlags          = D3D11_RESOURCE_MISC_SHARED;
 
-        if (FAILED(device_->CreateTexture2D(&desc, nullptr, &texture)))
-        {
-            Debug::Error("Cursor::UpdateTexture() => GetDevice()->CreateTexture2D() failed.");
-            return nullptr;
-        }
+    D3D11_TEXTURE2D_DESC desc;
+    desc.Width              = width;
+    desc.Height             = height;
+    desc.MipLevels          = 1;
+    desc.ArraySize          = 1;
+    desc.Format             = DXGI_FORMAT_B8G8R8A8_UNORM;
+    desc.SampleDesc.Count   = 1;
+    desc.SampleDesc.Quality = 0;
+    desc.Usage              = D3D11_USAGE_DYNAMIC;
+    desc.BindFlags          = 0;
+    desc.CPUAccessFlags     = D3D11_CPU_ACCESS_READ | D3D11_CPU_ACCESS_WRITE;
+    desc.MiscFlags          = D3D11_RESOURCE_MISC_SHARED;
+
+    if (FAILED(device_->CreateTexture2D(&desc, nullptr, &texture)))
+    {
+        Debug::Error(__FUNCTION__, " => GetDevice()->CreateTexture2D() failed.");
+        return nullptr;
     }
 
-    cachedSharedTexture_ = texture;
-    width_ = width;
-    height_ = height;
-
-    return cachedSharedTexture_;
+    return texture;
 }

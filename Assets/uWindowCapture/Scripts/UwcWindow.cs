@@ -134,12 +134,6 @@ public class Window
         get { return Lib.GetWindowZOrder(id); }
     }
 
-    public bool shouldBeUpdated
-    {
-        get;
-        set;
-    }
-
     public Texture2D texture
     {
         get; 
@@ -166,6 +160,12 @@ public class Window
         set;
     }
 
+    public void Capture()
+    {
+        UpdateTextureIfNeeded();
+        Lib.CaptureWindow(id);
+    }
+
     public void UpdateTextureIfNeeded()
     {
         var w = width;
@@ -175,6 +175,7 @@ public class Window
             if (texture) Object.DestroyImmediate(texture);
             texture = new Texture2D(w, h, TextureFormat.BGRA32, false);
             Lib.SetWindowTexturePtr(id, texture.GetNativeTexturePtr());
+            Debug.Log(texture.GetNativeTexturePtr());
         }
     }
 }

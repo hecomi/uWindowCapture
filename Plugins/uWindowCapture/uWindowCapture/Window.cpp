@@ -1,8 +1,8 @@
 #include <vector>
 #include <algorithm>
-#include <wrl/client.h>
 #include "Window.h"
 #include "WindowManager.h"
+#include "Device.h"
 #include "Debug.h"
 
 using namespace Microsoft::WRL;
@@ -28,6 +28,8 @@ Window::~Window()
         captureThread_.join();
     }
     DeleteBitmap();
+
+    sharedTexture_.Reset();
 }
 
 
@@ -40,28 +42,20 @@ void Window::Update()
     // set title
     const auto titleLength = GetWindowTextLengthW(window_);
     std::vector<WCHAR> buf(titleLength + 1);
-    if (!GetWindowTextW(window_, &buf[0], static_cast<int>(buf.size())))
-    {
-        OutputApiError("GetWindowTextW");
-    }
-    else
+    if (GetWindowTextW(window_, &buf[0], static_cast<int>(buf.size())))
     {
         title_ = &buf[0];
     }
 
-    // message handling
-    if (!hasCaptureMessageSent_) 
+    // Send message
+    if (!hasCaptureFinished_)
     {
         Message message;
         message.type = MessageType::WindowCaptured;
         message.windowId = id_;
         message.windowHandle = window_;
-        if (auto& manager = GetWindowManager())
-        {
-            manager->AddMessage(message);
-        }
-
-        hasCaptureMessageSent_ = true;
+        GetWindowManager()->AddMessage(message);
+        hasCaptureFinished_ = true;
     }
 }
 
@@ -293,8 +287,11 @@ void Window::Capture()
             {
                 hasCaptureFinished_ = false;
                 CaptureInternal();
+                if (auto& manager = GetWindowManager())
+                {
+                    manager->AddToUploadList(id_);
+                }
                 hasCaptureFinished_ = true;
-                hasCaptureMessageSent_ = false;
             });
         }
     }
@@ -345,8 +342,6 @@ void Window::CaptureInternal()
 
     if (result)
     {
-        std::lock_guard<std::mutex> lock(mutex_);
-
         BITMAPINFOHEADER bmi {};
         bmi.biWidth       = static_cast<LONG>(width);
         bmi.biHeight      = -static_cast<LONG>(height);
@@ -356,9 +351,12 @@ void Window::CaptureInternal()
         bmi.biCompression = BI_RGB;
         bmi.biSizeImage   = 0;
 
-        if (!::GetDIBits(hDcMem, bitmap_, 0, height, buffer_.Get(), reinterpret_cast<BITMAPINFO*>(&bmi), DIB_RGB_COLORS))
         {
-            OutputApiError("GetDIBits");
+            std::lock_guard<std::mutex> lock(mutex_);
+            if (!::GetDIBits(hDcMem, bitmap_, 0, height, buffer_.Get(), reinterpret_cast<BITMAPINFO*>(&bmi), DIB_RGB_COLORS))
+            {
+                OutputApiError("GetDIBits");
+            }
         }
     }
 
@@ -369,22 +367,66 @@ void Window::CaptureInternal()
 }
 
 
-
-void Window::Draw()
+void Window::UploadTextureToGpu(const std::shared_ptr<IsolatedD3D11Device>& device)
 {
-    if (unityTexture_ == nullptr) return;
+    bool shouldUpdateTexture = true;
 
-    // Check given texture size.
-    D3D11_TEXTURE2D_DESC desc;
-    unityTexture_->GetDesc(&desc);
-    if (desc.Width != width_ || desc.Height != height_) return;
+    if (sharedTexture_)
+    {
+        D3D11_TEXTURE2D_DESC desc;
+        sharedTexture_->GetDesc(&desc);
+        if (desc.Width == width_ && desc.Height == height_)
+        {
+            shouldUpdateTexture = false;
+        }
+    }
 
-    auto device = GetDevice();
-    ComPtr<ID3D11DeviceContext> context;
-    device->GetImmediateContext(&context);
+    if (shouldUpdateTexture)
+    {
+        sharedTexture_ = device->CreateSharedTexture(width_, height_);
+        if (!sharedTexture_)
+        {
+            Debug::Error("Window::UploadTextureToGpu() => Shared texture is null.");
+            return;
+        }
+    }
 
     {
         std::lock_guard<std::mutex> lock(mutex_);
-        context->UpdateSubresource(unityTexture_, 0, nullptr, buffer_.Get(), width_ * 4, 0);
+        ComPtr<ID3D11DeviceContext> context;
+        device->GetDevice()->GetImmediateContext(&context);
+        context->UpdateSubresource(sharedTexture_.Get(), 0, nullptr, buffer_.Get(), width_ * 4, 0);
+    }
+
+    hasNewTextureUploaded_ = true;
+}
+
+
+void Window::Render()
+{
+    //if (!hasNewTextureUploaded_) return;
+    //hasNewTextureUploaded_ = false;
+
+    if (!unityTexture_ || !sharedTexture_) return;
+
+    // Check given texture size.
+    D3D11_TEXTURE2D_DESC dstDesc;
+    unityTexture_->GetDesc(&dstDesc);
+
+    D3D11_TEXTURE2D_DESC srcDesc;
+    sharedTexture_->GetDesc(&srcDesc);
+
+    if (dstDesc.Width != srcDesc.Width || 
+        dstDesc.Height != srcDesc.Height)
+    {
+         return;
+    }
+
+    // Copy shared texture to given texture
+    {
+        ComPtr<ID3D11DeviceContext> context;
+        GetUnityDevice()->GetImmediateContext(&context);
+        context->CopyResource(unityTexture_, sharedTexture_.Get());
+        //context->UpdateSubresource(unityTexture_, 0, nullptr, buffer_.Get(), width_ * 4, 0);
     }
 }

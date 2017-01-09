@@ -17,7 +17,7 @@ IUnityInterfaces* GetUnity()
 }
 
 
-ID3D11Device* GetDevice()
+ID3D11Device* GetUnityDevice()
 {
     return GetUnity()->Get<IUnityGraphicsD3D11>()->GetDevice();
 }

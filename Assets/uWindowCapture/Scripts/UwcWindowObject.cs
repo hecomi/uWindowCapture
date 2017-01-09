@@ -39,7 +39,7 @@ public class UwcWindowObject : MonoBehaviour
         }
 
         if (!hasCaptured_) {
-            window.shouldBeUpdated = true;
+            window.Capture();
         }
     }
 
@@ -51,7 +51,7 @@ public class UwcWindowObject : MonoBehaviour
         if (window.isHungup) return;
 
         if (updatedFrame % skipFrame == 0) {
-            window.shouldBeUpdated = true;
+            window.Capture();
         }
 
         updatedFrame++;
@@ -65,7 +65,7 @@ public class UwcWindowObject : MonoBehaviour
 
     void OnSizeChanged()
     {
-        window.shouldBeUpdated = true;
+        window.Capture();
     }
 }
 

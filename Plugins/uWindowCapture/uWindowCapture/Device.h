@@ -16,11 +16,10 @@ public:
 
     HRESULT Create(const Microsoft::WRL::ComPtr<IDXGIAdapter>& adapter);
     Microsoft::WRL::ComPtr<ID3D11Device> GetDevice();
-    Microsoft::WRL::ComPtr<ID3D11Texture2D> GetCachedSharedTexture(UINT width, UINT height);
+    Microsoft::WRL::ComPtr<ID3D11Texture2D> CreateSharedTexture(UINT width, UINT height);
 
 private:
     Microsoft::WRL::ComPtr<ID3D11Device> device_;
-    Microsoft::WRL::ComPtr<ID3D11Texture2D> cachedSharedTexture_;
     UINT width_ = 0;
     UINT height_ = 0;
 };
