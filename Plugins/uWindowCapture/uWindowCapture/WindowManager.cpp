@@ -168,20 +168,7 @@ void WindowManager::UpdateWindows()
 
 void WindowManager::InitializeDevice()
 {
-    ComPtr<IDXGIDevice1> dxgiDevice;
-    if (FAILED(GetUnityDevice()->QueryInterface(IID_PPV_ARGS(&dxgiDevice)))){
-        Debug::Error("WindowManager::InitializeDevice() => QueryInterface from IUnityGraphicsD3D11 to IDXGIDevice1 failed.");
-        return;
-    }
-
-    ComPtr<IDXGIAdapter> dxgiAdapter;
-    if (FAILED(dxgiDevice->GetAdapter(&dxgiAdapter))) {
-        Debug::Error("WindowManager::InitializeDevice() => QueryInterface from IDXGIDevice1 to IDXGIAdapter failed.");
-        return;
-    }
-
     uploadDevice_ = std::make_shared<IsolatedD3D11Device>();
-    uploadDevice_->Create(dxgiAdapter);
 }
 
 

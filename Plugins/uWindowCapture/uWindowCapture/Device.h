@@ -14,11 +14,13 @@ public:
     IsolatedD3D11Device();
     ~IsolatedD3D11Device();
 
-    HRESULT Create(const Microsoft::WRL::ComPtr<IDXGIAdapter>& adapter);
     Microsoft::WRL::ComPtr<ID3D11Device> GetDevice();
-    Microsoft::WRL::ComPtr<ID3D11Texture2D> CreateSharedTexture(UINT width, UINT height);
+    Microsoft::WRL::ComPtr<ID3D11Texture2D> CreateCompatibleSharedTexture(
+        const Microsoft::WRL::ComPtr<ID3D11Texture2D>& texture);
 
 private:
+    void Create();
+
     Microsoft::WRL::ComPtr<ID3D11Device> device_;
     UINT width_ = 0;
     UINT height_ = 0;

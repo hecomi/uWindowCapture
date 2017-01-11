@@ -369,6 +369,8 @@ void Window::CaptureInternal()
 
 void Window::UploadTextureToGpu(const std::shared_ptr<IsolatedD3D11Device>& device)
 {
+    if (!unityTexture_) return;
+
     bool shouldUpdateTexture = true;
 
     if (sharedTexture_)
@@ -383,7 +385,7 @@ void Window::UploadTextureToGpu(const std::shared_ptr<IsolatedD3D11Device>& devi
 
     if (shouldUpdateTexture)
     {
-        sharedTexture_ = device->CreateSharedTexture(width_, height_);
+        sharedTexture_ = device->CreateCompatibleSharedTexture(unityTexture_);
         if (!sharedTexture_)
         {
             Debug::Error("Window::UploadTextureToGpu() => Shared texture is null.");
@@ -396,6 +398,7 @@ void Window::UploadTextureToGpu(const std::shared_ptr<IsolatedD3D11Device>& devi
         ComPtr<ID3D11DeviceContext> context;
         device->GetDevice()->GetImmediateContext(&context);
         context->UpdateSubresource(sharedTexture_.Get(), 0, nullptr, buffer_.Get(), width_ * 4, 0);
+        context->Flush();
     }
 
     hasNewTextureUploaded_ = true;
@@ -404,8 +407,8 @@ void Window::UploadTextureToGpu(const std::shared_ptr<IsolatedD3D11Device>& devi
 
 void Window::Render()
 {
-    //if (!hasNewTextureUploaded_) return;
-    //hasNewTextureUploaded_ = false;
+    if (!hasNewTextureUploaded_) return;
+    hasNewTextureUploaded_ = false;
 
     if (!unityTexture_ || !sharedTexture_) return;
 
@@ -426,11 +429,7 @@ void Window::Render()
     {
         ComPtr<ID3D11DeviceContext> context;
         GetUnityDevice()->GetImmediateContext(&context);
-
-        ComPtr<ID3D11Texture2D> tmpTexture;
-        GetUnityDevice()->OpenSharedResource(sharedTexture_.Get(), __uuidof(ID3D11Texture2D), &tmpTexture);
-
-        context->CopyResource(unityTexture_, tmpTexture.Get());
+        context->CopyResource(unityTexture_, sharedTexture_.Get());
         //context->UpdateSubresource(unityTexture_, 0, nullptr, buffer_.Get(), width_ * 4, 0);
     }
 }
