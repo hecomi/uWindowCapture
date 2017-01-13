@@ -27,9 +27,11 @@ Window::~Window()
     {
         captureThread_.join();
     }
-    DeleteBitmap();
 
-    sharedTexture_.Reset();
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        DeleteBitmap();
+    }
 }
 
 
@@ -50,11 +52,7 @@ void Window::Update()
     // Send message
     if (!hasCaptureFinished_)
     {
-        Message message;
-        message.type = MessageType::WindowCaptured;
-        message.windowId = id_;
-        message.windowHandle = window_;
-        GetWindowManager()->AddMessage(message);
+        GetWindowManager()->AddMessage({ MessageType::WindowCaptured, id_, window_ });
         hasCaptureFinished_ = true;
     }
 }
@@ -174,11 +172,14 @@ UINT Window::GetHeight() const
 UINT Window::GetZOrder() const
 {
     int z = 0;
-    auto hWnd = GetWindow(window_, GW_HWNDPREV);
+    auto hWnd = ::GetWindow(window_, GW_HWNDPREV);
     while (hWnd != NULL)
     {
-        hWnd = GetWindow(hWnd, GW_HWNDPREV);
-        ++z;
+        hWnd = ::GetWindow(hWnd, GW_HWNDPREV);
+        if (::IsWindowVisible(hWnd) && ::IsWindow(hWnd))
+        {
+            ++z;
+        }
     }
     return z;
 }
@@ -201,28 +202,18 @@ void Window::CreateBitmapIfNeeded(HDC hDc, UINT width, UINT height)
     if (width_ == width && height_ == height) return;
     if (width == 0 || height == 0) return;
 
+    std::lock_guard<std::mutex> lock(mutex_);
+
     width_ = width;
     height_ = height;
 
     {
-        Message message;
-        message.type = MessageType::WindowSizeChanged;
-        message.windowId = id_;
-        message.windowHandle = window_;
-        GetWindowManager()->AddMessage(message);
-    }
-
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
+        DeleteBitmap();
+        bitmap_ = ::CreateCompatibleBitmap(hDc, width, height);
         buffer_.ExpandIfNeeded(width * height * 4);
     }
 
-    DeleteBitmap();
-
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        bitmap_ = ::CreateCompatibleBitmap(hDc, width, height);
-    }
+    GetWindowManager()->AddMessage({ MessageType::WindowSizeChanged, id_, window_ });
 }
 
 
@@ -230,7 +221,6 @@ void Window::DeleteBitmap()
 {
     if (bitmap_ != nullptr) 
     {
-        std::lock_guard<std::mutex> lock(mutex_);
         if (!::DeleteObject(bitmap_)) OutputApiError("DeleteObject");
         bitmap_ = nullptr;
     }
@@ -239,7 +229,6 @@ void Window::DeleteBitmap()
 
 void Window::SetTexturePtr(ID3D11Texture2D* ptr)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
     unityTexture_ = ptr;
 }
 
@@ -287,11 +276,12 @@ void Window::Capture()
             {
                 hasCaptureFinished_ = false;
                 CaptureInternal();
+                hasCaptureFinished_ = true;
+
                 if (auto& manager = GetWindowManager())
                 {
                     manager->AddToUploadList(id_);
                 }
-                hasCaptureFinished_ = true;
             });
         }
     }
@@ -308,6 +298,7 @@ void Window::CaptureInternal()
     {
         if (!::ReleaseDC(window_, hDc)) OutputApiError("ReleaseDC");
     }
+
     CreateBitmapIfNeeded(hDc, width, height);
 
     auto hDcMem = ::CreateCompatibleDC(hDc);
@@ -369,7 +360,9 @@ void Window::CaptureInternal()
 
 void Window::UploadTextureToGpu(const std::shared_ptr<IsolatedD3D11Device>& device)
 {
-    if (!unityTexture_) return;
+    if (!unityTexture_.load()) return;
+
+    std::lock_guard<std::mutex> lock(mutex_);
 
     bool shouldUpdateTexture = true;
 
@@ -385,20 +378,52 @@ void Window::UploadTextureToGpu(const std::shared_ptr<IsolatedD3D11Device>& devi
 
     if (shouldUpdateTexture)
     {
-        sharedTexture_ = device->CreateCompatibleSharedTexture(unityTexture_);
+        sharedTexture_ = device->CreateCompatibleSharedTexture(unityTexture_.load());
+
         if (!sharedTexture_)
         {
-            Debug::Error("Window::UploadTextureToGpu() => Shared texture is null.");
+            Debug::Error(__FUNCTION__, " => Shared texture is null.");
+            return;
+        }
+
+        ComPtr<IDXGIResource> dxgiResource;
+        sharedTexture_.As(&dxgiResource);
+        if (FAILED(dxgiResource->GetSharedHandle(&sharedHandle_)))
+        {
+            Debug::Error(__FUNCTION__, " => GetSharedHandle() failed.");
             return;
         }
     }
 
     {
-        std::lock_guard<std::mutex> lock(mutex_);
         ComPtr<ID3D11DeviceContext> context;
         device->GetDevice()->GetImmediateContext(&context);
+
+        /*
+        ComPtr<IDXGIKeyedMutex> keyedMutex;
+        if (FAILED(sharedTexture_->QueryInterface(__uuidof(IDXGIKeyedMutex), &keyedMutex)))
+        {
+            Debug::Error(__FUNCTION__, " => could not get IDXGIKeyedMutex.");
+            return;
+        }
+
+        if (FAILED(keyedMutex->AcquireSync(0, 16)))
+        {
+            Debug::Error(__FUNCTION__, " => AcquireSync() failed.");
+            return;
+        }
+        */
+
         context->UpdateSubresource(sharedTexture_.Get(), 0, nullptr, buffer_.Get(), width_ * 4, 0);
         context->Flush();
+
+        /*
+        if (FAILED(keyedMutex->ReleaseSync(0)))
+        {
+            Debug::Error(__FUNCTION__, " => ReleaseSync() failed.");
+            return;
+        }
+        */
     }
 
     hasNewTextureUploaded_ = true;
@@ -410,26 +435,43 @@ void Window::Render()
     if (!hasNewTextureUploaded_) return;
     hasNewTextureUploaded_ = false;
 
-    if (!unityTexture_ || !sharedTexture_) return;
-
-    // Check given texture size.
-    D3D11_TEXTURE2D_DESC dstDesc;
-    unityTexture_->GetDesc(&dstDesc);
-
-    D3D11_TEXTURE2D_DESC srcDesc;
-    sharedTexture_->GetDesc(&srcDesc);
-
-    if (dstDesc.Width != srcDesc.Width || 
-        dstDesc.Height != srcDesc.Height)
+    if (unityTexture_.load() && sharedTexture_ && sharedHandle_)
     {
-         return;
-    }
+        std::lock_guard<std::mutex> lock(mutex_);
 
-    // Copy shared texture to given texture
-    {
         ComPtr<ID3D11DeviceContext> context;
         GetUnityDevice()->GetImmediateContext(&context);
-        context->CopyResource(unityTexture_, sharedTexture_.Get());
-        //context->UpdateSubresource(unityTexture_, 0, nullptr, buffer_.Get(), width_ * 4, 0);
+
+        ComPtr<ID3D11Texture2D> texture;
+        if (FAILED(GetUnityDevice()->OpenSharedResource(sharedHandle_, __uuidof(ID3D11Texture2D), &texture)))
+        {
+            Debug::Error(__FUNCTION__, " => OpenSharedResource() failed.");
+            return;
+        }
+
+        /*
+        ComPtr<IDXGIKeyedMutex> keyedMutex;
+        if (FAILED(texture->QueryInterface(__uuidof(IDXGIKeyedMutex), &keyedMutex)))
+        {
+            Debug::Error(__FUNCTION__, " => Could not get IDXGIKeyedMutex.");
+            return;
+        }
+
+        if (FAILED(keyedMutex->AcquireSync(0, 16)))
+        {
+            Debug::Error(__FUNCTION__, " => AcquireSync() failed.");
+            return;
+        }
+        */
+
+        context->CopyResource(unityTexture_.load(), texture.Get());
+
+        /*
+        if (FAILED(keyedMutex->ReleaseSync(0)))
+        {
+            Debug::Error(__FUNCTION__, " => ReleaseSync() failed.");
+            return;
+        }
+        */
     }
 }

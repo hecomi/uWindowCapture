@@ -6,7 +6,8 @@
 #include <string>
 #include <thread>
 #include <mutex>
-#include <list>
+#include <atomic>
+
 #include "Common.h"
 
 
@@ -67,18 +68,19 @@ private:
 
     std::thread captureThread_;
     Microsoft::WRL::ComPtr<ID3D11Texture2D> sharedTexture_;
-    bool hasCaptureFinished_ = true;
-    bool hasNewTextureUploaded_ = false;
-    bool hasCaptureMessageSent_ = true;
+    HANDLE sharedHandle_;
+    std::atomic<bool> hasCaptureFinished_ = true;
+    std::atomic<bool> hasNewTextureUploaded_ = false;
+    std::atomic<bool> hasCaptureMessageSent_ = true;
 
     int id_ = -1;
     HWND window_ = nullptr;
     HWND owner_ = nullptr;
     Buffer<BYTE> buffer_;
     HBITMAP bitmap_ = nullptr;
-    UINT width_ = 0;
-    UINT height_ = 0;
-    ID3D11Texture2D* unityTexture_ = nullptr;
+    std::atomic<UINT> width_ = 0;
+    std::atomic<UINT> height_ = 0;
+    std::atomic<ID3D11Texture2D*> unityTexture_ = nullptr;
     std::wstring title_;
     std::mutex mutex_;
 

@@ -83,6 +83,7 @@ ComPtr<ID3D11Texture2D> IsolatedD3D11Device::CreateCompatibleSharedTexture(const
     texture->GetDesc(&srcDesc);
 
     D3D11_TEXTURE2D_DESC desc = srcDesc;
+    //desc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
     desc.MiscFlags = D3D11_RESOURCE_MISC_SHARED;
     if (FAILED(device_->CreateTexture2D(&desc, nullptr, &sharedTexture)))
     {

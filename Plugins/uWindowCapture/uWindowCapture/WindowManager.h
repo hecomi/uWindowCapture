@@ -5,6 +5,7 @@
 #include <vector>
 #include <memory>
 #include <mutex>
+#include <atomic>
 
 class Window;
 
@@ -22,6 +23,8 @@ struct Message
     MessageType type = MessageType::None;
     int windowId = -1;
     HWND windowHandle = nullptr;
+    Message(MessageType type, int id, HWND handle)
+        : type(type), windowId(id), windowHandle(handle) {}
 };
 
 class WindowManager
@@ -33,7 +36,7 @@ public:
     void AddToUploadList(int id);
     void Render();
     std::shared_ptr<Window> GetWindow(int id) const;
-    void AddMessage(const Message& message);
+    void AddMessage(Message message);
     UINT GetMessageCount() const;
     const Message* GetMessages() const;
 
@@ -57,6 +60,6 @@ private:
     std::thread uploadThread_;
     std::mutex mutex_;
     std::vector<int> uploadList_;
-    bool isUploadThreadRunning_ = false;
+    std::atomic<bool> isUploadThreadRunning_ = false;
 };
 

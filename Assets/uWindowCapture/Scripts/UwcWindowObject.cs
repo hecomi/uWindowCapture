@@ -11,6 +11,8 @@ public class UwcWindowObject : MonoBehaviour
     public CaptureMode captureMode = CaptureMode.PrintWindow;
 
     public int skipFrame = 10;
+
+    static int updateFrameBase = 0;
     int updatedFrame = 0;
 
     Material material_;
@@ -21,6 +23,8 @@ public class UwcWindowObject : MonoBehaviour
         captureMode = window.captureMode;
         material_ = GetComponent<Renderer>().material; // clone
         window.onSizeChanged += OnSizeChanged;
+
+        updatedFrame = updateFrameBase++;
 
         yield return new WaitForSeconds(0.1f);
         window.onCaptured += OnCaptured;
@@ -47,7 +51,7 @@ public class UwcWindowObject : MonoBehaviour
     {
         window.captureMode = captureMode;
 
-        if (window.handle != Lib.GetForegroundWindow()) return;
+        // if (window.handle != Lib.GetForegroundWindow()) return;
         if (window.isHungup) return;
 
         if (updatedFrame % skipFrame == 0) {

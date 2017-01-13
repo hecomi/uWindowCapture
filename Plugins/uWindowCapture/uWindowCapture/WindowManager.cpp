@@ -62,12 +62,7 @@ std::shared_ptr<Window> WindowManager::FindOrAddWindow(HWND hWnd)
     const auto id = currentId_++;
     auto window = std::make_shared<Window>(hWnd, id);
     windows_.emplace(id, window);
-
-    Message msg;
-    msg.type = MessageType::WindowAdded;
-    msg.windowId = id;
-    msg.windowHandle = hWnd;
-    AddMessage(msg);
+    AddMessage({ MessageType::WindowAdded, id, hWnd });
 
     return window;
 }
@@ -88,7 +83,7 @@ const Message* WindowManager::GetMessages() const
 }
 
 
-void WindowManager::AddMessage(const Message& message)
+void WindowManager::AddMessage(Message message)
 {
     std::lock_guard<std::mutex> lock(messageMutex_);
     messages_.push_back(message);
@@ -150,12 +145,7 @@ void WindowManager::UpdateWindows()
     {
         if (!it->second->isAlive_)
         {
-            Message msg;
-            msg.type = MessageType::WindowRemoved;
-            msg.windowId = it->first;
-            msg.windowHandle = it->second->GetHandle();
-            AddMessage(msg);
-
+            AddMessage({ MessageType::WindowRemoved, it->first, it->second->GetHandle() });
             windows_.erase(it++);
         }
         else
@@ -239,6 +229,7 @@ void WindowManager::UploadTextures()
     {
         if (auto window = GetWindow(id))
         {
+            if (!window->IsWindow() || !window->IsVisible()) continue;
             window->UploadTextureToGpu(uploadDevice_);
         }
     }
@@ -249,6 +240,8 @@ void WindowManager::UploadTextures()
 
 void WindowManager::RenderWindows()
 {
+    std::lock_guard<std::mutex> lock(mutex_);
+
     for (auto&& pair : windows_)
     {
         pair.second->Render();
