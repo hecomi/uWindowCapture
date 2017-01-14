@@ -4,6 +4,7 @@
 #include "Window.h"
 #include "Thread.h"
 #include "Message.h"
+#include "Util.h"
 #include "Debug.h"
 
 using namespace Microsoft::WRL;
@@ -95,13 +96,15 @@ void WindowManager::UpdateWindows()
 
     {
         std::lock_guard<std::mutex> lock(windowsHandleListMutex_);
-        for (HWND hWnd : windowHandleList_[0])
+        for (const auto& info : windowHandleList_[0])
         {
-            if (!::IsWindow(hWnd)) continue;
+            if (!::IsWindow(info.hWnd)) continue;
 
-            if (auto window = WindowManager::Get().FindOrAddWindow(hWnd))
+            if (auto window = WindowManager::Get().FindOrAddWindow(info.hWnd))
             {
                 window->isAlive_ = true;
+                window->rect_ = info.rect;
+                window->zOrder_ = ::GetZOrder(info.hWnd);
             }
         }
     }
@@ -133,8 +136,13 @@ void WindowManager::UpdateWindowHandleList()
             return TRUE;
         }
 
+        WindowInfo info;
+        info.hWnd = hWnd;
+        ::GetWindowRect(hWnd, &info.rect);
+        info.zOrder = ::GetZOrder(hWnd);
+
         auto thiz = reinterpret_cast<WindowManager*>(lParam);
-        thiz->windowHandleList_[1].push_back(hWnd);
+        thiz->windowHandleList_[1].push_back(info);
 
         return TRUE;
     };

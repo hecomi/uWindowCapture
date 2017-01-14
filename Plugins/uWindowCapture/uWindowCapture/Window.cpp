@@ -6,6 +6,7 @@
 #include "Unity.h"
 #include "Uploader.h"
 #include "Message.h"
+#include "Util.h"
 #include "Debug.h"
 
 using namespace Microsoft::WRL;
@@ -15,39 +16,6 @@ using namespace Microsoft::WRL;
 namespace
 {
 
-bool IsAltTabWindow(HWND hWnd)
-{
-    if (!::IsWindowVisible(hWnd)) return false;
-
-    // Ref: https://blogs.msdn.microsoft.com/oldnewthing/20071008-00/?p=24863/
-    HWND hWndWalk = ::GetAncestor(hWnd, GA_ROOTOWNER);
-    HWND hWndTry;
-    while ((hWndTry = ::GetLastActivePopup(hWndWalk)) != hWndTry) {
-        if (::IsWindowVisible(hWndTry)) break;
-        hWndWalk = hWndTry;
-    }
-    if (hWndWalk != hWnd)
-    {
-        return false;
-    }
-
-    // Tool window
-    if (::GetWindowLong(hWnd, GWL_EXSTYLE) & WS_EX_TOOLWINDOW)
-    {
-        return false;
-    }
-
-    // Remove task tray programs
-    TITLEBARINFO titleBar;
-    titleBar.cbSize = sizeof(TITLEBARINFO);
-    ::GetTitleBarInfo(hWnd, &titleBar);
-    if (titleBar.rgstate[0] & STATE_SYSTEM_INVISIBLE)
-    {
-        return false;
-    }
-
-    return true;
-}
 
 }
 
@@ -57,12 +25,7 @@ Window::Window(HWND hWnd, int id)
     : window_(hWnd)
     , id_(id)
 {
-    if (!IsWindow())
-    {
-        Debug::Error("Given window handle is not a window.");
-        window_ = nullptr;
-    }
-    else if (hWnd == ::GetDesktopWindow())
+    if (hWnd == ::GetDesktopWindow())
     {
         title_ = L"Desktop";
         isDesktop_ = true;
@@ -159,58 +122,33 @@ BOOL Window::IsTouchable() const
 }
 
 
-RECT Window::GetRect() const
-{
-    RECT rect;
-    if (!::GetWindowRect(window_, &rect))
-    {
-        OutputApiError("GetWindowRect");
-    }
-    return std::move(rect);
-}
-
-
 UINT Window::GetX() const
 {
-    const auto rect = GetRect();
-    return rect.left;
+    return rect_.left;
 }
 
 
 UINT Window::GetY() const
 {
-    const auto rect = GetRect();
-    return rect.top;
+    return rect_.top;
 }
 
 
 UINT Window::GetWidth() const
 {
-    const auto rect = GetRect();
-    return rect.right - rect.left;
+    return rect_.right - rect_.left;
 }
 
 
 UINT Window::GetHeight() const
 {
-    const auto rect = GetRect();
-    return rect.bottom - rect.top;
+    return rect_.bottom - rect_.top;
 }
 
 
 UINT Window::GetZOrder() const
 {
-    int z = 0;
-    auto hWnd = ::GetWindow(window_, GW_HWNDPREV);
-    while (hWnd != NULL)
-    {
-        hWnd = ::GetWindow(hWnd, GW_HWNDPREV);
-        if (::IsWindowVisible(hWnd) && ::IsWindow(hWnd))
-        {
-            ++z;
-        }
-    }
-    return z;
+    return zOrder_;
 }
 
 
@@ -241,13 +179,13 @@ const std::wstring& Window::GetTitle() const
 
 void Window::CreateBitmapIfNeeded(HDC hDc, UINT width, UINT height)
 {
-    if (width_ == width && height_ == height) return;
+    if (bufferWidth_ == width && bufferHeight_ == height) return;
     if (width == 0 || height == 0) return;
 
     std::lock_guard<std::mutex> lock(mutex_);
 
-    width_ = width;
-    height_ = height;
+    bufferWidth_ = width;
+    bufferHeight_ = height;
 
     {
         DeleteBitmap();
@@ -330,11 +268,18 @@ void Window::CaptureInternal()
 
     auto hDc = ::GetDC(window_);
 
-    const auto width = GetWidth();
-    const auto height = GetHeight();
+    RECT rect;
+    if (FAILED(::GetWindowRect(window_, &rect)))
+    {
+        OutputApiError("GetWindowRect");
+    }
+    const auto width = rect.right - rect.left;
+    const auto height = rect.bottom - rect.top;
+
     if (width == 0 || height == 0)
     {
         if (!::ReleaseDC(window_, hDc)) OutputApiError("ReleaseDC");
+        return;
     }
 
     CreateBitmapIfNeeded(hDc, width, height);
@@ -353,13 +298,13 @@ void Window::CaptureInternal()
         }
         case CaptureMode::BitBlt:
         {
-            result = ::BitBlt(hDcMem, 0, 0, width_, height_, hDc, 0, 0, SRCCOPY);
+            result = ::BitBlt(hDcMem, 0, 0, bufferWidth_, bufferHeight_, hDc, 0, 0, SRCCOPY);
             if (!result) OutputApiError("BitBlt");
             break;
         }
         case CaptureMode::BitBltAlpha:
         {
-            result = ::BitBlt(hDcMem, 0, 0, width_, height_, hDc, 0, 0, SRCCOPY | CAPTUREBLT);
+            result = ::BitBlt(hDcMem, 0, 0, bufferWidth_, bufferHeight_, hDc, 0, 0, SRCCOPY | CAPTUREBLT);
             if (!result) OutputApiError("BitBlt");
             break;
         }
@@ -415,7 +360,7 @@ void Window::UploadTextureToGpu()
     {
         D3D11_TEXTURE2D_DESC desc;
         sharedTexture_->GetDesc(&desc);
-        if (desc.Width == width_ && desc.Height == height_)
+        if (desc.Width == bufferWidth_ && desc.Height == bufferHeight_)
         {
             shouldUpdateTexture = false;
         }
@@ -443,7 +388,7 @@ void Window::UploadTextureToGpu()
     {
         ComPtr<ID3D11DeviceContext> context;
         Uploader::Get().GetDevice()->GetImmediateContext(&context);
-        context->UpdateSubresource(sharedTexture_.Get(), 0, nullptr, buffer_.Get(), width_ * 4, 0);
+        context->UpdateSubresource(sharedTexture_.Get(), 0, nullptr, buffer_.Get(), bufferWidth_ * 4, 0);
         context->Flush();
     }
 

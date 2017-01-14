@@ -28,7 +28,7 @@ public:
 
     HWND GetHandle() const;
     HWND GetOwner() const;
-    RECT GetRect() const;
+
     UINT GetX() const;
     UINT GetY() const;
     UINT GetWidth() const;
@@ -70,22 +70,28 @@ private:
 
     CaptureMode mode_ = CaptureMode::PrintWindow;
 
+    const int id_ = -1;
+    const HWND window_ = nullptr;
+    HWND owner_ = nullptr;
+    std::wstring title_;
+
+    RECT rect_;
+    UINT zOrder_ = 0;
+
     ThreadLoop captureThreadLoop_;
+    std::mutex mutex_;
+
     Microsoft::WRL::ComPtr<ID3D11Texture2D> sharedTexture_;
     HANDLE sharedHandle_;
-    std::atomic<bool> isCaptureRequested_ = false;
-    std::atomic<bool> hasNewTextureUploaded_ = false;
+    std::atomic<ID3D11Texture2D*> unityTexture_ = nullptr;
 
-    int id_ = -1;
-    HWND window_ = nullptr;
-    HWND owner_ = nullptr;
     Buffer<BYTE> buffer_;
     HBITMAP bitmap_ = nullptr;
-    std::atomic<UINT> width_ = 0;
-    std::atomic<UINT> height_ = 0;
-    std::atomic<ID3D11Texture2D*> unityTexture_ = nullptr;
-    std::wstring title_;
-    std::mutex mutex_;
+    std::atomic<UINT> bufferWidth_ = 0;
+    std::atomic<UINT> bufferHeight_ = 0;
+
+    std::atomic<bool> isCaptureRequested_ = false;
+    std::atomic<bool> hasNewTextureUploaded_ = false;
 
     std::atomic<bool> isAlive_ = true;
     std::atomic<bool> isDesktop_ = false;

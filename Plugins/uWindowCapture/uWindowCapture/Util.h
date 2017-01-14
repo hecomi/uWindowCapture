@@ -2,6 +2,12 @@
 
 #include <functional>
 #include <chrono>
+#include <Windows.h>
+
+
+// Window utilities
+bool IsAltTabWindow(HWND hWnd);
+UINT GetZOrder(HWND hWnd);
 
 
 // Releaser
