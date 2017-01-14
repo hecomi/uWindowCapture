@@ -88,6 +88,8 @@ public static class Lib
     public static extern int GetWindowHeight(int id);
     [DllImport(name, EntryPoint = "UwcGetWindowZOrder")]
     public static extern int GetWindowZOrder(int id);
+    [DllImport(name, EntryPoint = "UwcUpdateWindowTitle")]
+    private static extern void UpdateWindowTitle(int id);
     [DllImport(name, EntryPoint = "UwcGetWindowTitleLength")]
     private static extern int GetWindowTitleLength(int id);
     [DllImport(name, EntryPoint = "UwcGetWindowTitle", CharSet = CharSet.Unicode)]
@@ -149,6 +151,7 @@ public static class Lib
 
     public static string GetWindowTitle(int id)
     {
+        UpdateWindowTitle(id);
         var len = GetWindowTitleLength(id);
         var ptr = GetWindowTitle_Internal(id);
         if (ptr != IntPtr.Zero) {
