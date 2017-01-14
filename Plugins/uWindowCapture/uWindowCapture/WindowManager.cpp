@@ -175,19 +175,9 @@ void WindowManager::StartUploadThread()
 
     uploadThread_ = std::thread([this] 
     {
-        using namespace std::chrono;
-
         while (isUploadThreadRunning_)
         {
-            ScopedTimer timer([] (microseconds us)
-            {
-                const auto waitTime = microseconds(1000000 / 60) - us;
-                if (waitTime > microseconds::zero())
-                {
-                    std::this_thread::sleep_for(waitTime);
-                }
-            });
-
+            ScopedThreadSleeper(std::chrono::microseconds(1000000 / 60));
             UploadTextures();
         }
     });
@@ -206,7 +196,7 @@ void WindowManager::StopUploadThread()
 }
 
 
-void WindowManager::AddToUploadList(int id)
+void WindowManager::RequestUploadInBackgroundThread(int id)
 {
     std::lock_guard<std::mutex> lock(mutex_);
 

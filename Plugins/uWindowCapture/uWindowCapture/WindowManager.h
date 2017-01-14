@@ -33,12 +33,12 @@ public:
     WindowManager();
     ~WindowManager();
     void Update();
-    void AddToUploadList(int id);
     void Render();
     std::shared_ptr<Window> GetWindow(int id) const;
     void AddMessage(Message message);
     UINT GetMessageCount() const;
     const Message* GetMessages() const;
+    void RequestUploadInBackgroundThread(int id);
 
 private:
     std::shared_ptr<Window> FindOrAddWindow(HWND hwnd);

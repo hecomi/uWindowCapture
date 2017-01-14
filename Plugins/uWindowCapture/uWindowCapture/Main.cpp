@@ -146,11 +146,27 @@ extern "C"
         return nullptr;
     }
 
-    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcCaptureWindow(int id)
+    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcStartCaptureWindow(int id)
     {
         if (auto window = GetWindow(id))
         {
-            window->Capture();
+            window->StartCapture();
+        }
+    }
+
+    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcStopCaptureWindow(int id)
+    {
+        if (auto window = GetWindow(id))
+        {
+            window->StopCapture();
+        }
+    }
+
+    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcRequestCaptureWindow(int id)
+    {
+        if (auto window = GetWindow(id))
+        {
+            window->RequestCapture();
         }
     }
 

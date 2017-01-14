@@ -7,31 +7,29 @@ namespace uWindowCapture
 public class UwcWindowObject : MonoBehaviour
 {
     public Window window { get; set; }
-    public int lastUpdatedTime { get; set; }
-    public CaptureMode captureMode = CaptureMode.PrintWindow;
 
+    public CaptureMode captureMode = CaptureMode.PrintWindow;
     public int skipFrame = 10;
 
-    static int updateFrameBase = 0;
-    int updatedFrame = 0;
-
+    int updatedFrame_ = 0;
     Material material_;
-    bool hasCaptured_ = false;
 
-    IEnumerator Start()
+    void Awake()
     {
         captureMode = window.captureMode;
         material_ = GetComponent<Renderer>().material; // clone
-        window.onSizeChanged += OnSizeChanged;
-
-        updatedFrame = updateFrameBase++;
-
-        yield return new WaitForSeconds(0.1f);
-        window.onCaptured += OnCaptured;
     }
 
-    void OnDisable()
+    void Start()
     {
+        window.onSizeChanged += OnSizeChanged;
+        window.onCaptured += OnCaptured;
+        window.StartCapture();
+    }
+
+    void OnDestroy()
+    {
+        window.StopCapture();
         window.onCaptured -= OnCaptured;
         window.onSizeChanged -= OnSizeChanged;
     }
@@ -42,34 +40,28 @@ public class UwcWindowObject : MonoBehaviour
             material_.mainTexture = window.texture;
         }
 
-        if (!hasCaptured_) {
-            window.Capture();
-        }
+        updatedFrame_++;
     }
 
     void OnWillRenderObject()
     {
         window.captureMode = captureMode;
 
-        // if (window.handle != Lib.GetForegroundWindow()) return;
-        if (window.isHungup) return;
+        if (window.handle != Lib.GetForegroundWindow()) return;
 
-        if (updatedFrame % skipFrame == 0) {
-            window.Capture();
+        if (updatedFrame_ % skipFrame == 0) {
+            window.RequestCapture();
         }
-
-        updatedFrame++;
     }
 
     void OnCaptured()
     {
-        hasCaptured_ = true;
         window.onCaptured -= OnCaptured;
     }
 
     void OnSizeChanged()
     {
-        window.Capture();
+        window.RequestCapture();
     }
 }
 

@@ -23,10 +23,7 @@ Window::Window(HWND hwnd, int id)
 
 Window::~Window()
 {
-    if (captureThread_.joinable())
-    {
-        captureThread_.join();
-    }
+    StopCapture();
 
     {
         std::lock_guard<std::mutex> lock(mutex_);
@@ -47,13 +44,6 @@ void Window::Update()
     if (GetWindowTextW(window_, &buf[0], static_cast<int>(buf.size())))
     {
         title_ = &buf[0];
-    }
-
-    // Send message
-    if (!hasCaptureFinished_)
-    {
-        GetWindowManager()->AddMessage({ MessageType::WindowCaptured, id_, window_ });
-        hasCaptureFinished_ = true;
     }
 }
 
@@ -251,40 +241,54 @@ Window::CaptureMode Window::GetCaptureMode() const
 }
 
 
-void Window::Capture()
+void Window::StartCapture()
 {
-    if (!IsWindow())
+    if (isCaptureThreadRunning_) return;
+
+    if (captureThread_.joinable())
     {
-        Debug::Error("Window doesn't exist anymore.");
-        return;
+        Debug::Error(__FUNCTION__, " => Capture thread is running in spite of false flag.");
+        captureThread_.join();
     }
 
-    if (!IsVisible() || IsIconic() || GetWidth() == 0)
+    isCaptureThreadRunning_ = true;
+    captureThread_ = std::thread([&]
     {
-        return;
-    }
-
-    if (hasCaptureFinished_)
-    {
-        if (captureThread_.joinable()) {
-            captureThread_.join();
-        }
-
-        if (mode_ != CaptureMode::None)
+        while (isCaptureThreadRunning_)
         {
-            captureThread_ = std::thread([&] 
-            {
-                hasCaptureFinished_ = false;
-                CaptureInternal();
-                hasCaptureFinished_ = true;
+            ScopedThreadSleeper(std::chrono::microseconds(1000000 / 60));
 
-                if (auto& manager = GetWindowManager())
-                {
-                    manager->AddToUploadList(id_);
-                }
-            });
+            if (!IsWindow() || !IsVisible() || (mode_ == CaptureMode::None))
+            {
+                continue;
+            }
+
+            if (isCaptureRequested_)
+            {
+                isCaptureRequested_ = false;
+                CaptureInternal();
+                RequestUpload();
+            }
         }
+    });
+}
+
+
+void Window::StopCapture()
+{
+    if (!isCaptureThreadRunning_) return;
+
+    isCaptureThreadRunning_ = false;
+    if (captureThread_.joinable())
+    {
+        captureThread_.join();
     }
+}
+
+
+void Window::RequestCapture()
+{
+    isCaptureRequested_ = true;
 }
 
 
@@ -355,6 +359,15 @@ void Window::CaptureInternal()
 
     if (!::DeleteDC(hDcMem)) OutputApiError("DeleteDC");
     if (!::ReleaseDC(window_, hDc)) OutputApiError("ReleaseDC");
+}
+
+
+void Window::RequestUpload()
+{
+    if (auto& manager = GetWindowManager())
+    {
+        manager->RequestUploadInBackgroundThread(id_);
+    }
 }
 
 
@@ -473,5 +486,7 @@ void Window::Render()
             return;
         }
         */
+
+        GetWindowManager()->AddMessage({ MessageType::WindowCaptured, id_, window_ });
     }
 }

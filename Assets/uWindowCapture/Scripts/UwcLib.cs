@@ -71,8 +71,12 @@ public static class Lib
     public static extern IntPtr GetWindowHandle(int id);
     [DllImport(name, EntryPoint = "UwcGetWindowOwner")]
     public static extern IntPtr GetWindowOwner(int id);
-    [DllImport(name, EntryPoint = "UwcCaptureWindow")]
-    public static extern void CaptureWindow(int id);
+    [DllImport(name, EntryPoint = "UwcStartCaptureWindow")]
+    public static extern void StartCaptureWindow(int id);
+    [DllImport(name, EntryPoint = "UwcStopCaptureWindow")]
+    public static extern void StopCaptureWindow(int id);
+    [DllImport(name, EntryPoint = "UwcRequestCaptureWindow")]
+    public static extern void RequestCaptureWindow(int id);
     [DllImport(name, EntryPoint = "UwcGetWindowX")]
     public static extern int GetWindowX(int id);
     [DllImport(name, EntryPoint = "UwcGetWindowY")]

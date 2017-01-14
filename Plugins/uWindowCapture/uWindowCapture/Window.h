@@ -44,7 +44,9 @@ public:
     void SetCaptureMode(CaptureMode mode);
     CaptureMode GetCaptureMode() const;
 
-    void Capture();
+    void StartCapture();
+    void StopCapture();
+    void RequestCapture();
     void Render();
     void UploadTextureToGpu(const std::shared_ptr<class IsolatedD3D11Device>& device);
 
@@ -63,15 +65,16 @@ private:
     void CreateBitmapIfNeeded(HDC hDc, UINT width, UINT height);
     void DeleteBitmap();
     void CaptureInternal();
+    void RequestUpload();
 
     CaptureMode mode_ = CaptureMode::PrintWindow;
 
     std::thread captureThread_;
     Microsoft::WRL::ComPtr<ID3D11Texture2D> sharedTexture_;
     HANDLE sharedHandle_;
-    std::atomic<bool> hasCaptureFinished_ = true;
+    std::atomic<bool> isCaptureThreadRunning_ = false;
+    std::atomic<bool> isCaptureRequested_ = false;
     std::atomic<bool> hasNewTextureUploaded_ = false;
-    std::atomic<bool> hasCaptureMessageSent_ = true;
 
     int id_ = -1;
     HWND window_ = nullptr;

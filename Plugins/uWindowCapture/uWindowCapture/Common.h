@@ -129,3 +129,20 @@ private:
     const TimerFuncType func_;
     const std::chrono::time_point<std::chrono::steady_clock> start_;
 };
+
+
+class ScopedThreadSleeper : public ScopedTimer
+{
+public:
+    template <class T>
+    explicit ScopedThreadSleeper(const T& duration) : 
+        ScopedTimer([duration] (microseconds us)
+        {
+            const auto waitTime = duration - us;
+            if (waitTime > microseconds::zero())
+            {
+                std::this_thread::sleep_for(waitTime);
+            }
+        }) 
+    {}
+};
