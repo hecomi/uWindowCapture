@@ -70,7 +70,6 @@ void Uploader::Initialize()
 void Uploader::Finalize()
 {
     StopUploadThread();
-    device_.Reset();
 }
 
 

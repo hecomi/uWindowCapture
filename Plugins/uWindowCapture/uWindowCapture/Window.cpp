@@ -405,7 +405,7 @@ void Window::RequestUpload()
 
 void Window::UploadTextureToGpu()
 {
-    if (!unityTexture_.load() || !IsWindow() || !IsVisible()) return;
+    if (!unityTexture_.load()) return;
 
     std::lock_guard<std::mutex> lock(mutex_);
 
