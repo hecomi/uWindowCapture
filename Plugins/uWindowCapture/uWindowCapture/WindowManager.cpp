@@ -42,7 +42,7 @@ void WindowManager::Render()
 
 void WindowManager::StartWindowHandleListThread()
 {
-    windowHandleListThread_.Start([this]
+    windowHandleListThreadLoop_.Start([this]
     {
         UpdateWindowHandleList();
     });
@@ -51,7 +51,7 @@ void WindowManager::StartWindowHandleListThread()
 
 void WindowManager::StopWindowHandleListThread()
 {
-    windowHandleListThread_.Stop();
+    windowHandleListThreadLoop_.Stop();
 }
 
 

@@ -23,18 +23,18 @@ public:
 };
 
 
-Thread::Thread()
+ThreadLoop::ThreadLoop()
 {
 }
 
 
-Thread::~Thread()
+ThreadLoop::~ThreadLoop()
 {
     Stop();
 }
 
 
-void Thread::Start(const ThreadFunc& func, const microseconds& interval)
+void ThreadLoop::Start(const ThreadFunc& func, const microseconds& interval)
 {
     if (isRunning_) return;
 
@@ -59,13 +59,13 @@ void Thread::Start(const ThreadFunc& func, const microseconds& interval)
 }
 
 
-void Thread::Restart()
+void ThreadLoop::Restart()
 {
     Start(func_, interval_);
 }
 
 
-void Thread::Stop()
+void ThreadLoop::Stop()
 {
     if (!isRunning_) return;
 
@@ -78,7 +78,7 @@ void Thread::Stop()
 }
 
 
-bool Thread::IsRunning() const
+bool ThreadLoop::IsRunning() const
 {
     return isRunning_;
 }

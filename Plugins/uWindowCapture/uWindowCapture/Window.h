@@ -71,7 +71,7 @@ private:
 
     CaptureMode mode_ = CaptureMode::PrintWindow;
 
-    Thread captureThread_;
+    ThreadLoop captureThreadLoop_;
     Microsoft::WRL::ComPtr<ID3D11Texture2D> sharedTexture_;
     HANDLE sharedHandle_;
     std::atomic<bool> isCaptureRequested_ = false;

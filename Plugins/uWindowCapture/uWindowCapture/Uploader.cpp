@@ -101,7 +101,7 @@ TexturePtr Uploader::CreateCompatibleSharedTexture(const TexturePtr& texture)
 
 void Uploader::StartUploadThread()
 {
-    thread_.Start([this] 
+    threadLoop_.Start([this] 
     { 
         UploadTextures(); 
     });
@@ -110,7 +110,7 @@ void Uploader::StartUploadThread()
 
 void Uploader::StopUploadThread()
 {
-    thread_.Stop();
+    threadLoop_.Stop();
 }
 
 

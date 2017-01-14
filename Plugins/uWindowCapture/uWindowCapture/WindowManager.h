@@ -34,7 +34,7 @@ private:
     void UpdateWindows();
     void RenderWindows();
 
-    Thread windowHandleListThread_;
+    ThreadLoop windowHandleListThreadLoop_;
     int lastWindowId_ = 0;
     std::map<int, std::shared_ptr<Window>> windows_;
     std::vector<HWND> windowHandleList_[2];

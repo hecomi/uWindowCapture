@@ -296,7 +296,7 @@ Window::CaptureMode Window::GetCaptureMode() const
 
 void Window::StartCapture()
 {
-    captureThread_.Start([&]
+    captureThreadLoop_.Start([&]
     {
         if (!IsWindow() || !IsVisible() || (mode_ == CaptureMode::None))
         {
@@ -315,7 +315,7 @@ void Window::StartCapture()
 
 void Window::StopCapture()
 {
-    captureThread_.Stop();
+    captureThreadLoop_.Stop();
 }
 
 

@@ -6,14 +6,14 @@
 #include <atomic>
 
 
-class Thread
+class ThreadLoop
 {
 public:
     using ThreadFunc = std::function<void()>;
     using microseconds = std::chrono::microseconds;
 
-    Thread();
-    ~Thread();
+    ThreadLoop();
+    ~ThreadLoop();
     void Start(
         const ThreadFunc& func,
         const microseconds& interval = microseconds(1'000'000 / 60));
