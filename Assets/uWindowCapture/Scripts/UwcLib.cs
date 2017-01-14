@@ -21,6 +21,12 @@ public enum CaptureMode
     BitBltAlpha = 2,
 }
 
+public enum CapturePriority
+{
+    Immediate = 0,
+    Queued = 1,
+}
+
 public enum MessageType
 {
     None = -1,
@@ -77,7 +83,9 @@ public static class Lib
     [DllImport(name, EntryPoint = "UwcStopCaptureWindow")]
     public static extern void StopCaptureWindow(int id);
     [DllImport(name, EntryPoint = "UwcRequestCaptureWindow")]
-    public static extern void RequestCaptureWindow(int id);
+    public static extern void RequestCaptureWindow(int id, CapturePriority priority);
+    [DllImport(name, EntryPoint = "UwcSetCaptureNumberPerFrame")]
+    public static extern void SetCaptureNumberPerFrame(int number);
     [DllImport(name, EntryPoint = "UwcGetWindowX")]
     public static extern int GetWindowX(int id);
     [DllImport(name, EntryPoint = "UwcGetWindowY")]

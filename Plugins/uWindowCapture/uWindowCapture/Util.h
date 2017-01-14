@@ -4,6 +4,8 @@
 #include <chrono>
 #include <Windows.h>
 
+#define UWC_DEBUG_ON
+
 
 // Window utilities
 bool IsAltTabWindow(HWND hWnd);

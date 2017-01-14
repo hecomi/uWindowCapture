@@ -29,7 +29,7 @@ Window::Window(HWND hWnd, int id)
     {
         title_ = L"Desktop";
         isDesktop_ = true;
-        mode_ = Window::CaptureMode::BitBlt;
+        mode_ = CaptureMode::BitBlt;
     }
     else
     {
@@ -225,7 +225,7 @@ void Window::SetCaptureMode(CaptureMode mode)
 }
 
 
-Window::CaptureMode Window::GetCaptureMode() const
+CaptureMode Window::GetCaptureMode() const
 {
     return mode_;
 }

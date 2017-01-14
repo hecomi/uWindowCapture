@@ -169,12 +169,16 @@ extern "C"
         }
     }
 
-    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcRequestCaptureWindow(int id)
+    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcRequestCaptureWindow(int id, CapturePriority priority)
     {
-        if (auto window = GetWindow(id))
-        {
-            window->RequestCapture();
-        }
+        if (WindowManager::IsNull()) return;
+        WindowManager::Get().GetCaptureManager()->RequestCapture(id, priority);
+    }
+
+    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcSetCaptureNumberPerFrame(UINT count)
+    {
+        if (WindowManager::IsNull()) return;
+        WindowManager::Get().GetCaptureManager()->SetNumberPerFrame(count);
     }
 
     UNITY_INTERFACE_EXPORT HWND UNITY_INTERFACE_API UwcGetWindowOwner(int id)
@@ -274,16 +278,16 @@ extern "C"
         }
     }
 
-    UNITY_INTERFACE_EXPORT Window::CaptureMode UNITY_INTERFACE_API UwcGetWindowCaptureMode(int id)
+    UNITY_INTERFACE_EXPORT CaptureMode UNITY_INTERFACE_API UwcGetWindowCaptureMode(int id)
     {
         if (auto window = GetWindow(id))
         {
             return window->GetCaptureMode();
         }
-        return Window::CaptureMode::None;
+        return CaptureMode::None;
     }
 
-    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcSetWindowCaptureMode(int id, Window::CaptureMode mode)
+    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcSetWindowCaptureMode(int id, CaptureMode mode)
     {
         if (auto window = GetWindow(id))
         {

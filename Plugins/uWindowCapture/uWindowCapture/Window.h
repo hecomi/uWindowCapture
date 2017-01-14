@@ -11,18 +11,19 @@
 #include "Thread.h"
 
 
+enum class CaptureMode
+{
+    None = -1,
+    PrintWindow = 0,
+    BitBlt = 1,
+    BitBltAlpha = 2,
+};
+
+
 class Window
 {
 friend class WindowManager;
 public:
-    enum class CaptureMode
-    {
-        None = -1,
-        PrintWindow = 0,
-        BitBlt = 1,
-        BitBltAlpha = 2,
-    };
-
     Window(HWND hwnd, int id);
     ~Window();
 
