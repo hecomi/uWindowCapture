@@ -160,10 +160,20 @@ public class Window
         set;
     }
 
-    public void Capture()
+    public void StartCapture()
+    {
+        Lib.StartCaptureWindow(id);
+    }
+
+    public void StopCapture()
+    {
+        Lib.StopCaptureWindow(id);
+    }
+
+    public void RequestCapture()
     {
         UpdateTextureIfNeeded();
-        Lib.CaptureWindow(id);
+        Lib.RequestCaptureWindow(id);
     }
 
     public void UpdateTextureIfNeeded()
@@ -175,7 +185,6 @@ public class Window
             if (texture) Object.DestroyImmediate(texture);
             texture = new Texture2D(w, h, TextureFormat.BGRA32, false);
             Lib.SetWindowTexturePtr(id, texture.GetNativeTexturePtr());
-            Debug.Log(texture.GetNativeTexturePtr());
         }
     }
 }
