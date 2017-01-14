@@ -4,7 +4,7 @@
 #include "Window.h"
 #include "WindowManager.h"
 #include "Common.h"
-#include "Device.h"
+#include "Uploader.h"
 #include "Util.h"
 #include "Message.h"
 #include "Debug.h"
@@ -389,13 +389,13 @@ void Window::CaptureInternal()
 
 void Window::RequestUpload()
 {
-    WindowManager::Get().RequestUploadInBackgroundThread(id_);
+    Uploader::Get().RequestUploadInBackgroundThread(id_);
 }
 
 
-void Window::UploadTextureToGpu(const std::shared_ptr<IsolatedD3D11Device>& device)
+void Window::UploadTextureToGpu()
 {
-    if (!unityTexture_.load()) return;
+    if (!unityTexture_.load() || !IsWindow() || !IsVisible()) return;
 
     std::lock_guard<std::mutex> lock(mutex_);
 
@@ -413,7 +413,7 @@ void Window::UploadTextureToGpu(const std::shared_ptr<IsolatedD3D11Device>& devi
 
     if (shouldUpdateTexture)
     {
-        sharedTexture_ = device->CreateCompatibleSharedTexture(unityTexture_.load());
+        sharedTexture_ = Uploader::Get().CreateCompatibleSharedTexture(unityTexture_.load());
 
         if (!sharedTexture_)
         {
@@ -432,7 +432,7 @@ void Window::UploadTextureToGpu(const std::shared_ptr<IsolatedD3D11Device>& devi
 
     {
         ComPtr<ID3D11DeviceContext> context;
-        device->GetDevice()->GetImmediateContext(&context);
+        Uploader::Get().GetDevice()->GetImmediateContext(&context);
         context->UpdateSubresource(sharedTexture_.Get(), 0, nullptr, buffer_.Get(), width_ * 4, 0);
         context->Flush();
     }

@@ -3,7 +3,7 @@
 #include "Common.h"
 #include "WindowManager.h"
 #include "Window.h"
-#include "Device.h"
+#include "Uploader.h"
 #include "Util.h"
 #include "Thread.h"
 #include "Message.h"
@@ -17,9 +17,6 @@ UWC_SINGLETON_INSTANCE(WindowManager)
 
 void WindowManager::Initialize()
 {
-    uploadDevice_ = std::make_shared<IsolatedD3D11Device>();
-
-    StartUploadThread();
     StartWindowThread();
 }
 
@@ -27,7 +24,6 @@ void WindowManager::Initialize()
 void WindowManager::Finalize()
 {
     StopWindowThread();
-    StopUploadThread();
     {
         std::lock_guard<std::mutex> lock(windowsMutex_);
         windows_.clear();
@@ -162,55 +158,6 @@ void WindowManager::UpdateWindows()
             }
         }
     }
-}
-
-
-void WindowManager::StartUploadThread()
-{
-    if (!uploadDevice_)
-    {
-        Debug::Error("WindowManager::StartUploadThread() => device is null.");
-        return;
-    }
-
-    uploadThread_.Start([this] 
-    { 
-        UploadTextures(); 
-    });
-}
-
-
-void WindowManager::StopUploadThread()
-{
-    uploadThread_.Stop();
-}
-
-
-void WindowManager::RequestUploadInBackgroundThread(int id)
-{
-    std::lock_guard<std::mutex> lock(uploadMutex_);
-
-    auto window = GetWindow(id);
-    if (!window) return;
-
-    uploadList_.insert(id);
-}
-
-
-void WindowManager::UploadTextures()
-{
-    std::lock_guard<std::mutex> lock(uploadMutex_);
-
-    for (const auto id : uploadList_)
-    {
-        if (auto window = GetWindow(id))
-        {
-            if (!window->IsWindow() || !window->IsVisible()) continue;
-            window->UploadTextureToGpu(uploadDevice_);
-        }
-    }
-
-    uploadList_.clear();
 }
 
 

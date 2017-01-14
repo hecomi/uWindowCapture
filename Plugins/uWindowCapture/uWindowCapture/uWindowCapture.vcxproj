@@ -137,7 +137,7 @@
   <ItemGroup>
     <ClCompile Include="Common.cpp" />
     <ClCompile Include="Debug.cpp" />
-    <ClCompile Include="Device.cpp" />
+    <ClCompile Include="Uploader.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Message.cpp" />
     <ClCompile Include="Thread.cpp" />
@@ -149,7 +149,7 @@
     <ClInclude Include="Buffer.h" />
     <ClInclude Include="Common.h" />
     <ClInclude Include="Debug.h" />
-    <ClInclude Include="Device.h" />
+    <ClInclude Include="Uploader.h" />
     <ClInclude Include="include\IUnityGraphics.h" />
     <ClInclude Include="include\IUnityGraphicsD3D11.h" />
     <ClInclude Include="include\IUnityInterface.h" />

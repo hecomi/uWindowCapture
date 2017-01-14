@@ -25,7 +25,6 @@ public:
     void Update();
     void Render();
     std::shared_ptr<Window> GetWindow(int id) const;
-    void RequestUploadInBackgroundThread(int id);
 
 private:
     std::shared_ptr<Window> FindOrAddWindow(HWND hwnd);
@@ -35,19 +34,9 @@ private:
     void UpdateWindows();
     void RenderWindows();
 
-    void StartUploadThread();
-    void StopUploadThread();
-    void UploadTextures();
-
-    std::map<int, std::shared_ptr<Window>> windows_;
-    int lastWindowId_ = 0;
-    mutable std::mutex windowsMutex_;
-
     Thread windowThread_;
-
-    std::shared_ptr<class IsolatedD3D11Device> uploadDevice_;
-    Thread uploadThread_;
-    std::set<int> uploadList_;
-    mutable std::mutex uploadMutex_;
+    int lastWindowId_ = 0;
+    std::map<int, std::shared_ptr<Window>> windows_;
+    mutable std::mutex windowsMutex_;
 };
 

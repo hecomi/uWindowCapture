@@ -9,6 +9,7 @@
 
 #include "Debug.h"
 #include "Message.h"
+#include "Uploader.h"
 #include "Window.h"
 #include "WindowManager.h"
 
@@ -40,6 +41,9 @@ extern "C"
 
         MessageManager::Create();
 
+        Uploader::Create();
+        Uploader::Get().Initialize();
+
         WindowManager::Create();
         WindowManager::Get().Initialize();
     }
@@ -51,6 +55,9 @@ extern "C"
 
         WindowManager::Get().Finalize();
         WindowManager::Destroy();
+
+        Uploader::Get().Finalize();
+        Uploader::Destroy();
 
         MessageManager::Destroy();
 

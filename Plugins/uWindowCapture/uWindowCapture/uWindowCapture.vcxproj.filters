@@ -19,12 +19,12 @@
     <ClInclude Include="Debug.h" />
     <ClInclude Include="Window.h" />
     <ClInclude Include="WindowManager.h" />
-    <ClInclude Include="Device.h" />
     <ClInclude Include="Thread.h" />
     <ClInclude Include="Util.h" />
     <ClInclude Include="Buffer.h" />
     <ClInclude Include="Message.h" />
     <ClInclude Include="Singleton.h" />
+    <ClInclude Include="Uploader.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp" />
@@ -32,9 +32,9 @@
     <ClCompile Include="Debug.cpp" />
     <ClCompile Include="Window.cpp" />
     <ClCompile Include="WindowManager.cpp" />
-    <ClCompile Include="Device.cpp" />
     <ClCompile Include="Thread.cpp" />
     <ClCompile Include="Util.cpp" />
     <ClCompile Include="Message.cpp" />
+    <ClCompile Include="Uploader.cpp" />
   </ItemGroup>
 </Project>

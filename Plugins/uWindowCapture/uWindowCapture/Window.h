@@ -49,7 +49,7 @@ public:
     void StopCapture();
     void RequestCapture();
     void Render();
-    void UploadTextureToGpu(const std::shared_ptr<class IsolatedD3D11Device>& device);
+    void UploadTextureToGpu();
 
     bool IsAltTab() const;
     bool IsDesktop() const;

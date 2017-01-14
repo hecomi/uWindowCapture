@@ -6,28 +6,24 @@
 
 #include "IUnityInterface.h"
 #include "IUnityGraphicsD3D11.h"
-#include "Device.h"
+#include "Uploader.h"
+#include "WindowManager.h"
 #include "Debug.h"
+#include "Window.h"
 #include "Common.h"
 
 #pragma comment(lib, "d3d11.lib")
 
 using namespace Microsoft::WRL;
+using DevicePtr = Microsoft::WRL::ComPtr<ID3D11Device>;
+using TexturePtr = Microsoft::WRL::ComPtr<ID3D11Texture2D>;
 
 
 
-IsolatedD3D11Device::IsolatedD3D11Device()
-{
-    Create();
-}
+UWC_SINGLETON_INSTANCE(Uploader)
 
 
-IsolatedD3D11Device::~IsolatedD3D11Device()
-{
-}
-
-
-void IsolatedD3D11Device::Create()
+void Uploader::Initialize()
 {
     ComPtr<IDXGIDevice1> dxgiDevice;
     if (FAILED(GetUnityDevice()->QueryInterface(IID_PPV_ARGS(&dxgiDevice)))){
@@ -66,25 +62,34 @@ void IsolatedD3D11Device::Create()
         &device_,
         &featureLevelsSupported,
         nullptr);
+
+    StartUploadThread();
 }
 
 
-ComPtr<ID3D11Device> IsolatedD3D11Device::GetDevice()
+void Uploader::Finalize()
+{
+    StopUploadThread();
+    device_.Reset();
+}
+
+
+DevicePtr Uploader::GetDevice()
 { 
     return device_;
 }
 
 
-ComPtr<ID3D11Texture2D> IsolatedD3D11Device::CreateCompatibleSharedTexture(const ComPtr<ID3D11Texture2D>& texture)
+TexturePtr Uploader::CreateCompatibleSharedTexture(const TexturePtr& texture)
 {
-    ComPtr<ID3D11Texture2D> sharedTexture;
+    TexturePtr sharedTexture;
 
     D3D11_TEXTURE2D_DESC srcDesc;
     texture->GetDesc(&srcDesc);
 
     D3D11_TEXTURE2D_DESC desc = srcDesc;
-    //desc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
     desc.MiscFlags = D3D11_RESOURCE_MISC_SHARED;
+
     if (FAILED(device_->CreateTexture2D(&desc, nullptr, &sharedTexture)))
     {
         Debug::Error(__FUNCTION__, " => GetDevice()->CreateTexture2D() failed.");
@@ -93,3 +98,43 @@ ComPtr<ID3D11Texture2D> IsolatedD3D11Device::CreateCompatibleSharedTexture(const
 
     return sharedTexture;
 }
+
+
+void Uploader::StartUploadThread()
+{
+    thread_.Start([this] 
+    { 
+        UploadTextures(); 
+    });
+}
+
+
+void Uploader::StopUploadThread()
+{
+    thread_.Stop();
+}
+
+
+void Uploader::RequestUploadInBackgroundThread(int id)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    uploadList_.insert(id);
+}
+
+
+void Uploader::UploadTextures()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    for (const auto id : uploadList_)
+    {
+        if (auto window = WindowManager::Get().GetWindow(id))
+        {
+            window->UploadTextureToGpu();
+        }
+    }
+
+    uploadList_.clear();
+}
+
+
