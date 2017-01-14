@@ -1,7 +1,10 @@
 #include <algorithm>
+
+#include "Common.h"
 #include "WindowManager.h"
 #include "Window.h"
 #include "Device.h"
+#include "Util.h"
 #include "Debug.h"
 
 using namespace Microsoft::WRL;

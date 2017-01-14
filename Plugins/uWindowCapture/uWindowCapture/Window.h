@@ -8,12 +8,12 @@
 #include <mutex>
 #include <atomic>
 
-#include "Common.h"
+#include "Buffer.h"
 
 
 class Window
 {
-friend WindowManager;
+friend class WindowManager;
 public:
     enum class CaptureMode
     {

@@ -6,7 +6,6 @@
 #include <chrono>
 #include <mutex>
 
-#include "Common.h"
 #include "IUnityInterface.h"
 
 
@@ -147,20 +146,3 @@ private:
     static DebugLogFuncPtr errFunc_;
     static std::mutex mutex_;
 };
-
-
-#ifdef UWC_DEBUG_ON
-#define UWC_FUNCTION_SCOPE_TIMER \
-    ScopedTimer _timer_##__COUNTER__([](std::chrono::microseconds us) \
-    { \
-        Debug::Log(__FUNCTION__, "@", __FILE__, ":", __LINE__, " => ", us.count(), " [us]"); \
-    });
-#define UWC_SCOPE_TIMER(Name) \
-    ScopedTimer _timer_##__COUNTER__([](std::chrono::microseconds us) \
-    { \
-        Debug::Log(#Name, " => ", us.count(), " [us]"); \
-    });
-#else
-#define UWC_FUNCTION_SCOPE_TIMER
-#define UWC_SCOPE_TIMER(Name)
-#endif
