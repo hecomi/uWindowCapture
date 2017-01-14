@@ -54,14 +54,25 @@ bool IsAltTabWindow(HWND hWnd)
 
 
 
-Window::Window(HWND hwnd, int id)
-    : window_(hwnd)
+Window::Window(HWND hWnd, int id)
+    : window_(hWnd)
     , id_(id)
 {
     if (!IsWindow())
     {
         Debug::Error("Given window handle is not a window.");
         window_ = nullptr;
+    }
+    else if (hWnd == ::GetDesktopWindow())
+    {
+        title_ = L"Desktop";
+        isDesktop_ = true;
+        mode_ = Window::CaptureMode::BitBlt;
+    }
+    else
+    {
+        owner_ = ::GetWindow(hWnd, GW_OWNER);
+        isAltTabWindow_ = ::IsAltTabWindow(hWnd);
     }
 }
 
@@ -77,22 +88,6 @@ Window::~Window()
 }
 
 
-void Window::Update()
-{
-    isAlive_ = true;
-    owner_ = ::GetWindow(window_, GW_OWNER);
-    isAltTabWindow_ = IsAltTabWindow(window_);
-
-    // set title
-    const auto titleLength = GetWindowTextLengthW(window_);
-    std::vector<WCHAR> buf(titleLength + 1);
-    if (GetWindowTextW(window_, &buf[0], static_cast<int>(buf.size())))
-    {
-        title_ = &buf[0];
-    }
-}
-
-
 HWND Window::GetHandle() const
 {
     return window_;
@@ -101,7 +96,7 @@ HWND Window::GetHandle() const
 
 HWND Window::GetOwner() const
 {
-    return GetWindow(window_, GW_OWNER);
+    return ::GetWindow(window_, GW_OWNER);
 }
 
 
@@ -220,6 +215,19 @@ UINT Window::GetZOrder() const
 }
 
 
+void Window::UpdateTitle()
+{
+    if (isDesktop_) return;
+
+    const auto titleLength = ::GetWindowTextLengthW(window_);
+    std::vector<WCHAR> buf(titleLength + 1);
+    if (::GetWindowTextW(window_, &buf[0], static_cast<int>(buf.size())))
+    {
+        title_ = &buf[0];
+    }
+}
+
+
 UINT Window::GetTitleLength() const
 {
     return static_cast<UINT>(title_.length());
@@ -319,6 +327,8 @@ void Window::RequestCapture()
 
 void Window::CaptureInternal()
 {
+    if (!IsWindow() || !IsVisible()) return;
+
     auto hDc = ::GetDC(window_);
 
     const auto width = GetWidth();

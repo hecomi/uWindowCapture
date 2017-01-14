@@ -25,6 +25,7 @@
     <ClInclude Include="Message.h" />
     <ClInclude Include="Singleton.h" />
     <ClInclude Include="Uploader.h" />
+    <ClInclude Include="Container.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp" />

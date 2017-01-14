@@ -52,7 +52,7 @@ void Thread::Start(const ThreadFunc& func, const microseconds& interval)
     {
         while (isRunning_)
         {
-            ScopedThreadSleeper sleeper(interval_);
+            ScopedThreadSleeper sleeper(std::chrono::microseconds(1000000 / 60));// interval_);
             func_();
         }
     });

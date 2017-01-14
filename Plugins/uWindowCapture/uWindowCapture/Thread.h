@@ -6,7 +6,6 @@
 #include <atomic>
 
 
-// Interval
 class Thread
 {
 public:

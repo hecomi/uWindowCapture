@@ -81,6 +81,11 @@ public class UwcDesktopLayouter : UwcLayouter
         } else {
             ScaleWindow(windowObject, false);
         }
+
+        var title = windowObject.window.title;
+        if (!string.IsNullOrEmpty(title)) {
+            windowObject.transform.name = title;
+        }
     }
 
     public override void UpdateLayout(Dictionary<System.IntPtr, UwcWindowObject> windows)
@@ -88,13 +93,6 @@ public class UwcDesktopLayouter : UwcLayouter
         var enumerator = windows.GetEnumerator();
         while (enumerator.MoveNext()) {
             var windowObject = enumerator.Current.Value;
-            var window = windowObject.window;
-
-            var title = window.title;
-            if (!string.IsNullOrEmpty(title)) {
-                windowObject.transform.name = title;
-            }
-
             MoveWindow(windowObject, usePositionFilter);
             ScaleWindow(windowObject, useScaleFilter);
         }

@@ -17,17 +17,14 @@ UWC_SINGLETON_INSTANCE(WindowManager)
 
 void WindowManager::Initialize()
 {
-    StartWindowThread();
+    StartWindowHandleListThread();
 }
 
 
 void WindowManager::Finalize()
 {
-    StopWindowThread();
-    {
-        std::lock_guard<std::mutex> lock(windowsMutex_);
-        windows_.clear();
-    }
+    StopWindowHandleListThread();
+    windows_.clear();
 }
 
 
@@ -43,29 +40,27 @@ void WindowManager::Render()
 }
 
 
-void WindowManager::StartWindowThread()
+void WindowManager::StartWindowHandleListThread()
 {
-    windowThread_.Start([this]
+    windowHandleListThread_.Start([this]
     {
-        //UpdateWindows();
+        UpdateWindowHandleList();
     });
 }
 
 
-void WindowManager::StopWindowThread()
+void WindowManager::StopWindowHandleListThread()
 {
-    windowThread_.Stop();
+    windowHandleListThread_.Stop();
 }
 
 
 std::shared_ptr<Window> WindowManager::GetWindow(int id) const
 {
-    std::lock_guard<std::mutex> lock(windowsMutex_);
-
     auto it = windows_.find(id);
     if (it == windows_.end())
     {
-        Debug::Error("WindowManager::GetWindow() => Window whose id is ", id, " does not exist.");
+        Debug::Error(__FUNCTION__, " => Window whose id is ", id, " does not exist.");
         return nullptr;
     }
     return it->second;
@@ -74,8 +69,6 @@ std::shared_ptr<Window> WindowManager::GetWindow(int id) const
 
 std::shared_ptr<Window> WindowManager::FindOrAddWindow(HWND hWnd)
 {
-    std::lock_guard<std::mutex> lock(windowsMutex_);
-
     auto it = std::find_if(
         windows_.begin(),
         windows_.end(),
@@ -98,6 +91,46 @@ std::shared_ptr<Window> WindowManager::FindOrAddWindow(HWND hWnd)
 
 void WindowManager::UpdateWindows()
 {
+    for (const auto& pair : windows_)
+    {
+        pair.second->isAlive_ = false;
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(windowsHandleListMutex_);
+        for (HWND hWnd : windowHandleList_)
+        {
+            if (auto window = WindowManager::Get().FindOrAddWindow(hWnd))
+            {
+                window->isAlive_ = true;
+            }
+        }
+    }
+
+    for (auto it = windows_.begin(); it != windows_.end();)
+    {
+        const auto id = it->first;
+        auto& window = it->second;
+
+        if (!window->isAlive_)
+        {
+            MessageManager::Get().Add({ MessageType::WindowRemoved, id, window->GetHandle() });
+            windows_.erase(it++);
+        }
+        else
+        {
+            it++;
+        }
+    }
+}
+
+
+void WindowManager::UpdateWindowHandleList()
+{
+    std::lock_guard<std::mutex> lock(windowsHandleListMutex_);
+
+    windowHandleList_.clear();
+
     static const auto _EnumWindowsCallback = [](HWND hWnd, LPARAM lParam) -> BOOL
     {
         if (!::IsWindowVisible(hWnd) || !::IsWindow(hWnd))
@@ -105,10 +138,8 @@ void WindowManager::UpdateWindows()
             return TRUE;
         }
 
-        if (auto window = WindowManager::Get().FindOrAddWindow(hWnd))
-        {
-            window->Update();
-        }
+        auto thiz = reinterpret_cast<WindowManager*>(lParam);
+        thiz->windowHandleList_.push_back(hWnd);
 
         return TRUE;
     };
@@ -116,55 +147,16 @@ void WindowManager::UpdateWindows()
     using EnumWindowsCallbackType = BOOL(CALLBACK *)(HWND, LPARAM);
     static const auto EnumWindowsCallback = static_cast<EnumWindowsCallbackType>(_EnumWindowsCallback);
 
-    // mark all window as inactive
-    {
-        std::lock_guard<std::mutex> lock(windowsMutex_);
-        for (const auto& pair : windows_)
-        {
-            pair.second->isAlive_ = false;
-        }
-    }
-
-    // add desktop
-    if (auto desktop = FindOrAddWindow(GetDesktopWindow()))
-    {
-        desktop->title_ = L"Desktop";
-        desktop->isAlive_ = true;
-        desktop->isDesktop_ = true;
-
-        // desktop image can be get through BitBlt.
-        desktop->SetCaptureMode(Window::CaptureMode::BitBlt);
-    }
-
     // add new windows and mark registered windows as alive
-    if (!::EnumWindows(EnumWindowsCallback, 0))
+    if (!::EnumWindows(EnumWindowsCallback, reinterpret_cast<LPARAM>(this)))
     {
         OutputApiError("EnumWindows");
-    }
-
-    // remove inactive windows
-    {
-        std::lock_guard<std::mutex> lock(windowsMutex_);
-        for (auto it = windows_.begin(); it != windows_.end();)
-        {
-            if (!it->second->isAlive_)
-            {
-                MessageManager::Get().Add({ MessageType::WindowRemoved, it->first, it->second->GetHandle() });
-                windows_.erase(it++);
-            }
-            else
-            {
-                it++;
-            }
-        }
     }
 }
 
 
 void WindowManager::RenderWindows()
 {
-    std::lock_guard<std::mutex> lock(windowsMutex_);
-
     for (auto&& pair : windows_)
     {
         pair.second->Render();

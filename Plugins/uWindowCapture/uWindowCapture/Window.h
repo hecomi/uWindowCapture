@@ -26,7 +26,6 @@ public:
 
     Window(HWND hwnd, int id);
     ~Window();
-    void Update();
 
     HWND GetHandle() const;
     HWND GetOwner() const;
@@ -36,6 +35,8 @@ public:
     UINT GetWidth() const;
     UINT GetHeight() const;
     UINT GetZOrder() const;
+
+    void UpdateTitle();
     UINT GetTitleLength() const;
     const std::wstring& GetTitle() const;
 
@@ -87,8 +88,8 @@ private:
     std::wstring title_;
     std::mutex mutex_;
 
-    bool isAlive_ = true;
-    bool isDesktop_ = false;
-    bool isAltTabWindow_ = false;
+    std::atomic<bool> isAlive_ = true;
+    std::atomic<bool> isDesktop_ = false;
+    std::atomic<bool> isAltTabWindow_ = false;
 };
 

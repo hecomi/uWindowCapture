@@ -3,10 +3,8 @@
 #include <Windows.h>
 #include <map>
 #include <vector>
-#include <set>
 #include <memory>
 #include <mutex>
-#include <atomic>
 
 #include "Singleton.h"
 #include "Thread.h"
@@ -29,14 +27,17 @@ public:
 private:
     std::shared_ptr<Window> FindOrAddWindow(HWND hwnd);
 
-    void StartWindowThread();
-    void StopWindowThread();
+    void StartWindowHandleListThread();
+    void StopWindowHandleListThread();
+    void UpdateWindowHandleList();
+
     void UpdateWindows();
     void RenderWindows();
 
-    Thread windowThread_;
+    Thread windowHandleListThread_;
     int lastWindowId_ = 0;
     std::map<int, std::shared_ptr<Window>> windows_;
-    mutable std::mutex windowsMutex_;
+    std::vector<HWND> windowHandleList_;
+    mutable std::mutex windowsHandleListMutex_;
 };
 

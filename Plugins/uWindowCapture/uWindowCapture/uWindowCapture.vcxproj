@@ -148,6 +148,7 @@
   <ItemGroup>
     <ClInclude Include="Buffer.h" />
     <ClInclude Include="Common.h" />
+    <ClInclude Include="Container.h" />
     <ClInclude Include="Debug.h" />
     <ClInclude Include="Uploader.h" />
     <ClInclude Include="include\IUnityGraphics.h" />
