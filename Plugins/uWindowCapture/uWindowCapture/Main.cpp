@@ -22,19 +22,9 @@ bool g_hasInitialized = false;
 IUnityInterfaces* g_unity = nullptr;
 
 
-bool CheckManager()
-{
-    if (WindowManager::IsNull())
-    {
-        Debug::Error("Manager has not been initialized.");
-        return false;
-    }
-    return true;
-}
-
 std::shared_ptr<Window> GetWindow(int id)
 {
-    if (!CheckManager()) return nullptr;
+    if (WindowManager::IsNull()) return nullptr;
     return WindowManager::Get().GetWindow(id);
 }
 
@@ -115,7 +105,7 @@ extern "C"
 
     void UNITY_INTERFACE_API OnRenderEvent(int id)
     {
-        if (!CheckManager()) return;
+        if (WindowManager::IsNull()) return;
         WindowManager::Get().Render();
     }
 
@@ -126,7 +116,7 @@ extern "C"
 
     UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcUpdate()
     {
-        if (!CheckManager()) return;
+        if (WindowManager::IsNull()) return;
         WindowManager::Get().Update();
     }
 
