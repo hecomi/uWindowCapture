@@ -135,7 +135,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Common.cpp" />
+    <ClCompile Include="Unity.cpp" />
     <ClCompile Include="Debug.cpp" />
     <ClCompile Include="Uploader.cpp" />
     <ClCompile Include="Main.cpp" />
@@ -147,7 +147,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Buffer.h" />
-    <ClInclude Include="Common.h" />
+    <ClInclude Include="Unity.h" />
     <ClInclude Include="Debug.h" />
     <ClInclude Include="Uploader.h" />
     <ClInclude Include="include\IUnityGraphics.h" />

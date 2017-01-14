@@ -15,7 +15,6 @@
     <ClInclude Include="include\IUnityGraphicsD3D11.h">
       <Filter>Include</Filter>
     </ClInclude>
-    <ClInclude Include="Common.h" />
     <ClInclude Include="Debug.h" />
     <ClInclude Include="Window.h" />
     <ClInclude Include="WindowManager.h" />
@@ -25,10 +24,10 @@
     <ClInclude Include="Message.h" />
     <ClInclude Include="Singleton.h" />
     <ClInclude Include="Uploader.h" />
+    <ClInclude Include="Unity.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp" />
-    <ClCompile Include="Common.cpp" />
     <ClCompile Include="Debug.cpp" />
     <ClCompile Include="Window.cpp" />
     <ClCompile Include="WindowManager.cpp" />
@@ -36,5 +35,6 @@
     <ClCompile Include="Util.cpp" />
     <ClCompile Include="Message.cpp" />
     <ClCompile Include="Uploader.cpp" />
+    <ClCompile Include="Unity.cpp" />
   </ItemGroup>
 </Project>

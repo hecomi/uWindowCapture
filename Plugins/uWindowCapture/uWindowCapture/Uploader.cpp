@@ -1,7 +1,5 @@
 #pragma once
 
-#include <queue>
-#include <d3d9.h>
 #include <d3d11.h>
 
 #include "IUnityInterface.h"
@@ -10,7 +8,7 @@
 #include "WindowManager.h"
 #include "Debug.h"
 #include "Window.h"
-#include "Common.h"
+#include "Unity.h"
 
 #pragma comment(lib, "d3d11.lib")
 

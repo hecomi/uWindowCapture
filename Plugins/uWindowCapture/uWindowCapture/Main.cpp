@@ -1,7 +1,6 @@
 #include <d3d11.h>
 #include <dxgi1_2.h>
 #include <Windows.h>
-#include <wrl/client.h>
 #include <memory>
 
 #include "IUnityInterface.h"

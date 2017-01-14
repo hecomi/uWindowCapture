@@ -32,7 +32,7 @@ public:
 
 private:
     DevicePtr device_;
-    std::set<int> uploadList_;
     ThreadLoop threadLoop_;
+    std::set<int> uploadList_;
     mutable std::mutex mutex_;
 };
