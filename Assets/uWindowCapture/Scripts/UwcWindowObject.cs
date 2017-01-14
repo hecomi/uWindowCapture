@@ -25,6 +25,7 @@ public class UwcWindowObject : MonoBehaviour
         window.onSizeChanged += OnSizeChanged;
         window.onCaptured += OnCaptured;
         window.StartCapture();
+        window.RequestCapture();
     }
 
     void OnDestroy()
