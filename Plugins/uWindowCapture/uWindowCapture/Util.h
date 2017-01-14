@@ -32,23 +32,6 @@ private:
 };
 
 
-class ScopedThreadSleeper : public ScopedTimer
-{
-public:
-    template <class T>
-    explicit ScopedThreadSleeper(const T& duration) : 
-        ScopedTimer([duration] (microseconds us)
-        {
-            const auto waitTime = duration - us;
-            if (waitTime > microseconds::zero())
-            {
-                std::this_thread::sleep_for(waitTime);
-            }
-        }) 
-    {}
-};
-
-
 #ifdef UWC_DEBUG_ON
 #define UWC_FUNCTION_SCOPE_TIMER \
     ScopedTimer _timer_##__COUNTER__([](std::chrono::microseconds us) \

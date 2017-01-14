@@ -3,11 +3,16 @@
 #include <Windows.h>
 #include <map>
 #include <vector>
+#include <set>
 #include <memory>
 #include <mutex>
 #include <atomic>
 
+#include "Thread.h"
+
+
 class Window;
+
 
 enum class MessageType : int
 {
@@ -18,6 +23,7 @@ enum class MessageType : int
     WindowSizeChanged = 3,
 };
 
+
 struct Message
 {
     MessageType type = MessageType::None;
@@ -26,6 +32,7 @@ struct Message
     Message(MessageType type, int id, HWND handle)
         : type(type), windowId(id), windowHandle(handle) {}
 };
+
 
 class WindowManager
 {
@@ -52,14 +59,14 @@ private:
     void UploadTextures();
 
     std::map<int, std::shared_ptr<Window>> windows_;
+    std::mutex windowsMutex_;
+
     std::vector<Message> messages_;
     int currentId_ = 0;
     mutable std::mutex messageMutex_;
 
     std::shared_ptr<class IsolatedD3D11Device> uploadDevice_;
-    std::thread uploadThread_;
-    std::mutex mutex_;
-    std::vector<int> uploadList_;
-    std::atomic<bool> isUploadThreadRunning_ = false;
+    Thread uploadThread_;
+    std::set<int> uploadList_;
 };
 

@@ -9,6 +9,7 @@
 #include <atomic>
 
 #include "Buffer.h"
+#include "Thread.h"
 
 
 class Window
@@ -69,10 +70,9 @@ private:
 
     CaptureMode mode_ = CaptureMode::PrintWindow;
 
-    std::thread captureThread_;
+    Thread captureThread_;
     Microsoft::WRL::ComPtr<ID3D11Texture2D> sharedTexture_;
     HANDLE sharedHandle_;
-    std::atomic<bool> isCaptureThreadRunning_ = false;
     std::atomic<bool> isCaptureRequested_ = false;
     std::atomic<bool> hasNewTextureUploaded_ = false;
 

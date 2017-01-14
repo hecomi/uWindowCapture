@@ -287,46 +287,26 @@ Window::CaptureMode Window::GetCaptureMode() const
 
 void Window::StartCapture()
 {
-    if (isCaptureThreadRunning_) return;
-
-    if (captureThread_.joinable())
+    captureThread_.Start([&]
     {
-        Debug::Error(__FUNCTION__, " => Capture thread is running in spite of false flag.");
-        captureThread_.join();
-    }
-
-    isCaptureThreadRunning_ = true;
-    captureThread_ = std::thread([&]
-    {
-        while (isCaptureThreadRunning_)
+        if (!IsWindow() || !IsVisible() || (mode_ == CaptureMode::None))
         {
-            ScopedThreadSleeper(std::chrono::microseconds(1000000 / 60));
-
-            if (!IsWindow() || !IsVisible() || (mode_ == CaptureMode::None))
-            {
-                continue;
-            }
-
-            if (isCaptureRequested_)
-            {
-                isCaptureRequested_ = false;
-                CaptureInternal();
-                RequestUpload();
-            }
+            return;
         }
-    });
+
+        if (isCaptureRequested_)
+        {
+            isCaptureRequested_ = false;
+            CaptureInternal();
+            RequestUpload();
+        }
+    }, std::chrono::microseconds(1000000 / 60));
 }
 
 
 void Window::StopCapture()
 {
-    if (!isCaptureThreadRunning_) return;
-
-    isCaptureThreadRunning_ = false;
-    if (captureThread_.joinable())
-    {
-        captureThread_.join();
-    }
+    captureThread_.Stop();
 }
 
 

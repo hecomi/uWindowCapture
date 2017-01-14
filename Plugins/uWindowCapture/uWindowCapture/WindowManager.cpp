@@ -5,6 +5,7 @@
 #include "Window.h"
 #include "Device.h"
 #include "Util.h"
+#include "Thread.h"
 #include "Debug.h"
 
 using namespace Microsoft::WRL;
@@ -20,7 +21,10 @@ WindowManager::WindowManager()
 
 WindowManager::~WindowManager()
 {
-    windows_.clear();
+    {
+        std::lock_guard<std::mutex> lock(windowsMutex_);
+        windows_.clear();
+    }
     StopUploadThread();
 }
 
@@ -173,50 +177,33 @@ void WindowManager::StartUploadThread()
         return;
     }
 
-    if (isUploadThreadRunning_) return;
-    isUploadThreadRunning_ = true;
-
-    uploadThread_ = std::thread([this] 
-    {
-        while (isUploadThreadRunning_)
-        {
-            ScopedThreadSleeper(std::chrono::microseconds(1000000 / 60));
-            UploadTextures();
-        }
-    });
+    uploadThread_.Start([this] 
+    { 
+        UploadTextures(); 
+    }, std::chrono::microseconds(1000000 / 60));
 }
 
 
 void WindowManager::StopUploadThread()
 {
-    if (!isUploadThreadRunning_) return;
-
-    isUploadThreadRunning_ = false;
-    if (uploadThread_.joinable())
-    {
-        uploadThread_.join();
-    }
+    uploadThread_.Stop();
 }
 
 
 void WindowManager::RequestUploadInBackgroundThread(int id)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::mutex> lock(windowsMutex_);
 
     auto window = GetWindow(id);
     if (!window) return;
 
-    // Skip if id is already registered to queue.
-    auto it = std::find(uploadList_.begin(), uploadList_.end(), id);
-    if (it != uploadList_.end()) return;
-
-    uploadList_.push_back(id);
+    uploadList_.insert(id);
 }
 
 
 void WindowManager::UploadTextures()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::mutex> lock(windowsMutex_);
 
     for (const auto id : uploadList_)
     {
@@ -233,7 +220,7 @@ void WindowManager::UploadTextures()
 
 void WindowManager::RenderWindows()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::mutex> lock(windowsMutex_);
 
     for (auto&& pair : windows_)
     {

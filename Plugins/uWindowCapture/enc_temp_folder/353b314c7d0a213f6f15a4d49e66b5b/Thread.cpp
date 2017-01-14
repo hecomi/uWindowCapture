@@ -50,10 +50,17 @@ void Thread::Start(const ThreadFunc& func, const std::chrono::microseconds& inte
 
     thread_ = std::thread([this] 
     {
-        while (isRunning_)
+        for (;;)
         {
             ScopedThreadSleeper sleeper(interval_);
-            func_();
+            if (isRunning_)
+            {
+                func_();
+            }
+            else
+            {
+                break;
+            }
         }
     });
 }
