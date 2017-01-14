@@ -435,32 +435,8 @@ void Window::UploadTextureToGpu(const std::shared_ptr<IsolatedD3D11Device>& devi
     {
         ComPtr<ID3D11DeviceContext> context;
         device->GetDevice()->GetImmediateContext(&context);
-
-        /*
-        ComPtr<IDXGIKeyedMutex> keyedMutex;
-        if (FAILED(sharedTexture_->QueryInterface(__uuidof(IDXGIKeyedMutex), &keyedMutex)))
-        {
-            Debug::Error(__FUNCTION__, " => could not get IDXGIKeyedMutex.");
-            return;
-        }
-
-        if (FAILED(keyedMutex->AcquireSync(0, 16)))
-        {
-            Debug::Error(__FUNCTION__, " => AcquireSync() failed.");
-            return;
-        }
-        */
-
         context->UpdateSubresource(sharedTexture_.Get(), 0, nullptr, buffer_.Get(), width_ * 4, 0);
         context->Flush();
-
-        /*
-        if (FAILED(keyedMutex->ReleaseSync(0)))
-        {
-            Debug::Error(__FUNCTION__, " => ReleaseSync() failed.");
-            return;
-        }
-        */
     }
 
     hasNewTextureUploaded_ = true;
@@ -486,30 +462,7 @@ void Window::Render()
             return;
         }
 
-        /*
-        ComPtr<IDXGIKeyedMutex> keyedMutex;
-        if (FAILED(texture->QueryInterface(__uuidof(IDXGIKeyedMutex), &keyedMutex)))
-        {
-            Debug::Error(__FUNCTION__, " => Could not get IDXGIKeyedMutex.");
-            return;
-        }
-
-        if (FAILED(keyedMutex->AcquireSync(0, 16)))
-        {
-            Debug::Error(__FUNCTION__, " => AcquireSync() failed.");
-            return;
-        }
-        */
-
         context->CopyResource(unityTexture_.load(), texture.Get());
-
-        /*
-        if (FAILED(keyedMutex->ReleaseSync(0)))
-        {
-            Debug::Error(__FUNCTION__, " => ReleaseSync() failed.");
-            return;
-        }
-        */
 
         GetWindowManager()->AddMessage({ MessageType::WindowCaptured, id_, window_ });
     }
