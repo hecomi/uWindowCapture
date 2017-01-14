@@ -40,11 +40,11 @@ extern "C"
 
         MessageManager::Create();
 
-        Uploader::Create();
-        Uploader::Get().Initialize();
-
         WindowManager::Create();
         WindowManager::Get().Initialize();
+
+        Uploader::Create();
+        Uploader::Get().Initialize();
     }
 
     UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcFinalize()
@@ -52,11 +52,11 @@ extern "C"
         if (!g_hasInitialized) return;
         g_hasInitialized = false;
 
-        WindowManager::Get().Finalize();
-        WindowManager::Destroy();
-
         Uploader::Get().Finalize();
         Uploader::Destroy();
+
+        WindowManager::Get().Finalize();
+        WindowManager::Destroy();
 
         MessageManager::Destroy();
 

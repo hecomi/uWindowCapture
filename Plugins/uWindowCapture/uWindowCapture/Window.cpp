@@ -398,13 +398,14 @@ void Window::CaptureInternal()
 
 void Window::RequestUpload()
 {
+    if (Uploader::IsNull()) return;
     Uploader::Get().RequestUploadInBackgroundThread(id_);
 }
 
 
 void Window::UploadTextureToGpu()
 {
-    if (!unityTexture_.load()) return;
+    if (!unityTexture_.load() || Uploader::IsNull()) return;
 
     std::lock_guard<std::mutex> lock(mutex_);
 

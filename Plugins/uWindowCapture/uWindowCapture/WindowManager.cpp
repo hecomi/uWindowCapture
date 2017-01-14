@@ -2,7 +2,6 @@
 
 #include "WindowManager.h"
 #include "Window.h"
-#include "Uploader.h"
 #include "Thread.h"
 #include "Message.h"
 #include "Debug.h"
