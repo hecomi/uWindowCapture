@@ -9,10 +9,6 @@
 #include "IUnityInterface.h"
 
 
-// Debug flag
-#define UWC_DEBUG_ON
-
-
 // Error handling
 void OutputApiError(const char* apiName);
 

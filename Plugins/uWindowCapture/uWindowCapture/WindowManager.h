@@ -37,7 +37,7 @@ private:
     Thread windowHandleListThread_;
     int lastWindowId_ = 0;
     std::map<int, std::shared_ptr<Window>> windows_;
-    std::vector<HWND> windowHandleList_;
+    std::vector<HWND> windowHandleList_[2];
     mutable std::mutex windowsHandleListMutex_;
 };
 

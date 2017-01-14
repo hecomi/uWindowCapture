@@ -98,8 +98,10 @@ void WindowManager::UpdateWindows()
 
     {
         std::lock_guard<std::mutex> lock(windowsHandleListMutex_);
-        for (HWND hWnd : windowHandleList_)
+        for (HWND hWnd : windowHandleList_[0])
         {
+            if (!::IsWindow(hWnd)) continue;
+
             if (auto window = WindowManager::Get().FindOrAddWindow(hWnd))
             {
                 window->isAlive_ = true;
@@ -127,19 +129,15 @@ void WindowManager::UpdateWindows()
 
 void WindowManager::UpdateWindowHandleList()
 {
-    std::lock_guard<std::mutex> lock(windowsHandleListMutex_);
-
-    windowHandleList_.clear();
-
     static const auto _EnumWindowsCallback = [](HWND hWnd, LPARAM lParam) -> BOOL
     {
-        if (!::IsWindowVisible(hWnd) || !::IsWindow(hWnd))
+        if (!::IsWindowVisible(hWnd) || !::IsWindow(hWnd) || !::IsWindowEnabled(hWnd))
         {
             return TRUE;
         }
 
         auto thiz = reinterpret_cast<WindowManager*>(lParam);
-        thiz->windowHandleList_.push_back(hWnd);
+        thiz->windowHandleList_[1].push_back(hWnd);
 
         return TRUE;
     };
@@ -151,6 +149,12 @@ void WindowManager::UpdateWindowHandleList()
     if (!::EnumWindows(EnumWindowsCallback, reinterpret_cast<LPARAM>(this)))
     {
         OutputApiError("EnumWindows");
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(windowsHandleListMutex_);
+        windowHandleList_[0] = windowHandleList_[1];
+        windowHandleList_[1].clear();
     }
 }
 
