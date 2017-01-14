@@ -7,8 +7,8 @@
 #include "IUnityInterface.h"
 #include "IUnityGraphics.h"
 
-#include "Common.h"
 #include "Debug.h"
+#include "Message.h"
 #include "Window.h"
 #include "WindowManager.h"
 
@@ -21,13 +21,10 @@ bool g_hasInitialized = false;
 // unity interafece to access ID3D11Device.
 IUnityInterfaces* g_unity = nullptr;
 
-// window manager instance.
-std::unique_ptr<WindowManager> g_manager = nullptr;
-
 
 bool CheckManager()
 {
-    if (!g_manager)
+    if (WindowManager::IsNull())
     {
         Debug::Error("Manager has not been initialized.");
         return false;
@@ -38,7 +35,7 @@ bool CheckManager()
 std::shared_ptr<Window> GetWindow(int id)
 {
     if (!CheckManager()) return nullptr;
-    return g_manager->GetWindow(id);
+    return WindowManager::Get().GetWindow(id);
 }
 
 
@@ -50,7 +47,11 @@ extern "C"
         g_hasInitialized = true;
 
         Debug::Initialize();
-        g_manager = std::make_unique<WindowManager>();
+
+        MessageManager::Create();
+
+        WindowManager::Create();
+        WindowManager::Get().Initialize();
     }
 
     UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcFinalize()
@@ -58,8 +59,12 @@ extern "C"
         if (!g_hasInitialized) return;
         g_hasInitialized = false;
 
+        WindowManager::Get().Finalize();
+        WindowManager::Destroy();
+
+        MessageManager::Destroy();
+
         Debug::Finalize();
-        g_manager.reset();
     }
 
     void UNITY_INTERFACE_API OnGraphicsDeviceEvent(UnityGfxDeviceEventType event)
@@ -111,7 +116,7 @@ extern "C"
     void UNITY_INTERFACE_API OnRenderEvent(int id)
     {
         if (!CheckManager()) return;
-        g_manager->Render();
+        WindowManager::Get().Render();
     }
 
     UNITY_INTERFACE_EXPORT UnityRenderingEvent UNITY_INTERFACE_API UwcGetRenderEventFunc()
@@ -122,19 +127,25 @@ extern "C"
     UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcUpdate()
     {
         if (!CheckManager()) return;
-        g_manager->Update();
+        WindowManager::Get().Update();
     }
 
     UNITY_INTERFACE_EXPORT UINT UNITY_INTERFACE_API UwcGetMessageCount()
     {
-        if (!CheckManager()) return 0;
-        return g_manager->GetMessageCount();
+        if (MessageManager::IsNull()) return 0;
+        return MessageManager::Get().GetCount();
     }
 
     UNITY_INTERFACE_EXPORT const Message* UNITY_INTERFACE_API UwcGetMessages()
     {
-        if (!CheckManager()) return nullptr;
-        return g_manager->GetMessages();
+        if (MessageManager::IsNull()) return nullptr;
+        return MessageManager::Get().GetHeadPointer();
+    }
+
+    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcClearMessages()
+    {
+        if (MessageManager::IsNull()) return;
+        MessageManager::Get().ClearAll();
     }
 
     UNITY_INTERFACE_EXPORT HWND UNITY_INTERFACE_API UwcGetWindowHandle(int id)

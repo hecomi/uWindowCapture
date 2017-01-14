@@ -6,6 +6,7 @@
 #include "Common.h"
 #include "Device.h"
 #include "Util.h"
+#include "Message.h"
 #include "Debug.h"
 
 using namespace Microsoft::WRL;
@@ -247,7 +248,7 @@ void Window::CreateBitmapIfNeeded(HDC hDc, UINT width, UINT height)
         buffer_.ExpandIfNeeded(width * height * 4);
     }
 
-    GetWindowManager()->AddMessage({ MessageType::WindowSizeChanged, id_, window_ });
+    MessageManager::Get().Add({ MessageType::WindowSizeChanged, id_, window_ });
 }
 
 
@@ -300,7 +301,7 @@ void Window::StartCapture()
             CaptureInternal();
             RequestUpload();
         }
-    }, std::chrono::microseconds(1000000 / 60));
+    });
 }
 
 
@@ -388,10 +389,7 @@ void Window::CaptureInternal()
 
 void Window::RequestUpload()
 {
-    if (auto& manager = GetWindowManager())
-    {
-        manager->RequestUploadInBackgroundThread(id_);
-    }
+    WindowManager::Get().RequestUploadInBackgroundThread(id_);
 }
 
 
@@ -464,6 +462,6 @@ void Window::Render()
 
         context->CopyResource(unityTexture_.load(), texture.Get());
 
-        GetWindowManager()->AddMessage({ MessageType::WindowCaptured, id_, window_ });
+        MessageManager::Get().Add({ MessageType::WindowCaptured, id_, window_ });
     }
 }

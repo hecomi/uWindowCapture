@@ -23,6 +23,8 @@
     <ClInclude Include="Thread.h" />
     <ClInclude Include="Util.h" />
     <ClInclude Include="Buffer.h" />
+    <ClInclude Include="Message.h" />
+    <ClInclude Include="Singleton.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp" />
@@ -33,5 +35,6 @@
     <ClCompile Include="Device.cpp" />
     <ClCompile Include="Thread.cpp" />
     <ClCompile Include="Util.cpp" />
+    <ClCompile Include="Message.cpp" />
   </ItemGroup>
 </Project>

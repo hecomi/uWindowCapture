@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Text;
 using System.Runtime.InteropServices;
 
 #pragma warning disable 114, 465
@@ -39,7 +38,7 @@ public struct Message
     [MarshalAs(UnmanagedType.I4)]
     public int windowId;
     [MarshalAs(UnmanagedType.I8)]
-    public System.IntPtr windowHandle;
+    public IntPtr windowHandle;
 }
 
 public static class Lib
@@ -67,6 +66,8 @@ public static class Lib
     private static extern int GetMessageCount();
     [DllImport(name, EntryPoint = "UwcGetMessages")]
     private static extern IntPtr GetMessages_Internal();
+    [DllImport(name, EntryPoint = "UwcClearMessages")]
+    private static extern void ClearMessages();
     [DllImport(name, EntryPoint = "UwcGetWindowHandle")]
     public static extern IntPtr GetWindowHandle(int id);
     [DllImport(name, EntryPoint = "UwcGetWindowOwner")]
@@ -120,7 +121,7 @@ public static class Lib
     [DllImport(name, EntryPoint = "UwcIsWindowTouchable")]
     public static extern bool IsWindowTouchable(int id);
     [DllImport(name, EntryPoint = "UwcGetForegroundWindow")]
-    public static extern System.IntPtr GetForegroundWindow();
+    public static extern IntPtr GetForegroundWindow();
     [DllImport(name, EntryPoint = "UwcGetScreenWidth")]
     public static extern int GetScreenWidth();
     [DllImport(name, EntryPoint = "UwcGetScreenHeight")]
@@ -137,9 +138,11 @@ public static class Lib
         var size = Marshal.SizeOf(typeof(Message));
 
         for (int i = 0; i < count; ++i) {
-            var data = new System.IntPtr(ptr.ToInt64() + (size * i));
+            var data = new IntPtr(ptr.ToInt64() + (size * i));
             messages[i] = (Message)Marshal.PtrToStructure(data, typeof(Message));
         }
+
+        ClearMessages();
 
         return messages;
     }
@@ -148,7 +151,7 @@ public static class Lib
     {
         var len = GetWindowTitleLength(id);
         var ptr = GetWindowTitle_Internal(id);
-        if (ptr != System.IntPtr.Zero) {
+        if (ptr != IntPtr.Zero) {
             return Marshal.PtrToStringUni(ptr, len);
         } else {
             return "";

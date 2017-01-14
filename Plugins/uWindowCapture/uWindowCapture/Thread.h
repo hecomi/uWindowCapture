@@ -11,10 +11,13 @@ class Thread
 {
 public:
     using ThreadFunc = std::function<void()>;
+    using microseconds = std::chrono::microseconds;
 
     Thread();
     ~Thread();
-    void Start(const ThreadFunc& func, const std::chrono::microseconds& interval);
+    void Start(
+        const ThreadFunc& func,
+        const microseconds& interval = microseconds(1'000'000 / 60));
     void Restart();
     void Stop();
     bool IsRunning() const;
@@ -22,6 +25,6 @@ public:
 private:
     std::thread thread_;
     std::atomic<bool> isRunning_ = false;
-    std::chrono::microseconds interval_ = std::chrono::microseconds::zero();
+    microseconds interval_ = microseconds::zero();
     ThreadFunc func_ = nullptr;
 };

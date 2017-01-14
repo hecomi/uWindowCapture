@@ -34,7 +34,7 @@ Thread::~Thread()
 }
 
 
-void Thread::Start(const ThreadFunc& func, const std::chrono::microseconds& interval)
+void Thread::Start(const ThreadFunc& func, const microseconds& interval)
 {
     if (isRunning_) return;
 

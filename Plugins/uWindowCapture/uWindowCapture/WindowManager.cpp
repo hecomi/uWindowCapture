@@ -6,32 +6,37 @@
 #include "Device.h"
 #include "Util.h"
 #include "Thread.h"
+#include "Message.h"
 #include "Debug.h"
 
 using namespace Microsoft::WRL;
 
 
+UWC_SINGLETON_INSTANCE(WindowManager)
 
-WindowManager::WindowManager()
+
+void WindowManager::Initialize()
 {
-    InitializeDevice();
+    uploadDevice_ = std::make_shared<IsolatedD3D11Device>();
+
     StartUploadThread();
+    StartWindowThread();
 }
 
 
-WindowManager::~WindowManager()
+void WindowManager::Finalize()
 {
+    StopWindowThread();
+    StopUploadThread();
     {
         std::lock_guard<std::mutex> lock(windowsMutex_);
         windows_.clear();
     }
-    StopUploadThread();
 }
 
 
 void WindowManager::Update()
 {
-    UpdateMessages();
     UpdateWindows();
 }
 
@@ -42,8 +47,25 @@ void WindowManager::Render()
 }
 
 
+void WindowManager::StartWindowThread()
+{
+    windowThread_.Start([this]
+    {
+        //UpdateWindows();
+    });
+}
+
+
+void WindowManager::StopWindowThread()
+{
+    windowThread_.Stop();
+}
+
+
 std::shared_ptr<Window> WindowManager::GetWindow(int id) const
 {
+    std::lock_guard<std::mutex> lock(windowsMutex_);
+
     auto it = windows_.find(id);
     if (it == windows_.end())
     {
@@ -56,6 +78,8 @@ std::shared_ptr<Window> WindowManager::GetWindow(int id) const
 
 std::shared_ptr<Window> WindowManager::FindOrAddWindow(HWND hWnd)
 {
+    std::lock_guard<std::mutex> lock(windowsMutex_);
+
     auto it = std::find_if(
         windows_.begin(),
         windows_.end(),
@@ -66,41 +90,13 @@ std::shared_ptr<Window> WindowManager::FindOrAddWindow(HWND hWnd)
         return it->second;
     }
 
-    const auto id = currentId_++;
+    const auto id = lastWindowId_++;
     auto window = std::make_shared<Window>(hWnd, id);
     windows_.emplace(id, window);
-    AddMessage({ MessageType::WindowAdded, id, hWnd });
+
+    MessageManager::Get().Add({ MessageType::WindowAdded, id, hWnd });
 
     return window;
-}
-
-
-UINT WindowManager::GetMessageCount() const
-{
-    std::lock_guard<std::mutex> lock(messageMutex_);
-    return static_cast<UINT>(messages_.size());
-}
-
-
-const Message* WindowManager::GetMessages() const
-{
-    std::lock_guard<std::mutex> lock(messageMutex_);
-    if (messages_.empty()) return nullptr;
-    return &messages_[0];
-}
-
-
-void WindowManager::AddMessage(Message message)
-{
-    std::lock_guard<std::mutex> lock(messageMutex_);
-    messages_.push_back(message);
-}
-
-
-void WindowManager::UpdateMessages()
-{
-    std::lock_guard<std::mutex> lock(messageMutex_);
-    messages_.clear();
 }
 
 
@@ -113,7 +109,7 @@ void WindowManager::UpdateWindows()
             return TRUE;
         }
 
-        if (auto window = GetWindowManager()->FindOrAddWindow(hWnd))
+        if (auto window = WindowManager::Get().FindOrAddWindow(hWnd))
         {
             window->Update();
         }
@@ -125,9 +121,12 @@ void WindowManager::UpdateWindows()
     static const auto EnumWindowsCallback = static_cast<EnumWindowsCallbackType>(_EnumWindowsCallback);
 
     // mark all window as inactive
-    for (const auto& pair : windows_)
     {
-        pair.second->isAlive_ = false;
+        std::lock_guard<std::mutex> lock(windowsMutex_);
+        for (const auto& pair : windows_)
+        {
+            pair.second->isAlive_ = false;
+        }
     }
 
     // add desktop
@@ -148,24 +147,21 @@ void WindowManager::UpdateWindows()
     }
 
     // remove inactive windows
-    for (auto it = windows_.begin(); it != windows_.end();)
     {
-        if (!it->second->isAlive_)
+        std::lock_guard<std::mutex> lock(windowsMutex_);
+        for (auto it = windows_.begin(); it != windows_.end();)
         {
-            AddMessage({ MessageType::WindowRemoved, it->first, it->second->GetHandle() });
-            windows_.erase(it++);
-        }
-        else
-        {
-            it++;
+            if (!it->second->isAlive_)
+            {
+                MessageManager::Get().Add({ MessageType::WindowRemoved, it->first, it->second->GetHandle() });
+                windows_.erase(it++);
+            }
+            else
+            {
+                it++;
+            }
         }
     }
-}
-
-
-void WindowManager::InitializeDevice()
-{
-    uploadDevice_ = std::make_shared<IsolatedD3D11Device>();
 }
 
 
@@ -180,7 +176,7 @@ void WindowManager::StartUploadThread()
     uploadThread_.Start([this] 
     { 
         UploadTextures(); 
-    }, std::chrono::microseconds(1000000 / 60));
+    });
 }
 
 
@@ -192,7 +188,7 @@ void WindowManager::StopUploadThread()
 
 void WindowManager::RequestUploadInBackgroundThread(int id)
 {
-    std::lock_guard<std::mutex> lock(windowsMutex_);
+    std::lock_guard<std::mutex> lock(uploadMutex_);
 
     auto window = GetWindow(id);
     if (!window) return;
@@ -203,7 +199,7 @@ void WindowManager::RequestUploadInBackgroundThread(int id)
 
 void WindowManager::UploadTextures()
 {
-    std::lock_guard<std::mutex> lock(windowsMutex_);
+    std::lock_guard<std::mutex> lock(uploadMutex_);
 
     for (const auto id : uploadList_)
     {

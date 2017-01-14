@@ -93,8 +93,8 @@ public class UwcManager : MonoBehaviour
 
     void Update()
     {
-        UpdateMessages();
         Lib.Update();
+        UpdateMessages();
     }
 
     void UpdateMessages()
