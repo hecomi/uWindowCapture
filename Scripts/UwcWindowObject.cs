@@ -16,12 +16,12 @@ public class UwcWindowObject : MonoBehaviour
 
     void Awake()
     {
-        captureMode = window.captureMode;
         material_ = GetComponent<Renderer>().material; // clone
     }
 
     void Start()
     {
+        captureMode = window.captureMode;
         window.onSizeChanged += OnSizeChanged;
         window.onCaptured += OnCaptured;
         window.StartCapture();
