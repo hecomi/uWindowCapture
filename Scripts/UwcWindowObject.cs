@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections;
 
 namespace uWindowCapture
 {
@@ -25,7 +24,7 @@ public class UwcWindowObject : MonoBehaviour
         window.onSizeChanged += OnSizeChanged;
         window.onCaptured += OnCaptured;
         window.StartCapture();
-        window.RequestCapture();
+        window.RequestCapture(); // capture at first frame
     }
 
     void OnDestroy()
@@ -48,10 +47,11 @@ public class UwcWindowObject : MonoBehaviour
     {
         window.captureMode = captureMode;
 
-        if (window.handle != Lib.GetForegroundWindow()) return;
-
         if (updatedFrame_ % skipFrame == 0) {
-            window.RequestCapture();
+            var priority = (window.handle == Lib.GetForegroundWindow()) ?
+                CapturePriority.Immediate : CapturePriority.Queued;
+                if (priority == CapturePriority.Queued) return;
+            window.RequestCapture(priority);
         }
     }
 
