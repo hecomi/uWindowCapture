@@ -184,19 +184,17 @@ const std::wstring& Window::GetTitle() const
 
 void Window::CreateBitmapIfNeeded(HDC hDc, UINT width, UINT height)
 {
+    std::lock_guard<std::mutex> lock(bufferMutex_);
+
     if (bufferWidth_ == width && bufferHeight_ == height) return;
     if (width == 0 || height == 0) return;
 
-    std::lock_guard<std::mutex> lock(bufferMutex_);
-
     bufferWidth_ = width;
     bufferHeight_ = height;
+    buffer_.ExpandIfNeeded(width * height * 4);
 
-    {
-        DeleteBitmap();
-        bitmap_ = ::CreateCompatibleBitmap(hDc, width, height);
-        buffer_.ExpandIfNeeded(width * height * 4);
-    }
+    DeleteBitmap();
+    bitmap_ = ::CreateCompatibleBitmap(hDc, width, height);
 
     MessageManager::Get().Add({ MessageType::WindowSizeChanged, id_, window_ });
 }
@@ -380,9 +378,12 @@ void Window::UploadTextureToGpu()
     }
 
     {
+        std::lock_guard<std::mutex> lock(bufferMutex_);
         ComPtr<ID3D11DeviceContext> context;
         uploader->GetDevice()->GetImmediateContext(&context);
+        Debug::Log("UpdateSubresource");
         context->UpdateSubresource(sharedTexture_.Get(), 0, nullptr, buffer_.Get(), bufferWidth_ * 4, 0);
+        Debug::Log("Flush");
         context->Flush();
     }
 

@@ -80,14 +80,6 @@ std::shared_ptr<Window> WindowManager::GetWindow(int id) const
 }
 
 
-std::shared_ptr<Window> WindowManager::GetWindow(HWND hWnd) const
-{
-    auto it = windowHandleTable_.find(hWnd);
-    if (it == windowHandleTable_.end()) return nullptr;
-    return it->second.lock();
-}
-
-
 std::shared_ptr<Window> WindowManager::FindOrAddWindow(HWND hWnd)
 {
     auto it = std::find_if(
@@ -103,7 +95,6 @@ std::shared_ptr<Window> WindowManager::FindOrAddWindow(HWND hWnd)
     const auto id = lastWindowId_++;
     auto window = std::make_shared<Window>(hWnd, id);
     windows_.emplace(id, window);
-    windowHandleTable_.emplace(hWnd, window);
 
     MessageManager::Get().Add({ MessageType::WindowAdded, id, hWnd });
 
