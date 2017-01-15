@@ -160,17 +160,7 @@ public class Window
         set;
     }
 
-    public void StartCapture()
-    {
-        Lib.StartCaptureWindow(id);
-    }
-
-    public void StopCapture()
-    {
-        Lib.StopCaptureWindow(id);
-    }
-
-    public void RequestCapture(CapturePriority priority = CapturePriority.Immediate)
+    public void RequestCapture(CapturePriority priority = CapturePriority.High)
     {
         UpdateTextureIfNeeded();
         Lib.RequestCaptureWindow(id, priority);
