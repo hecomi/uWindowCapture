@@ -99,7 +99,7 @@ void UploadManager::StartUploadThread()
     threadLoop_.Start([this] 
     { 
         UploadTextures(); 
-    }, std::chrono::milliseconds(1) /* check uploading every 1 ms */);
+    }, std::chrono::microseconds(100) /* check uploading every 100 us */);
 }
 
 

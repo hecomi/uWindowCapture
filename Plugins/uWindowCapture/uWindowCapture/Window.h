@@ -34,6 +34,8 @@ public:
     UINT GetWidth() const;
     UINT GetHeight() const;
     UINT GetZOrder() const;
+    UINT GetBufferWidth() const;
+    UINT GetBufferHeight() const;
 
     void UpdateTitle();
     UINT GetTitleLength() const;

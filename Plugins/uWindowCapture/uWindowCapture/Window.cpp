@@ -1,5 +1,6 @@
 #include <vector>
 #include <algorithm>
+#include <dwmapi.h>
 
 #include "Window.h"
 #include "WindowManager.h"
@@ -9,15 +10,9 @@
 #include "Util.h"
 #include "Debug.h"
 
+#pragma comment(lib, "dwmapi.lib")
+
 using namespace Microsoft::WRL;
-
-
-
-namespace
-{
-
-
-}
 
 
 
@@ -148,6 +143,18 @@ UINT Window::GetZOrder() const
 }
 
 
+UINT Window::GetBufferWidth() const
+{
+    return bufferWidth_;
+}
+
+
+UINT Window::GetBufferHeight() const
+{
+    return bufferHeight_;
+}
+
+
 void Window::UpdateTitle()
 {
     if (isDesktop_) return;
@@ -246,7 +253,7 @@ void Window::CaptureInternal()
     auto hDc = ::GetDC(window_);
 
     RECT rect;
-    if (FAILED(::GetWindowRect(window_, &rect)))
+    if (FAILED(::DwmGetWindowAttribute(window_, DWMWA_EXTENDED_FRAME_BOUNDS, &rect, sizeof(RECT))))
     {
         OutputApiError("GetWindowRect");
     }
