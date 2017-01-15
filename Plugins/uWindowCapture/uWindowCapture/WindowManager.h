@@ -26,6 +26,7 @@ public:
     void Update();
     void Render();
     std::shared_ptr<Window> GetWindow(int id) const;
+    std::shared_ptr<Window> GetWindow(HWND hWnd) const;
 
     static const std::unique_ptr<CaptureManager>& GetCaptureManager();
     static const std::unique_ptr<UploadManager>& GetUploadManager();
@@ -45,6 +46,7 @@ private:
 
     int lastWindowId_ = 0;
     std::map<int, std::shared_ptr<Window>> windows_;
+    std::map<HWND, std::weak_ptr<Window>> windowHandleTable_;
     ThreadLoop windowHandleListThreadLoop_;
 
     struct WindowInfo

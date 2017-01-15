@@ -1,6 +1,7 @@
 #include <vector>
 #include <algorithm>
 #include <dwmapi.h>
+#include <WinUser.h>
 
 #include "Window.h"
 #include "WindowManager.h"
@@ -30,7 +31,7 @@ Window::Window(HWND hWnd, int id)
     {
         owner_ = ::GetWindow(hWnd, GW_OWNER);
         isAltTabWindow_ = ::IsAltTabWindow(hWnd);
-        mode_ = (owner_ == NULL) ? CaptureMode::PrintWindow : CaptureMode::BitBlt;
+        mode_ = (owner_ == NULL) ? CaptureMode::PrintWindow : CaptureMode::BitBltAlpha;
     }
 }
 
@@ -253,21 +254,24 @@ void Window::CaptureInternal()
 
     auto hDc = ::GetDC(window_);
 
-    RECT rect;
-    if (FAILED(::DwmGetWindowAttribute(window_, DWMWA_EXTENDED_FRAME_BOUNDS, &rect, sizeof(RECT))))
     {
-        OutputApiError("GetWindowRect");
-    }
-    const auto width = rect.right - rect.left;
-    const auto height = rect.bottom - rect.top;
+        BITMAP header;
+        ZeroMemory(&header, sizeof(BITMAP));
 
-    if (width == 0 || height == 0)
-    {
-        if (!::ReleaseDC(window_, hDc)) OutputApiError("ReleaseDC");
-        return;
-    }
+        auto hBitmap = GetCurrentObject(hDc, OBJ_BITMAP);
+        GetObject(hBitmap, sizeof(BITMAP), &header);
 
-    CreateBitmapIfNeeded(hDc, width, height);
+        const auto width = header.bmWidth;
+        const auto height = header.bmHeight;
+
+        if (width == 0 || height == 0)
+        {
+            if (!::ReleaseDC(window_, hDc)) OutputApiError("ReleaseDC");
+            return;
+        }
+
+        CreateBitmapIfNeeded(hDc, width, height);
+    }
 
     auto hDcMem = ::CreateCompatibleDC(hDc);
     HGDIOBJ preObject = ::SelectObject(hDcMem, bitmap_);
@@ -302,8 +306,8 @@ void Window::CaptureInternal()
     if (result)
     {
         BITMAPINFOHEADER bmi {};
-        bmi.biWidth       = static_cast<LONG>(width);
-        bmi.biHeight      = -static_cast<LONG>(height);
+        bmi.biWidth       = static_cast<LONG>(bufferWidth_);
+        bmi.biHeight      = -static_cast<LONG>(bufferHeight_);
         bmi.biPlanes      = 1;
         bmi.biSize        = sizeof(BITMAPINFOHEADER);
         bmi.biBitCount    = 32;
@@ -312,7 +316,7 @@ void Window::CaptureInternal()
 
         {
             std::lock_guard<std::mutex> lock(bufferMutex_);
-            if (!::GetDIBits(hDcMem, bitmap_, 0, height, buffer_.Get(), reinterpret_cast<BITMAPINFO*>(&bmi), DIB_RGB_COLORS))
+            if (!::GetDIBits(hDcMem, bitmap_, 0, bufferHeight_, buffer_.Get(), reinterpret_cast<BITMAPINFO*>(&bmi), DIB_RGB_COLORS))
             {
                 OutputApiError("GetDIBits");
             }
