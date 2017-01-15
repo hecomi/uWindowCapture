@@ -4,7 +4,7 @@
 
 #include "IUnityInterface.h"
 #include "IUnityGraphicsD3D11.h"
-#include "Uploader.h"
+#include "UploadManager.h"
 #include "WindowManager.h"
 #include "Debug.h"
 #include "Window.h"
@@ -18,10 +18,7 @@ using TexturePtr = Microsoft::WRL::ComPtr<ID3D11Texture2D>;
 
 
 
-UWC_SINGLETON_INSTANCE(Uploader)
-
-
-void Uploader::Initialize()
+UploadManager::UploadManager()
 {
     ComPtr<IDXGIDevice1> dxgiDevice;
     if (FAILED(GetUnityDevice()->QueryInterface(IID_PPV_ARGS(&dxgiDevice)))){
@@ -65,19 +62,19 @@ void Uploader::Initialize()
 }
 
 
-void Uploader::Finalize()
+UploadManager::~UploadManager()
 {
     StopUploadThread();
 }
 
 
-DevicePtr Uploader::GetDevice()
+DevicePtr UploadManager::GetDevice()
 { 
     return device_;
 }
 
 
-TexturePtr Uploader::CreateCompatibleSharedTexture(const TexturePtr& texture)
+TexturePtr UploadManager::CreateCompatibleSharedTexture(const TexturePtr& texture)
 {
     TexturePtr sharedTexture;
 
@@ -97,7 +94,7 @@ TexturePtr Uploader::CreateCompatibleSharedTexture(const TexturePtr& texture)
 }
 
 
-void Uploader::StartUploadThread()
+void UploadManager::StartUploadThread()
 {
     threadLoop_.Start([this] 
     { 
@@ -106,20 +103,20 @@ void Uploader::StartUploadThread()
 }
 
 
-void Uploader::StopUploadThread()
+void UploadManager::StopUploadThread()
 {
     threadLoop_.Stop();
 }
 
 
-void Uploader::RequestUploadInBackgroundThread(int id)
+void UploadManager::RequestUploadInBackgroundThread(int id)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     uploadList_.insert(id);
 }
 
 
-void Uploader::UploadTextures()
+void UploadManager::UploadTextures()
 {
     std::lock_guard<std::mutex> lock(mutex_);
 

@@ -9,32 +9,11 @@
 
 #include "Singleton.h"
 #include "Thread.h"
+#include "CaptureManager.h"
+#include "UploadManager.h"
 
 
 class Window;
-
-
-enum class CapturePriority
-{
-    Immediate = 0,
-    Queued = 1,
-};
-
-
-class WindowCaptureManager
-{
-public:
-    void RequestCapture(int id, CapturePriority priority);
-    void Update();
-    void SetNumberPerFrame(UINT number);
-
-private:
-    void Enqueue(int id, bool back);
-    int Dequeue();
-
-    std::deque<int> queue_;
-    UINT numberPerFrame_ = 1;
-};
 
 
 class WindowManager
@@ -47,7 +26,9 @@ public:
     void Update();
     void Render();
     std::shared_ptr<Window> GetWindow(int id) const;
-    const std::unique_ptr<WindowCaptureManager>& GetCaptureManager() const;
+
+    static const std::unique_ptr<CaptureManager>& GetCaptureManager();
+    static const std::unique_ptr<UploadManager>& GetUploadManager();
 
 private:
     std::shared_ptr<Window> FindOrAddWindow(HWND hwnd);
@@ -59,10 +40,12 @@ private:
     void UpdateWindows();
     void RenderWindows();
 
+    std::unique_ptr<CaptureManager> captureManager_;
+    std::unique_ptr<UploadManager> uploadManager_;
+
     int lastWindowId_ = 0;
     std::map<int, std::shared_ptr<Window>> windows_;
     ThreadLoop windowHandleListThreadLoop_;
-    std::unique_ptr<WindowCaptureManager> captureManager_ = std::make_unique<WindowCaptureManager>();
 
     struct WindowInfo
     {

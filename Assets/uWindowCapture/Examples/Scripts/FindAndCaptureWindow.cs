@@ -7,19 +7,11 @@ public class FindAndCaptureWindow : MonoBehaviour
     public string target = "";
     public CaptureMode mode;
 
-    void OnDestroy()
-    {
-        if (window != null) {
-            window.StopCapture();
-        }
-    }
-
     void Update()
     {
         if (window == null || !window.isAlive) {
             window = UwcManager.Find(target);
             if (window != null) {
-                window.StartCapture();
                 Debug.Log(window);
             }
         }
@@ -27,7 +19,7 @@ public class FindAndCaptureWindow : MonoBehaviour
         if (window != null) {
             GetComponent<Renderer>().material.mainTexture = window.texture;
             window.captureMode = mode;
-            window.RequestCapture();
+            window.RequestCapture(CapturePriority.High);
         }
     }
 }

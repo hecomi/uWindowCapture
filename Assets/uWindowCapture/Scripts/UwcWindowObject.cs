@@ -23,13 +23,11 @@ public class UwcWindowObject : MonoBehaviour
         captureMode = window.captureMode;
         window.onSizeChanged += OnSizeChanged;
         window.onCaptured += OnCaptured;
-        window.StartCapture();
-        window.RequestCapture(); // capture at first frame
+        window.RequestCapture(CapturePriority.High);
     }
 
     void OnDestroy()
     {
-        window.StopCapture();
         window.onCaptured -= OnCaptured;
         window.onSizeChanged -= OnSizeChanged;
     }
@@ -49,8 +47,8 @@ public class UwcWindowObject : MonoBehaviour
 
         if (updatedFrame_ % skipFrame == 0) {
             var priority = (window.handle == Lib.GetForegroundWindow()) ?
-                CapturePriority.Immediate : CapturePriority.Queued;
-                if (priority == CapturePriority.Queued) return;
+                CapturePriority.High : 
+                CapturePriority.Low;
             window.RequestCapture(priority);
         }
     }

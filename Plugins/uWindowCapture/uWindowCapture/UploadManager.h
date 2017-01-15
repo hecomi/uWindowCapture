@@ -6,22 +6,19 @@
 #include <wrl/client.h>
 
 #include "Thread.h"
-#include "Singleton.h"
 
 
 class Window;
 
 
-class Uploader
+class UploadManager
 {
-    UWC_SINGLETON(Uploader)
-
 public:
     using DevicePtr = Microsoft::WRL::ComPtr<ID3D11Device>;
     using TexturePtr = Microsoft::WRL::ComPtr<ID3D11Texture2D>;
 
-    void Initialize();
-    void Finalize();
+    UploadManager();
+    ~UploadManager();
 
     DevicePtr GetDevice();
     TexturePtr CreateCompatibleSharedTexture(const TexturePtr& texture);

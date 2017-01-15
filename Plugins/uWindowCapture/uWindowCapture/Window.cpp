@@ -3,8 +3,8 @@
 
 #include "Window.h"
 #include "WindowManager.h"
+#include "UploadManager.h"
 #include "Unity.h"
-#include "Uploader.h"
 #include "Message.h"
 #include "Util.h"
 #include "Debug.h"
@@ -41,12 +41,8 @@ Window::Window(HWND hWnd, int id)
 
 Window::~Window()
 {
-    StopCapture();
-
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        DeleteBitmap();
-    }
+    std::lock_guard<std::mutex> lock(bufferMutex_);
+    DeleteBitmap();
 }
 
 
@@ -124,31 +120,31 @@ BOOL Window::IsTouchable() const
 
 UINT Window::GetX() const
 {
-    return rect_.left;
+    return cachedRect_.left;
 }
 
 
 UINT Window::GetY() const
 {
-    return rect_.top;
+    return cachedRect_.top;
 }
 
 
 UINT Window::GetWidth() const
 {
-    return rect_.right - rect_.left;
+    return cachedRect_.right - cachedRect_.left;
 }
 
 
 UINT Window::GetHeight() const
 {
-    return rect_.bottom - rect_.top;
+    return cachedRect_.bottom - cachedRect_.top;
 }
 
 
 UINT Window::GetZOrder() const
 {
-    return zOrder_;
+    return cachedZOrder_;
 }
 
 
@@ -182,7 +178,7 @@ void Window::CreateBitmapIfNeeded(HDC hDc, UINT width, UINT height)
     if (bufferWidth_ == width && bufferHeight_ == height) return;
     if (width == 0 || height == 0) return;
 
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::mutex> lock(bufferMutex_);
 
     bufferWidth_ = width;
     bufferHeight_ = height;
@@ -231,34 +227,15 @@ CaptureMode Window::GetCaptureMode() const
 }
 
 
-void Window::StartCapture()
+void Window::Capture()
 {
-    captureThreadLoop_.Start([&]
+    if (!IsWindow() || !IsVisible() || (mode_ == CaptureMode::None))
     {
-        if (!IsWindow() || !IsVisible() || (mode_ == CaptureMode::None))
-        {
-            return;
-        }
+        return;
+    }
 
-        if (isCaptureRequested_)
-        {
-            isCaptureRequested_ = false;
-            CaptureInternal();
-            RequestUpload();
-        }
-    });
-}
-
-
-void Window::StopCapture()
-{
-    captureThreadLoop_.Stop();
-}
-
-
-void Window::RequestCapture()
-{
-    isCaptureRequested_ = true;
+    CaptureInternal();
+    RequestUpload();
 }
 
 
@@ -326,7 +303,7 @@ void Window::CaptureInternal()
         bmi.biSizeImage   = 0;
 
         {
-            std::lock_guard<std::mutex> lock(mutex_);
+            std::lock_guard<std::mutex> lock(bufferMutex_);
             if (!::GetDIBits(hDcMem, bitmap_, 0, height, buffer_.Get(), reinterpret_cast<BITMAPINFO*>(&bmi), DIB_RGB_COLORS))
             {
                 OutputApiError("GetDIBits");
@@ -343,16 +320,18 @@ void Window::CaptureInternal()
 
 void Window::RequestUpload()
 {
-    if (Uploader::IsNull()) return;
-    Uploader::Get().RequestUploadInBackgroundThread(id_);
+    if (auto& uploader = WindowManager::GetUploadManager())
+    {
+        uploader->RequestUploadInBackgroundThread(id_);
+    }
 }
 
 
 void Window::UploadTextureToGpu()
 {
-    if (!unityTexture_.load() || Uploader::IsNull()) return;
+    if (!unityTexture_.load()) return;
 
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::mutex> lock(sharedTextureMutex_);
 
     bool shouldUpdateTexture = true;
 
@@ -366,9 +345,12 @@ void Window::UploadTextureToGpu()
         }
     }
 
+    auto& uploader = WindowManager::GetUploadManager();
+    if (!uploader) return;
+
     if (shouldUpdateTexture)
     {
-        sharedTexture_ = Uploader::Get().CreateCompatibleSharedTexture(unityTexture_.load());
+        sharedTexture_ = uploader->CreateCompatibleSharedTexture(unityTexture_.load());
 
         if (!sharedTexture_)
         {
@@ -387,7 +369,7 @@ void Window::UploadTextureToGpu()
 
     {
         ComPtr<ID3D11DeviceContext> context;
-        Uploader::Get().GetDevice()->GetImmediateContext(&context);
+        uploader->GetDevice()->GetImmediateContext(&context);
         context->UpdateSubresource(sharedTexture_.Get(), 0, nullptr, buffer_.Get(), bufferWidth_ * 4, 0);
         context->Flush();
     }
@@ -403,7 +385,7 @@ void Window::Render()
 
     if (unityTexture_.load() && sharedTexture_ && sharedHandle_)
     {
-        std::lock_guard<std::mutex> lock(mutex_);
+        std::lock_guard<std::mutex> lock(sharedTextureMutex_);
 
         ComPtr<ID3D11DeviceContext> context;
         GetUnityDevice()->GetImmediateContext(&context);

@@ -135,9 +135,10 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="CaptureManager.cpp" />
     <ClCompile Include="Unity.cpp" />
     <ClCompile Include="Debug.cpp" />
-    <ClCompile Include="Uploader.cpp" />
+    <ClCompile Include="UploadManager.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Message.cpp" />
     <ClCompile Include="Thread.cpp" />
@@ -147,9 +148,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Buffer.h" />
+    <ClInclude Include="CaptureManager.h" />
     <ClInclude Include="Unity.h" />
     <ClInclude Include="Debug.h" />
-    <ClInclude Include="Uploader.h" />
+    <ClInclude Include="UploadManager.h" />
     <ClInclude Include="include\IUnityGraphics.h" />
     <ClInclude Include="include\IUnityGraphicsD3D11.h" />
     <ClInclude Include="include\IUnityInterface.h" />

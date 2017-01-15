@@ -8,7 +8,6 @@
 #include <atomic>
 
 #include "Buffer.h"
-#include "Thread.h"
 
 
 enum class CaptureMode
@@ -46,9 +45,7 @@ public:
     void SetCaptureMode(CaptureMode mode);
     CaptureMode GetCaptureMode() const;
 
-    void StartCapture();
-    void StopCapture();
-    void RequestCapture();
+    void Capture();
     void Render();
     void UploadTextureToGpu();
 
@@ -76,24 +73,21 @@ private:
     HWND owner_ = nullptr;
     std::wstring title_;
 
-    RECT rect_;
-    UINT zOrder_ = 0;
-
-    ThreadLoop captureThreadLoop_;
-    std::mutex mutex_;
+    RECT cachedRect_;
+    UINT cachedZOrder_ = 0;
 
     Microsoft::WRL::ComPtr<ID3D11Texture2D> sharedTexture_;
     HANDLE sharedHandle_;
     std::atomic<ID3D11Texture2D*> unityTexture_ = nullptr;
+    std::mutex sharedTextureMutex_;
 
     Buffer<BYTE> buffer_;
     HBITMAP bitmap_ = nullptr;
     std::atomic<UINT> bufferWidth_ = 0;
     std::atomic<UINT> bufferHeight_ = 0;
+    std::mutex bufferMutex_;
 
-    std::atomic<bool> isCaptureRequested_ = false;
     std::atomic<bool> hasNewTextureUploaded_ = false;
-
     std::atomic<bool> isAlive_ = true;
     std::atomic<bool> isDesktop_ = false;
     std::atomic<bool> isAltTabWindow_ = false;

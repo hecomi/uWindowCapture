@@ -23,8 +23,9 @@
     <ClInclude Include="Buffer.h" />
     <ClInclude Include="Message.h" />
     <ClInclude Include="Singleton.h" />
-    <ClInclude Include="Uploader.h" />
     <ClInclude Include="Unity.h" />
+    <ClInclude Include="CaptureManager.h" />
+    <ClInclude Include="UploadManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp" />
@@ -34,7 +35,8 @@
     <ClCompile Include="Thread.cpp" />
     <ClCompile Include="Util.cpp" />
     <ClCompile Include="Message.cpp" />
-    <ClCompile Include="Uploader.cpp" />
     <ClCompile Include="Unity.cpp" />
+    <ClCompile Include="CaptureManager.cpp" />
+    <ClCompile Include="UploadManager.cpp" />
   </ItemGroup>
 </Project>

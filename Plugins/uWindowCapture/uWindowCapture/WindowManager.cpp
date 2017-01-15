@@ -1,7 +1,6 @@
 #include <algorithm>
 #include "WindowManager.h"
 #include "Window.h"
-#include "Thread.h"
 #include "Message.h"
 #include "Util.h"
 #include "Debug.h"
@@ -10,89 +9,13 @@ using namespace Microsoft::WRL;
 
 
 
-void WindowCaptureManager::RequestCapture(int id, CapturePriority priority)
-{
-    UWC_FUNCTION_SCOPE_TIMER
-    auto window = WindowManager::Get().GetWindow(id);
-    if (!window) return;
-
-    switch (priority)
-    {
-        case CapturePriority::Immediate:
-        {
-            Enqueue(id, true);
-            break;
-        }
-        case CapturePriority::Queued:
-        {
-            Enqueue(id, false);
-            break;
-        }
-    }
-}
-
-
-void WindowCaptureManager::Enqueue(int id, bool back)
-{
-    UWC_FUNCTION_SCOPE_TIMER
-    const auto it = std::find(queue_.begin(), queue_.end(), id);
-    if (it == queue_.end())
-    {
-        if (back)
-        {
-            queue_.push_back(id);
-        }
-        else
-        {
-            queue_.push_front(id);
-        }
-    }
-}
-
-
-int WindowCaptureManager::Dequeue()
-{
-    UWC_FUNCTION_SCOPE_TIMER
-    if (queue_.empty()) return -1;
-
-    const auto id = queue_.back();
-    queue_.pop_back();
-    return id;
-}
-
-
-void WindowCaptureManager::SetNumberPerFrame(UINT number)
-{
-    UWC_FUNCTION_SCOPE_TIMER
-    numberPerFrame_ = number;
-}
-
-
-void WindowCaptureManager::Update()
-{
-    for (UINT i = 0; i < numberPerFrame_; ++i)
-    {
-        const auto id = Dequeue();
-        if (id < 0) break;
-
-        if (auto window = WindowManager::Get().GetWindow(id))
-        {
-            window->RequestCapture();
-        }
-    }
-}
-
-
-
-// ---
-
-
-
 UWC_SINGLETON_INSTANCE(WindowManager)
 
 
 void WindowManager::Initialize()
 {
+    uploadManager_ = std::make_unique<UploadManager>();
+    captureManager_ = std::make_unique<CaptureManager>();
     StartWindowHandleListThread();
 }
 
@@ -100,6 +23,8 @@ void WindowManager::Initialize()
 void WindowManager::Finalize()
 {
     StopWindowHandleListThread();
+    captureManager_.reset();
+    uploadManager_.reset();
     windows_.clear();
 }
 
@@ -107,7 +32,6 @@ void WindowManager::Finalize()
 void WindowManager::Update()
 {
     UpdateWindows();
-    captureManager_->Update();
 }
 
 
@@ -132,9 +56,15 @@ void WindowManager::StopWindowHandleListThread()
 }
 
 
-const std::unique_ptr<WindowCaptureManager>& WindowManager::GetCaptureManager() const
+const std::unique_ptr<CaptureManager>& WindowManager::GetCaptureManager()
 {
-    return captureManager_;
+    return WindowManager::Get().captureManager_;
+}
+
+
+const std::unique_ptr<UploadManager>& WindowManager::GetUploadManager()
+{
+    return WindowManager::Get().uploadManager_;
 }
 
 
@@ -188,8 +118,8 @@ void WindowManager::UpdateWindows()
             if (auto window = WindowManager::Get().FindOrAddWindow(info.hWnd))
             {
                 window->isAlive_ = true;
-                window->rect_ = info.rect;
-                window->zOrder_ = info.zOrder;
+                window->cachedRect_ = info.rect;
+                window->cachedZOrder_ = info.zOrder;
             }
         }
     }
