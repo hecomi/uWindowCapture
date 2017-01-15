@@ -1,7 +1,5 @@
 #include <vector>
 #include <algorithm>
-#include <dwmapi.h>
-#include <WinUser.h>
 
 #include "Window.h"
 #include "WindowManager.h"
@@ -10,8 +8,6 @@
 #include "Message.h"
 #include "Util.h"
 #include "Debug.h"
-
-#pragma comment(lib, "dwmapi.lib")
 
 using namespace Microsoft::WRL;
 
