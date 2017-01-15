@@ -78,6 +78,8 @@ public static class Lib
     public static extern IntPtr GetWindowHandle(int id);
     [DllImport(name, EntryPoint = "UwcGetWindowOwner")]
     public static extern IntPtr GetWindowOwner(int id);
+    [DllImport(name, EntryPoint = "UwcGetWindowProcessId")]
+    public static extern int GetWindowProcessId(int id);
     [DllImport(name, EntryPoint = "UwcRequestCaptureWindow")]
     public static extern void RequestCaptureWindow(int id, CapturePriority priority);
     [DllImport(name, EntryPoint = "UwcGetWindowX")]
@@ -94,8 +96,6 @@ public static class Lib
     public static extern int GetWindowBufferWidth(int id);
     [DllImport(name, EntryPoint = "UwcGetWindowBufferHeight")]
     public static extern int GetWindowBufferHeight(int id);
-    [DllImport(name, EntryPoint = "UwcUpdateWindowTitle")]
-    private static extern void UpdateWindowTitle(int id);
     [DllImport(name, EntryPoint = "UwcGetWindowTitleLength")]
     private static extern int GetWindowTitleLength(int id);
     [DllImport(name, EntryPoint = "UwcGetWindowTitle", CharSet = CharSet.Unicode)]
@@ -157,7 +157,6 @@ public static class Lib
 
     public static string GetWindowTitle(int id)
     {
-        UpdateWindowTitle(id);
         var len = GetWindowTitleLength(id);
         var ptr = GetWindowTitle_Internal(id);
         if (ptr != IntPtr.Zero) {
