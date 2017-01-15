@@ -30,6 +30,7 @@ Window::Window(HWND hWnd, int id)
     {
         owner_ = ::GetWindow(hWnd, GW_OWNER);
         isAltTabWindow_ = ::IsAltTabWindow(hWnd);
+        mode_ = (owner_ == NULL) ? CaptureMode::PrintWindow : CaptureMode::BitBlt;
     }
 }
 
@@ -49,7 +50,7 @@ HWND Window::GetHandle() const
 
 HWND Window::GetOwner() const
 {
-    return ::GetWindow(window_, GW_OWNER);
+    return owner_;
 }
 
 
