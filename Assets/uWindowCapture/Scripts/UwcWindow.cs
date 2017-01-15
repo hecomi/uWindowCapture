@@ -33,6 +33,11 @@ public class Window
         get { return Lib.GetWindowOwner(id); }
     }
 
+    public int processId
+    {
+        get { return Lib.GetWindowProcessId(id); }
+    }
+
     public bool isAlive
     {
         get;

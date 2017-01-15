@@ -51,6 +51,12 @@ HWND Window::GetOwner() const
 }
 
 
+DWORD Window::GetProcessId() const
+{
+    return processId_;
+}
+
+
 bool Window::IsAltTab() const
 {
     return isAltTabWindow_;
@@ -150,19 +156,6 @@ UINT Window::GetBufferWidth() const
 UINT Window::GetBufferHeight() const
 {
     return bufferHeight_;
-}
-
-
-void Window::UpdateTitle()
-{
-    if (isDesktop_) return;
-
-    const auto titleLength = ::GetWindowTextLengthW(window_);
-    std::vector<WCHAR> buf(titleLength + 1);
-    if (::GetWindowTextW(window_, &buf[0], static_cast<int>(buf.size())))
-    {
-        title_ = &buf[0];
-    }
 }
 
 
@@ -377,9 +370,7 @@ void Window::UploadTextureToGpu()
         std::lock_guard<std::mutex> lock(bufferMutex_);
         ComPtr<ID3D11DeviceContext> context;
         uploader->GetDevice()->GetImmediateContext(&context);
-        Debug::Log("UpdateSubresource");
         context->UpdateSubresource(sharedTexture_.Get(), 0, nullptr, buffer_.Get(), bufferWidth_ * 4, 0);
-        Debug::Log("Flush");
         context->Flush();
     }
 

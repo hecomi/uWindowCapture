@@ -117,6 +117,9 @@ void WindowManager::UpdateWindows()
         {
             if (auto window = WindowManager::Get().FindOrAddWindow(info.hWnd))
             {
+                window->owner_ = info.hOwner;
+                window->processId_ = info.processId;
+                window->title_ = info.title;
                 window->isAlive_ = true;
                 window->cachedRect_ = info.rect;
                 window->cachedZOrder_ = info.zOrder;
@@ -146,15 +149,25 @@ void WindowManager::UpdateWindowHandleList()
 {
     static const auto _EnumWindowsCallback = [](HWND hWnd, LPARAM lParam) -> BOOL
     {
-        if (!::IsWindowVisible(hWnd) || !::IsWindow(hWnd) || !::IsWindowEnabled(hWnd))
+        if (!::IsWindow(hWnd) || !::IsWindowVisible(hWnd))
         {
             return TRUE;
         }
 
         WindowInfo info;
+
+        // Skip if no title.
+        /*
+        ::GetWindowTitle(hWnd, info.title);
+        if (info.title.empty()) return TRUE;
+        */
+
         info.hWnd = hWnd;
+        info.hOwner = ::GetWindow(hWnd, GW_OWNER);
         ::GetWindowRect(hWnd, &info.rect);
-        info.zOrder = ::GetZOrder(hWnd);
+        info.zOrder = ::GetWindowZOrder(hWnd);
+        ::GetWindowTitle(hWnd, info.title);
+        ::GetWindowThreadProcessId(hWnd, &info.processId);
 
         auto thiz = reinterpret_cast<WindowManager*>(lParam);
         thiz->windowHandleList_[1].push_back(info);

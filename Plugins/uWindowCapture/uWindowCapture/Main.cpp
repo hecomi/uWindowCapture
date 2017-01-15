@@ -163,6 +163,15 @@ extern "C"
         return nullptr;
     }
 
+    UNITY_INTERFACE_EXPORT DWORD UNITY_INTERFACE_API UwcGetWindowProcessId(int id)
+    {
+        if (auto window = GetWindow(id))
+        {
+            return window->GetProcessId();
+        }
+        return -1;
+    }
+
     UNITY_INTERFACE_EXPORT UINT UNITY_INTERFACE_API UwcGetWindowX(int id)
     {
         if (auto window = GetWindow(id))
@@ -224,14 +233,6 @@ extern "C"
             return window->GetBufferHeight();
         }
         return 0;
-    }
-
-    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcUpdateWindowTitle(int id)
-    {
-        if (auto window = GetWindow(id))
-        {
-            return window->UpdateTitle();
-        }
     }
 
     UNITY_INTERFACE_EXPORT UINT UNITY_INTERFACE_API UwcGetWindowTitleLength(int id)

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <vector>
 #include "Util.h"
 
 
@@ -39,18 +40,34 @@ bool IsAltTabWindow(HWND hWnd)
 }
 
 
-UINT GetZOrder(HWND hWnd)
+UINT GetWindowZOrder(HWND hWnd)
 {
     int z = 0;
     while (hWnd != NULL)
     {
         hWnd = ::GetWindow(hWnd, GW_HWNDPREV);
-        if (::IsWindowVisible(hWnd) && ::IsWindow(hWnd))
+        if (::IsWindowVisible(hWnd) && ::IsWindow(hWnd) /* && ::GetWindowTextLength(hWnd) > 0*/)
         {
             ++z;
         }
     }
     return z;
+}
+
+
+bool GetWindowTitle(HWND hWnd, std::wstring& outTitle)
+{
+    const auto length = ::GetWindowTextLengthW(hWnd);
+    if (length == 0) return false;
+
+    std::vector<WCHAR> buf(length + 1);
+    if (::GetWindowTextW(hWnd, &buf[0], static_cast<int>(buf.size())))
+    {
+         outTitle = &buf[0];
+         return true;
+    }
+
+    return false;
 }
 
 

@@ -28,6 +28,7 @@ public:
 
     HWND GetHandle() const;
     HWND GetOwner() const;
+    DWORD GetProcessId() const;
 
     UINT GetX() const;
     UINT GetY() const;
@@ -37,7 +38,6 @@ public:
     UINT GetBufferWidth() const;
     UINT GetBufferHeight() const;
 
-    void UpdateTitle();
     UINT GetTitleLength() const;
     const std::wstring& GetTitle() const;
 
@@ -73,6 +73,7 @@ private:
     const int id_ = -1;
     const HWND window_ = nullptr;
     HWND owner_ = nullptr;
+    DWORD processId_ = -1;
     std::wstring title_;
 
     RECT cachedRect_;
