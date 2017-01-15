@@ -134,6 +134,16 @@ public class Window
         get { return Lib.GetWindowZOrder(id); }
     }
 
+    public int bufferWidth
+    {
+        get { return Lib.GetWindowBufferWidth(id); }
+    }
+
+    public int bufferHeight
+    {
+        get { return Lib.GetWindowBufferHeight(id); }
+    }
+
     public Texture2D texture
     {
         get; 
@@ -168,8 +178,8 @@ public class Window
 
     public void UpdateTextureIfNeeded()
     {
-        var w = width;
-        var h = height;
+        var w = bufferWidth;
+        var h = bufferHeight;
         if (w == 0 || h == 0) return;
         if (!texture || texture.width != w || texture.height != h) {
             if (texture) Object.DestroyImmediate(texture);

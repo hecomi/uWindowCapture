@@ -20,7 +20,7 @@ public class UwcWindowObject : MonoBehaviour
 
     void Start()
     {
-        captureMode = window.captureMode;
+        //captureMode = window.captureMode;
         window.onSizeChanged += OnSizeChanged;
         window.onCaptured += OnCaptured;
         window.RequestCapture(CapturePriority.High);
