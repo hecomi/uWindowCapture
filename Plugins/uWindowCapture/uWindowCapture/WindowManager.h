@@ -54,7 +54,6 @@ private:
         DWORD processId;
         RECT rect;
         UINT zOrder;
-        std::wstring title;
     };
     std::vector<WindowInfo> windowHandleList_[2];
     mutable std::mutex windowsHandleListMutex_;

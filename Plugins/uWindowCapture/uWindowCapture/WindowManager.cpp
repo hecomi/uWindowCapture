@@ -117,11 +117,10 @@ void WindowManager::UpdateWindows()
         {
             if (auto window = WindowManager::Get().FindOrAddWindow(info.hWnd))
             {
+                window->isAlive_ = true;
                 window->owner_ = info.hOwner;
                 window->processId_ = info.processId;
-                window->title_ = info.title;
-                window->isAlive_ = true;
-                window->cachedRect_ = info.rect;
+                window->cachedRect_ = std::move(info.rect);
                 window->cachedZOrder_ = info.zOrder;
             }
         }
@@ -149,24 +148,16 @@ void WindowManager::UpdateWindowHandleList()
 {
     static const auto _EnumWindowsCallback = [](HWND hWnd, LPARAM lParam) -> BOOL
     {
-        if (!::IsWindow(hWnd) || !::IsWindowVisible(hWnd))
+        if (!::IsWindow(hWnd) || !::IsWindowVisible(hWnd) || !::IsWindowEnabled(hWnd))
         {
             return TRUE;
         }
 
         WindowInfo info;
-
-        // Skip if no title.
-        /*
-        ::GetWindowTitle(hWnd, info.title);
-        if (info.title.empty()) return TRUE;
-        */
-
         info.hWnd = hWnd;
         info.hOwner = ::GetWindow(hWnd, GW_OWNER);
-        ::GetWindowRect(hWnd, &info.rect);
         info.zOrder = ::GetWindowZOrder(hWnd);
-        ::GetWindowTitle(hWnd, info.title);
+        ::GetWindowRect(hWnd, &info.rect);
         ::GetWindowThreadProcessId(hWnd, &info.processId);
 
         auto thiz = reinterpret_cast<WindowManager*>(lParam);
@@ -177,8 +168,6 @@ void WindowManager::UpdateWindowHandleList()
 
     using EnumWindowsCallbackType = BOOL(CALLBACK *)(HWND, LPARAM);
     static const auto EnumWindowsCallback = static_cast<EnumWindowsCallbackType>(_EnumWindowsCallback);
-
-    // add new windows and mark registered windows as alive
     if (!::EnumWindows(EnumWindowsCallback, reinterpret_cast<LPARAM>(this)))
     {
         OutputApiError("EnumWindows");
@@ -186,9 +175,9 @@ void WindowManager::UpdateWindowHandleList()
 
     {
         std::lock_guard<std::mutex> lock(windowsHandleListMutex_);
-        windowHandleList_[0] = windowHandleList_[1];
-        windowHandleList_[1].clear();
+        std::swap(windowHandleList_[0], windowHandleList_[1]);
     }
+    windowHandleList_[1].clear();
 }
 
 

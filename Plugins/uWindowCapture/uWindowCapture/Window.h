@@ -38,6 +38,7 @@ public:
     UINT GetBufferWidth() const;
     UINT GetBufferHeight() const;
 
+    void UpdateTitle();
     UINT GetTitleLength() const;
     const std::wstring& GetTitle() const;
 
@@ -65,7 +66,7 @@ public:
 private:
     void CreateBitmapIfNeeded(HDC hDc, UINT width, UINT height);
     void DeleteBitmap();
-    void CaptureInternal();
+    BOOL CaptureInternal();
     void RequestUpload();
 
     CaptureMode mode_ = CaptureMode::PrintWindow;
@@ -74,7 +75,7 @@ private:
     const HWND window_ = nullptr;
     HWND owner_ = nullptr;
     DWORD processId_ = -1;
-    std::wstring title_;
+    std::wstring title_ = L"-No Name-";
 
     RECT cachedRect_;
     UINT cachedZOrder_ = 0;

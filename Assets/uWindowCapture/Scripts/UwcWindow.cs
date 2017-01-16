@@ -16,10 +16,14 @@ public class Window
         this.handle = handle;
         this.id = id;
         this.isAlive = true;
+        this.onCaptured += OnCaptured;
+        this.onSizeChanged += OnSizeChanged;
     }
 
     ~Window()
     {
+        this.onCaptured -= OnCaptured;
+        this.onSizeChanged -= OnSizeChanged;
     }
 
     public System.IntPtr handle
@@ -151,9 +155,12 @@ public class Window
 
     public Texture2D texture
     {
-        get; 
+        get;
         private set;
     }
+
+    private Texture2D backTexture_;
+    private bool willTextureSizeChange_ = false;
 
     public CaptureMode captureMode
     {
@@ -177,19 +184,29 @@ public class Window
 
     public void RequestCapture(CapturePriority priority = CapturePriority.High)
     {
-        UpdateTextureIfNeeded();
         Lib.RequestCaptureWindow(id, priority);
     }
 
-    public void UpdateTextureIfNeeded()
+    void OnSizeChanged()
     {
         var w = bufferWidth;
         var h = bufferHeight;
         if (w == 0 || h == 0) return;
+
         if (!texture || texture.width != w || texture.height != h) {
-            if (texture) Object.DestroyImmediate(texture);
-            texture = new Texture2D(w, h, TextureFormat.BGRA32, false);
-            Lib.SetWindowTexturePtr(id, texture.GetNativeTexturePtr());
+            backTexture_ = new Texture2D(w, h, TextureFormat.BGRA32, false);
+            Lib.SetWindowTexturePtr(id, backTexture_.GetNativeTexturePtr());
+            willTextureSizeChange_ = true;
+        }
+    }
+
+    void OnCaptured()
+    {
+        if (willTextureSizeChange_) {
+            Object.DestroyImmediate(texture);
+            texture = backTexture_;
+            backTexture_ = null;
+            willTextureSizeChange_ = false;
         }
     }
 }

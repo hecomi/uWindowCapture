@@ -21,15 +21,7 @@ public class UwcWindowObject : MonoBehaviour
     void Start()
     {
         captureMode = window.captureMode;
-        window.onSizeChanged += OnSizeChanged;
-        window.onCaptured += OnCaptured;
         window.RequestCapture(CapturePriority.High);
-    }
-
-    void OnDestroy()
-    {
-        window.onCaptured -= OnCaptured;
-        window.onSizeChanged -= OnSizeChanged;
     }
 
     void Update()
@@ -38,6 +30,7 @@ public class UwcWindowObject : MonoBehaviour
             material_.mainTexture = window.texture;
         }
 
+        gameObject.name = window.title;
         updatedFrame_++;
     }
 
@@ -51,16 +44,6 @@ public class UwcWindowObject : MonoBehaviour
                 CapturePriority.Low;
             window.RequestCapture(priority);
         }
-    }
-
-    void OnCaptured()
-    {
-        window.onCaptured -= OnCaptured;
-    }
-
-    void OnSizeChanged()
-    {
-        window.RequestCapture();
     }
 }
 

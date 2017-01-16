@@ -25,7 +25,6 @@ Window::Window(HWND hWnd, int id)
     }
     else
     {
-        owner_ = ::GetWindow(hWnd, GW_OWNER);
         isAltTabWindow_ = ::IsAltTabWindow(hWnd);
         mode_ = (owner_ == NULL) ? CaptureMode::PrintWindow : CaptureMode::BitBltAlpha;
     }
@@ -159,6 +158,12 @@ UINT Window::GetBufferHeight() const
 }
 
 
+void Window::UpdateTitle()
+{
+    ::GetWindowTitle(window_, title_);
+}
+
+
 UINT Window::GetTitleLength() const
 {
     return static_cast<UINT>(title_.length());
@@ -230,14 +235,18 @@ void Window::Capture()
         return;
     }
 
-    CaptureInternal();
-    RequestUpload();
+    // UpdateTitle();
+
+    if (CaptureInternal())
+    {
+        RequestUpload();
+    }
 }
 
 
-void Window::CaptureInternal()
+BOOL Window::CaptureInternal()
 {
-    if (!IsWindow() || !IsVisible()) return;
+    if (!IsWindow() || !IsVisible()) return -1;
 
     auto hDc = ::GetDC(window_);
 
@@ -254,7 +263,7 @@ void Window::CaptureInternal()
         if (width == 0 || height == 0)
         {
             if (!::ReleaseDC(window_, hDc)) OutputApiError("ReleaseDC");
-            return;
+            return -1;
         }
 
         CreateBitmapIfNeeded(hDc, width, height);
@@ -314,6 +323,8 @@ void Window::CaptureInternal()
 
     if (!::DeleteDC(hDcMem)) OutputApiError("DeleteDC");
     if (!::ReleaseDC(window_, hDc)) OutputApiError("ReleaseDC");
+
+    return result;
 }
 
 
@@ -331,6 +342,15 @@ void Window::UploadTextureToGpu()
     if (!unityTexture_.load()) return;
 
     std::lock_guard<std::mutex> lock(sharedTextureMutex_);
+
+    {
+        D3D11_TEXTURE2D_DESC desc;
+        unityTexture_.load()->GetDesc(&desc);
+        if (desc.Width != bufferWidth_ && desc.Height != bufferHeight_)
+        {
+            return;
+        }
+    }
 
     bool shouldUpdateTexture = true;
 

@@ -235,6 +235,14 @@ extern "C"
         return 0;
     }
 
+    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcUpdateWindowTitle(int id)
+    {
+        if (auto window = GetWindow(id))
+        {
+            window->UpdateTitle();
+        }
+    }
+
     UNITY_INTERFACE_EXPORT UINT UNITY_INTERFACE_API UwcGetWindowTitleLength(int id)
     {
         if (auto window = GetWindow(id))

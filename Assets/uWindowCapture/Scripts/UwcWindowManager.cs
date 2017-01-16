@@ -39,9 +39,7 @@ public class UwcWindowManager : MonoBehaviour
         if (!windowPrefab) return;
 
         var obj = Instantiate(windowPrefab, parent) as GameObject;
-
-        var title = window.title;
-        obj.name = !string.IsNullOrEmpty(title) ? title : ("-No Name- (" + window.handle.ToString() + ")");
+        obj.name = window.title;
 
         var windowObject = obj.GetComponent<UwcWindowObject>();
         Assert.IsNotNull(windowObject, "Prefab must have UwcWindowObject component.");
