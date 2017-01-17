@@ -88,6 +88,7 @@ public class UwcManager : MonoBehaviour
         for (;;) {
             yield return new WaitForEndOfFrame();
             GL.IssuePluginEvent(renderEventFunc_, 0);
+            Lib.TriggerGpuUpload();
         }
     }
 
