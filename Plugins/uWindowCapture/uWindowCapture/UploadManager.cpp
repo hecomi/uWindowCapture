@@ -7,6 +7,7 @@
 #include "UploadManager.h"
 #include "WindowManager.h"
 #include "Debug.h"
+#include "Util.h"
 #include "Window.h"
 #include "Unity.h"
 
@@ -98,8 +99,19 @@ void UploadManager::StartUploadThread()
 {
     threadLoop_.Start([this] 
     { 
-        UploadTextures(); 
-    }, std::chrono::microseconds(100) /* check uploading every 100 us */);
+        // Waiting for being triggered...
+        if (!hasUploadTriggered_) return;
+        hasUploadTriggered_ = false;
+
+        const int id = uploadQueue_.Dequeue();
+        if (id >= 0)
+        {
+            if (auto window = WindowManager::Get().GetWindow(id))
+            {
+                window->UploadTextureToGpu();
+            }
+        }
+    }, std::chrono::microseconds(10) /* check uploading every 10 us */);
 }
 
 
@@ -109,26 +121,13 @@ void UploadManager::StopUploadThread()
 }
 
 
-void UploadManager::RequestUploadInBackgroundThread(int id)
+void UploadManager::RequestUpload(int id)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    uploadList_.insert(id);
+    uploadQueue_.Enqueue(id);
 }
 
 
-void UploadManager::UploadTextures()
+void UploadManager::TriggerGpuUpload()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-
-    for (const auto id : uploadList_)
-    {
-        if (auto window = WindowManager::Get().GetWindow(id))
-        {
-            window->UploadTextureToGpu();
-        }
-    }
-
-    uploadList_.clear();
+    hasUploadTriggered_ = true;
 }
-
-

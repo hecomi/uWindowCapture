@@ -68,6 +68,8 @@ public static class Lib
     public static extern IntPtr GetRenderEventFunc();
     [DllImport(name, EntryPoint = "UwcUpdate")]
     public static extern void Update();
+    [DllImport(name, EntryPoint = "UwcTriggerGpuUpload")]
+    public static extern void TriggerGpuUpload();
     [DllImport(name, EntryPoint = "UwcGetMessageCount")]
     private static extern int GetMessageCount();
     [DllImport(name, EntryPoint = "UwcGetMessages")]
@@ -159,6 +161,7 @@ public static class Lib
 
     public static string GetWindowTitle(int id)
     {
+        UpdateWindowTitle(id);
         var len = GetWindowTitleLength(id);
         var ptr = GetWindowTitle_Internal(id);
         if (ptr != IntPtr.Zero) {

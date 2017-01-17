@@ -4,6 +4,7 @@
 #include <deque>
 #include <mutex>
 
+#include "WindowQueue.h"
 #include "Thread.h"
 
 
@@ -11,18 +12,6 @@ enum class CapturePriority
 {
     High = 0,
     Low  = 1,
-};
-
-
-class CaptureQueue
-{
-public:
-    void Enqueue(int id);
-    int Dequeue();
-
-private:
-    std::mutex mutex_;
-    std::deque<int> queue_;
 };
 
 
@@ -35,6 +24,6 @@ public:
 
 private:
     ThreadLoop threadLoop_;
-    CaptureQueue highPriorityQueue_;
-    CaptureQueue lowPriorityQueue_;
+    WindowQueue highPriorityQueue_;
+    WindowQueue lowPriorityQueue_;
 };

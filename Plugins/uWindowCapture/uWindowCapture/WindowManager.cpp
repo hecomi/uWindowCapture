@@ -104,8 +104,6 @@ std::shared_ptr<Window> WindowManager::FindOrAddWindow(HWND hWnd)
 
 void WindowManager::UpdateWindows()
 {
-    UWC_SCOPE_TIMER(UpdateWindows)
-
     for (const auto& pair : windows_)
     {
         pair.second->isAlive_ = false;

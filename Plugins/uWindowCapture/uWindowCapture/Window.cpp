@@ -235,7 +235,7 @@ void Window::Capture()
         return;
     }
 
-    // UpdateTitle();
+    UWC_SCOPE_TIMER(WindowCapture)
 
     if (CaptureInternal())
     {
@@ -332,7 +332,7 @@ void Window::RequestUpload()
 {
     if (auto& uploader = WindowManager::GetUploadManager())
     {
-        uploader->RequestUploadInBackgroundThread(id_);
+        uploader->RequestUpload(id_);
     }
 }
 
@@ -340,6 +340,8 @@ void Window::RequestUpload()
 void Window::UploadTextureToGpu()
 {
     if (!unityTexture_.load()) return;
+
+    UWC_SCOPE_TIMER(UploadTexture)
 
     std::lock_guard<std::mutex> lock(sharedTextureMutex_);
 
@@ -402,6 +404,8 @@ void Window::Render()
 {
     if (!hasNewTextureUploaded_) return;
     hasNewTextureUploaded_ = false;
+
+    UWC_SCOPE_TIMER(Render)
 
     if (unityTexture_.load() && sharedTexture_ && sharedHandle_)
     {

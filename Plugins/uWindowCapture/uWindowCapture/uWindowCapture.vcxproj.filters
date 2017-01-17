@@ -26,6 +26,7 @@
     <ClInclude Include="Unity.h" />
     <ClInclude Include="CaptureManager.h" />
     <ClInclude Include="UploadManager.h" />
+    <ClInclude Include="WindowQueue.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp" />
@@ -38,5 +39,6 @@
     <ClCompile Include="Unity.cpp" />
     <ClCompile Include="CaptureManager.cpp" />
     <ClCompile Include="UploadManager.cpp" />
+    <ClCompile Include="WindowQueue.cpp" />
   </ItemGroup>
 </Project>

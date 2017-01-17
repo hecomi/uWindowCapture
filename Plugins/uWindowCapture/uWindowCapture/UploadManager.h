@@ -1,10 +1,10 @@
 #pragma once
 
-#include <set>
-#include <mutex>
+#include <atomic>
 #include <d3d11.h>
 #include <wrl/client.h>
 
+#include "WindowQueue.h"
 #include "Thread.h"
 
 
@@ -22,14 +22,14 @@ public:
 
     DevicePtr GetDevice();
     TexturePtr CreateCompatibleSharedTexture(const TexturePtr& texture);
-    void RequestUploadInBackgroundThread(int id);
+    void RequestUpload(int id);
     void StartUploadThread();
     void StopUploadThread();
-    void UploadTextures();
+    void TriggerGpuUpload();
 
 private:
     DevicePtr device_;
     ThreadLoop threadLoop_;
-    std::set<int> uploadList_;
-    mutable std::mutex mutex_;
+    WindowQueue uploadQueue_;
+    std::atomic<bool> hasUploadTriggered_ = false;
 };

@@ -145,6 +145,7 @@
     <ClCompile Include="Util.cpp" />
     <ClCompile Include="Window.cpp" />
     <ClCompile Include="WindowManager.cpp" />
+    <ClCompile Include="WindowQueue.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Buffer.h" />
@@ -161,6 +162,7 @@
     <ClInclude Include="Util.h" />
     <ClInclude Include="Window.h" />
     <ClInclude Include="WindowManager.h" />
+    <ClInclude Include="WindowQueue.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
