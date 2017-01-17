@@ -80,8 +80,14 @@ public static class Lib
     public static extern IntPtr GetWindowHandle(int id);
     [DllImport(name, EntryPoint = "UwcGetWindowOwner")]
     public static extern IntPtr GetWindowOwner(int id);
+    [DllImport(name, EntryPoint = "UwcGetWindowParent")]
+    public static extern IntPtr GetWindowParent(int id);
+    [DllImport(name, EntryPoint = "UwcGetWindowInstance")]
+    public static extern IntPtr GetWindowInstance(int id);
     [DllImport(name, EntryPoint = "UwcGetWindowProcessId")]
     public static extern int GetWindowProcessId(int id);
+    [DllImport(name, EntryPoint = "UwcGetWindowThreadId")]
+    public static extern int GetWindowThreadId(int id);
     [DllImport(name, EntryPoint = "UwcRequestCaptureWindow")]
     public static extern void RequestCaptureWindow(int id, CapturePriority priority);
     [DllImport(name, EntryPoint = "UwcGetWindowX")]

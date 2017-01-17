@@ -169,11 +169,38 @@ extern "C"
         return nullptr;
     }
 
+    UNITY_INTERFACE_EXPORT HWND UNITY_INTERFACE_API UwcGetWindowParent(int id)
+    {
+        if (auto window = GetWindow(id))
+        {
+            return window->GetParent();
+        }
+        return nullptr;
+    }
+
+    UNITY_INTERFACE_EXPORT HINSTANCE UNITY_INTERFACE_API UwcGetWindowInstance(int id)
+    {
+        if (auto window = GetWindow(id))
+        {
+            return window->GetInstance();
+        }
+        return nullptr;
+    }
+
     UNITY_INTERFACE_EXPORT DWORD UNITY_INTERFACE_API UwcGetWindowProcessId(int id)
     {
         if (auto window = GetWindow(id))
         {
             return window->GetProcessId();
+        }
+        return -1;
+    }
+
+    UNITY_INTERFACE_EXPORT DWORD UNITY_INTERFACE_API UwcGetWindowThreadId(int id)
+    {
+        if (auto window = GetWindow(id))
+        {
+            return window->GetThreadId();
         }
         return -1;
     }

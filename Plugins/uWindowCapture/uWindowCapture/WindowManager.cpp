@@ -117,7 +117,10 @@ void WindowManager::UpdateWindows()
             {
                 window->isAlive_ = true;
                 window->owner_ = info.hOwner;
+                window->parent_ = info.hParent;
+                window->instance_ = info.hInstance;
                 window->processId_ = info.processId;
+                window->threadId_ = info.threadId;
                 window->cachedRect_ = std::move(info.rect);
                 window->cachedZOrder_ = info.zOrder;
             }
@@ -146,7 +149,7 @@ void WindowManager::UpdateWindowHandleList()
 {
     static const auto _EnumWindowsCallback = [](HWND hWnd, LPARAM lParam) -> BOOL
     {
-        if (!::IsWindow(hWnd) || !::IsWindowVisible(hWnd) || !::IsWindowEnabled(hWnd))
+        if (!::IsWindow(hWnd) || !::IsWindowVisible(hWnd))
         {
             return TRUE;
         }
@@ -154,9 +157,11 @@ void WindowManager::UpdateWindowHandleList()
         WindowInfo info;
         info.hWnd = hWnd;
         info.hOwner = ::GetWindow(hWnd, GW_OWNER);
+        info.hParent = ::GetParent(hWnd);
+        info.hInstance = reinterpret_cast<HINSTANCE>(::GetWindowLongPtr(hWnd, GWLP_HINSTANCE));
         info.zOrder = ::GetWindowZOrder(hWnd);
         ::GetWindowRect(hWnd, &info.rect);
-        ::GetWindowThreadProcessId(hWnd, &info.processId);
+        info.threadId = ::GetWindowThreadProcessId(hWnd, &info.processId);
 
         auto thiz = reinterpret_cast<WindowManager*>(lParam);
         thiz->windowHandleList_[1].push_back(info);

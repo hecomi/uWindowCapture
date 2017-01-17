@@ -34,7 +34,29 @@ public class UwcWindowManager : MonoBehaviour
         UwcManager.onWindowRemoved -= OnWindowRemoved;
     }
 
-    void AddWindowObject(Window window, Transform parent)
+    UwcWindowObject FindParent(Window window)
+    {
+        if (windows_.ContainsKey(window.owner)) {
+            return windows[window.owner];
+        }
+
+        if (windows_.ContainsKey(window.parent)) {
+            return windows[window.parent];
+        }
+
+        foreach (var pair in windows) {
+            var obj = pair.Value;
+            if (!obj.window.isChild &&
+                obj.window.processId == window.processId && 
+                obj.window.threadId == window.threadId) {
+                return obj;
+            }
+        }
+
+        return null;
+    }
+
+    void AddWindowObject(Window window, Transform parent, bool isChild)
     {
         if (!windowPrefab) return;
 
@@ -44,6 +66,7 @@ public class UwcWindowManager : MonoBehaviour
         var windowObject = obj.GetComponent<UwcWindowObject>();
         Assert.IsNotNull(windowObject, "Prefab must have UwcWindowObject component.");
         windowObject.window = window;
+        windowObject.isChild = isChild;
 
         var layouters = GetComponents<UwcLayouter>();
         for (int i = 0; i < layouters.Length; ++i) {
@@ -56,15 +79,13 @@ public class UwcWindowManager : MonoBehaviour
 
     void OnWindowAdded(Window window)
     {
-        if (window.isDesktop) {
-            // skip
-        } else if (windows_.ContainsKey(window.owner)) {
-            var owner = windows_[window.owner];
-            AddWindowObject(window, owner.transform);
-        } else if (window.isVisible && window.isEnabled) {
-            AddWindowObject(window, transform);
-        } else {
-            // Debug.LogFormat("Unhandled window: {0} {1}", window.handle, window.title);
+        if (window.isDesktop) return;
+
+        var parent = FindParent(window);
+        if (parent) {
+            AddWindowObject(window, parent.transform, true);
+        } else if (window.isVisible) {
+            AddWindowObject(window, transform, false);
         }
     }
 

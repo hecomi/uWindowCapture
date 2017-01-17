@@ -50,9 +50,27 @@ HWND Window::GetOwner() const
 }
 
 
+HWND Window::GetParent() const
+{
+    return parent_;
+}
+
+
+HINSTANCE Window::GetInstance() const
+{
+    return instance_;
+}
+
+
 DWORD Window::GetProcessId() const
 {
     return processId_;
+}
+
+
+DWORD Window::GetThreadId() const
+{
+    return threadId_;
 }
 
 

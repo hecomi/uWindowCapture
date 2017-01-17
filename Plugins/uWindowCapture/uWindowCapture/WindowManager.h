@@ -51,7 +51,10 @@ private:
     {
         HWND hWnd;
         HWND hOwner;
+        HWND hParent;
+        HINSTANCE hInstance;
         DWORD processId;
+        DWORD threadId;
         RECT rect;
         UINT zOrder;
     };

@@ -28,7 +28,10 @@ public:
 
     HWND GetHandle() const;
     HWND GetOwner() const;
+    HWND GetParent() const;
+    HINSTANCE GetInstance() const;
     DWORD GetProcessId() const;
+    DWORD GetThreadId() const;
 
     UINT GetX() const;
     UINT GetY() const;
@@ -74,8 +77,11 @@ private:
     const int id_ = -1;
     const HWND window_ = nullptr;
     HWND owner_ = nullptr;
+    HWND parent_ = nullptr;
+    HINSTANCE instance_ = nullptr;
     DWORD processId_ = -1;
-    std::wstring title_ = L"-No Name-";
+    DWORD threadId_ = -1;
+    std::wstring title_ = L"";
 
     RECT cachedRect_;
     UINT cachedZOrder_ = 0;
@@ -96,4 +102,3 @@ private:
     std::atomic<bool> isDesktop_ = false;
     std::atomic<bool> isAltTabWindow_ = false;
 };
-

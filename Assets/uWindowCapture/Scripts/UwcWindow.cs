@@ -37,9 +37,24 @@ public class Window
         get { return Lib.GetWindowOwner(id); }
     }
 
+    public System.IntPtr parent
+    {
+        get { return Lib.GetWindowParent(id); }
+    }
+
+    public System.IntPtr instance
+    {
+        get { return Lib.GetWindowInstance(id); }
+    }
+
     public int processId
     {
         get { return Lib.GetWindowProcessId(id); }
+    }
+
+    public int threadId
+    {
+        get { return Lib.GetWindowThreadId(id); }
     }
 
     public bool isAlive
