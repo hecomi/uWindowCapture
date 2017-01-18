@@ -15,16 +15,25 @@ public class UwcWindowObject : MonoBehaviour
 
     int updatedFrame_ = 0;
     Material material_;
+    Renderer renderer_;
 
     void Awake()
     {
-        material_ = GetComponent<Renderer>().material; // clone
+        renderer_ = GetComponent<Renderer>();
+        material_ = renderer_.material; // clone
     }
 
     void Start()
     {
         captureMode = window.captureMode;
         window.RequestCapture(CapturePriority.High);
+        window.onCaptured += OnCaptured;
+        renderer_.enabled = false;
+    }
+
+    void OnDestroy()
+    {
+        window.onCaptured -= OnCaptured;
     }
 
     void Update()
@@ -51,6 +60,11 @@ public class UwcWindowObject : MonoBehaviour
             }
             window.RequestCapture(priority);
         }
+    }
+
+    void OnCaptured()
+    {
+        renderer_.enabled = true;
     }
 }
 
