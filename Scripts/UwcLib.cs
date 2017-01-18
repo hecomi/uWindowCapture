@@ -47,6 +47,15 @@ public struct Message
     public IntPtr windowHandle;
 }
 
+[StructLayout(LayoutKind.Sequential)]
+public struct Point
+{
+    [MarshalAs(UnmanagedType.I4)]
+    public int x;
+    [MarshalAs(UnmanagedType.I4)]
+    public int y;
+}
+
 public static class Lib
 {
     public const string name = "uWindowCapture";
@@ -140,6 +149,12 @@ public static class Lib
     public static extern bool IsWindowTouchable(int id);
     [DllImport(name, EntryPoint = "UwcGetForegroundWindow")]
     public static extern IntPtr GetForegroundWindow();
+    [DllImport(name, EntryPoint = "UwcGetCursorPosition")]
+    public static extern Point GetCursorPosition();
+    [DllImport(name, EntryPoint = "UwcGetWindowFromPoint")]
+    public static extern IntPtr GetWindowFromPoint(int x, int y);
+    [DllImport(name, EntryPoint = "UwcGetWindowUnderCursor")]
+    public static extern IntPtr GetWindowUnderCursor();
     [DllImport(name, EntryPoint = "UwcGetScreenWidth")]
     public static extern int GetScreenWidth();
     [DllImport(name, EntryPoint = "UwcGetScreenHeight")]

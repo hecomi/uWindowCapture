@@ -56,16 +56,18 @@ public class UwcWindowManager : MonoBehaviour
         return null;
     }
 
-    void AddWindowObject(Window window, Transform parent, bool isChild)
+    void AddWindowObject(Window window, UwcWindowObject parent, bool isChild)
     {
         if (!windowPrefab) return;
 
-        var obj = Instantiate(windowPrefab, parent) as GameObject;
+        var parentTransform = parent ? parent.transform : transform; 
+        var obj = Instantiate(windowPrefab, parentTransform) as GameObject;
         obj.name = window.title;
 
         var windowObject = obj.GetComponent<UwcWindowObject>();
         Assert.IsNotNull(windowObject, "Prefab must have UwcWindowObject component.");
         windowObject.window = window;
+        windowObject.parent = parent ? parent.window : null;
         windowObject.isChild = isChild;
 
         var layouters = GetComponents<UwcLayouter>();
@@ -83,9 +85,9 @@ public class UwcWindowManager : MonoBehaviour
 
         var parent = FindParent(window);
         if (parent) {
-            AddWindowObject(window, parent.transform, true);
+            AddWindowObject(window, parent, true);
         } else if (window.isVisible) {
-            AddWindowObject(window, transform, false);
+            AddWindowObject(window, null, false);
         }
     }
 

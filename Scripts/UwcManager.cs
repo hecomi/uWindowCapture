@@ -54,6 +54,15 @@ public class UwcManager : MonoBehaviour
         get { return instance.windows_; }
     }
 
+    System.IntPtr cursorWindowHandle_ = System.IntPtr.Zero;
+    static public Window cursorWindow
+    {
+        get { 
+            return (instance.cursorWindowHandle_ != System.IntPtr.Zero) ? 
+                windows[instance.cursorWindowHandle_] : null;
+        }
+    }
+
     void Awake()
     {
         Lib.SetDebugMode(debugMode);
@@ -95,7 +104,13 @@ public class UwcManager : MonoBehaviour
     void Update()
     {
         Lib.Update();
+        UpdateWindowInfo();
         UpdateMessages();
+    }
+
+    void UpdateWindowInfo()
+    {
+        cursorWindowHandle_ = Lib.GetWindowUnderCursor();
     }
 
     void UpdateMessages()
