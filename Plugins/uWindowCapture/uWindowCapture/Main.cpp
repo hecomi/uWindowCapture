@@ -420,16 +420,43 @@ extern "C"
 
     UNITY_INTERFACE_EXPORT HWND UNITY_INTERFACE_API UwcGetForegroundWindow()
     {
-        return GetForegroundWindow();
+        return ::GetForegroundWindow();
+    }
+
+    UNITY_INTERFACE_EXPORT POINT UNITY_INTERFACE_API UwcGetCursorPosition()
+    {
+        POINT point;
+        GetCursorPos(&point);
+        return point;
+    }
+
+    UNITY_INTERFACE_EXPORT HWND UNITY_INTERFACE_API UwcGetWindowFromPoint(int x, int y)
+    {
+        if (WindowManager::IsNull()) return nullptr;
+        if (auto window = WindowManager::Get().GetWindowFromPoint({ x, y }))
+        {
+            return window->GetHandle();
+        }
+        return nullptr;
+    }
+
+    UNITY_INTERFACE_EXPORT HWND UNITY_INTERFACE_API UwcGetWindowUnderCursor()
+    {
+        if (WindowManager::IsNull()) return nullptr;
+        if (auto window = WindowManager::Get().GetCursorWindow())
+        {
+            return window->GetHandle();
+        }
+        return nullptr;
     }
 
     UNITY_INTERFACE_EXPORT UINT UNITY_INTERFACE_API UwcGetScreenWidth()
     {
-        return GetSystemMetrics(SM_CXVIRTUALSCREEN);
+        return ::GetSystemMetrics(SM_CXVIRTUALSCREEN);
     }
 
     UNITY_INTERFACE_EXPORT UINT UNITY_INTERFACE_API UwcGetScreenHeight()
     {
-        return GetSystemMetrics(SM_CYVIRTUALSCREEN);
+        return ::GetSystemMetrics(SM_CYVIRTUALSCREEN);
     }
 }

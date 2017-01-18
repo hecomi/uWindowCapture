@@ -80,6 +80,54 @@ std::shared_ptr<Window> WindowManager::GetWindow(int id) const
 }
 
 
+std::shared_ptr<Window> WindowManager::GetWindowFromPoint(POINT point) const
+{
+    auto hWnd = ::WindowFromPoint(point);
+
+    if (hWnd)
+    {
+        auto it = std::find_if(
+            windows_.begin(),
+            windows_.end(),
+            [hWnd](const auto& pair) 
+            { 
+                return pair.second->GetHandle() == hWnd; 
+            });
+
+        if (it == windows_.end()) 
+        {
+            DWORD thread, process;
+            thread = ::GetWindowThreadProcessId(hWnd, &process);
+
+            it = std::find_if(
+                windows_.begin(),
+                windows_.end(),
+                [=](const auto& pair) 
+                { 
+                    const auto& window = pair.second;
+                    return 
+                        window->GetOwner() == nullptr && 
+                        window->GetProcessId() == process && 
+                        window->GetThreadId() == thread;
+                });
+        }
+
+        if (it != windows_.end()) 
+        {
+            return it->second;
+        }
+    }
+
+    return nullptr;
+}
+
+
+std::shared_ptr<Window> WindowManager::GetCursorWindow() const
+{
+    return cursorWindow_.lock();
+}
+
+
 std::shared_ptr<Window> WindowManager::FindOrAddWindow(HWND hWnd)
 {
     auto it = std::find_if(
@@ -181,6 +229,12 @@ void WindowManager::UpdateWindowHandleList()
         std::swap(windowHandleList_[0], windowHandleList_[1]);
     }
     windowHandleList_[1].clear();
+
+    POINT cursorPos;
+    if (::GetCursorPos(&cursorPos))
+    {
+        cursorWindow_ = GetWindowFromPoint(cursorPos);
+    }
 }
 
 

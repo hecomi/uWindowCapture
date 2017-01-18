@@ -38,6 +38,11 @@ public class UwcDesktopLayouter : UwcLayouter
         get { return new Vector3(-Lib.GetScreenWidth() / (2 * basePixel), 0f, 0f); }
     }
 
+    void CheckWindow(UwcWindowObject windowObject)
+    {
+        windowObject.enabled = !windowObject.window.isIconic;
+    }
+
     void MoveWindow(UwcWindowObject windowObject, bool useFilter)
     {
         var window = windowObject.window;
@@ -93,6 +98,7 @@ public class UwcDesktopLayouter : UwcLayouter
         var enumerator = windows.GetEnumerator();
         while (enumerator.MoveNext()) {
             var windowObject = enumerator.Current.Value;
+            CheckWindow(windowObject);
             MoveWindow(windowObject, usePositionFilter);
             ScaleWindow(windowObject, useScaleFilter);
         }

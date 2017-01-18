@@ -6,6 +6,7 @@ namespace uWindowCapture
 public class UwcWindowObject : MonoBehaviour
 {
     public Window window { get; set; }
+    public Window parent { get; set; }
     public bool isChild { get; /* only window manager set this. */ set; }
 
     public CaptureMode captureMode = CaptureMode.PrintWindow;
@@ -35,7 +36,6 @@ public class UwcWindowObject : MonoBehaviour
         if (updateTitleEveryFrame) {
             gameObject.name = window.title;
         }
-        gameObject.name = ((window.handle == Lib.GetForegroundWindow()) ? "★" : "") + " " + window.processId + " " + window.threadId + " " + window.title;
 
         updatedFrame_++;
     }
@@ -45,9 +45,10 @@ public class UwcWindowObject : MonoBehaviour
         window.captureMode = captureMode;
 
         if (updatedFrame_ % skipFrame == 0) {
-            var priority = (window.handle == Lib.GetForegroundWindow()) ?
-                CapturePriority.High : 
-                CapturePriority.Low;
+            var priority = CapturePriority.Low;
+            if (window == UwcManager.cursorWindow) {
+                priority = CapturePriority.High;
+            }
             window.RequestCapture(priority);
         }
     }
