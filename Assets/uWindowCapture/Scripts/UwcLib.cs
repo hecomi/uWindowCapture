@@ -24,7 +24,8 @@ public enum CaptureMode
 public enum CapturePriority
 {
     High = 0,
-    Low = 1,
+    Middle = 1,
+    Low = 2,
 }
 
 public enum MessageType

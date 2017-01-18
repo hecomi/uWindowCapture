@@ -57,10 +57,7 @@ public class UwcManager : MonoBehaviour
     System.IntPtr cursorWindowHandle_ = System.IntPtr.Zero;
     static public Window cursorWindow
     {
-        get { 
-            return (instance.cursorWindowHandle_ != System.IntPtr.Zero) ? 
-                windows[instance.cursorWindowHandle_] : null;
-        }
+        get { return Find(instance.cursorWindowHandle_); }
     }
 
     void Awake()
@@ -127,8 +124,7 @@ public class UwcManager : MonoBehaviour
                     break;
                 }
                 case MessageType.WindowRemoved: {
-                    Window window;
-                    windows.TryGetValue(message.windowHandle, out window);
+                    var window = Find(message.windowHandle);
                     if (window != null) {
                         window.isAlive = false;
                         if (onWindowRemoved != null) onWindowRemoved(message.windowHandle);
@@ -137,16 +133,14 @@ public class UwcManager : MonoBehaviour
                     break;
                 }
                 case MessageType.WindowCaptured: {
-                    Window window;
-                    windows.TryGetValue(message.windowHandle, out window);
+                    var window = Find(message.windowHandle);
                     if (window != null && window.onCaptured != null) {
                         window.onCaptured();
                     }
                     break;
                 }
                 case MessageType.WindowSizeChanged: {
-                    Window window;
-                    windows.TryGetValue(message.windowHandle, out window);
+                    var window = Find(message.windowHandle);
                     if (window != null && window.onSizeChanged != null) {
                         window.onSizeChanged();
                     }
@@ -161,6 +155,7 @@ public class UwcManager : MonoBehaviour
 
     static public Window Find(System.IntPtr handle)
     {
+        if (handle == System.IntPtr.Zero) return null;
         if (windows.ContainsKey(handle)) {
             return windows[handle];
         }

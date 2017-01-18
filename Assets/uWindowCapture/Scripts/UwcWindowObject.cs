@@ -57,6 +57,8 @@ public class UwcWindowObject : MonoBehaviour
             var priority = CapturePriority.Low;
             if (window == UwcManager.cursorWindow) {
                 priority = CapturePriority.High;
+            } else if (window.zOrder < 5) {
+                priority = CapturePriority.Middle;
             }
             window.RequestCapture(priority);
         }

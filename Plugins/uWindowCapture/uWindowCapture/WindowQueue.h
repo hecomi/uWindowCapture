@@ -9,6 +9,7 @@ class WindowQueue
 public:
     void Enqueue(int id);
     int Dequeue();
+    bool Empty() const;
 
 private:
     std::mutex mutex_;

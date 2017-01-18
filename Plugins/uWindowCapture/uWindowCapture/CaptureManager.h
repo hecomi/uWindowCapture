@@ -11,7 +11,8 @@
 enum class CapturePriority
 {
     High = 0,
-    Low  = 1,
+    Middle = 1,
+    Low  = 2,
 };
 
 
@@ -25,5 +26,6 @@ public:
 private:
     ThreadLoop threadLoop_;
     WindowQueue highPriorityQueue_;
+    WindowQueue middlePriorityQueue_;
     WindowQueue lowPriorityQueue_;
 };

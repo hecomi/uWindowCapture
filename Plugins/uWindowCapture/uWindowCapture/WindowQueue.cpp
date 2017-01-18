@@ -25,3 +25,9 @@ int WindowQueue::Dequeue()
     queue_.pop_back();
     return id;
 }
+
+
+bool WindowQueue::Empty() const
+{
+    return queue_.empty();
+}
