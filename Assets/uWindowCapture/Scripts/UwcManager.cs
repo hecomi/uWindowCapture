@@ -135,21 +135,21 @@ public class UwcManager : MonoBehaviour
                 }
                 case MessageType.WindowCaptured: {
                     var window = Find(message.windowHandle);
-                    if (window != null && window.onCaptured != null) {
+                    if (window != null) {
                         window.onCaptured.Invoke();
                     }
                     break;
                 }
                 case MessageType.WindowSizeChanged: {
                     var window = Find(message.windowHandle);
-                    if (window != null && window.onSizeChanged != null) {
+                    if (window != null) {
                         window.onSizeChanged.Invoke();
                     }
                     break;
                 }
                 case MessageType.IconCaptured: {
                     var window = Find(message.windowHandle);
-                    if (window != null && window.onSizeChanged != null) {
+                    if (window != null) {
                         window.onIconCaptured.Invoke();
                     }
                     break;

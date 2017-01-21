@@ -53,14 +53,19 @@ bool IconTexture::CaptureOnce()
     auto hWnd = window_->GetHandle();
 
 
-    auto hIcon = reinterpret_cast<HICON>(GetClassLongPtr(hWnd, GCLP_HICON));
+    auto hIcon = reinterpret_cast<HICON>(::GetClassLongPtr(hWnd, GCLP_HICON));
     if (hIcon == nullptr)
     {
-        hIcon = reinterpret_cast<HICON>(SendMessage(hWnd, WM_GETICON, ICON_BIG, 0));
-        if (hIcon == nullptr)
+        const auto hr = ::SendMessageTimeout(hWnd, WM_GETICON, ICON_BIG, 0, SMTO_ABORTIFHUNG | SMTO_BLOCK, 1000, reinterpret_cast<PDWORD_PTR>(&hIcon));
+        if (FAILED(hr))
         {
-            Debug::Error(__FUNCTION__, " => Could not get HICON.");
-            return false;
+
+            hIcon = reinterpret_cast<HICON>(::LoadImage(window_->GetInstance(), IDI_APPLICATION, IMAGE_ICON, 0, 0, LR_SHARED));
+            if (hIcon == nullptr)
+            {
+                Debug::Error(__FUNCTION__, " => Could not get HICON.");
+                return false;
+            }
         }
     }
 
@@ -83,33 +88,44 @@ bool IconTexture::CaptureOnce()
     bmi.biCompression = BI_RGB;
     bmi.biSizeImage   = 0;
 
-    Buffer<BYTE> mask;
-    mask.ExpandIfNeeded(width * height * 4);
-
     auto hDcMem = ::CreateCompatibleDC(NULL);
     ScopedReleaser hDcReleaser([&] { ::DeleteDC(hDcMem); });
 
+    // Get color image
+    Buffer<BYTE> color;
+    color.ExpandIfNeeded(width * height * 4);
+    if (!::GetDIBits(hDcMem, info.hbmColor, 0, height, color.Get(), reinterpret_cast<BITMAPINFO*>(&bmi), DIB_RGB_COLORS))
+    {
+        OutputApiError("GetDIBits");
+        return false;
+    }
+    
+    // Get mask image
+    Buffer<BYTE> mask;
+    mask.ExpandIfNeeded(width * height * 4);
+    if (!::GetDIBits(hDcMem, info.hbmMask, 0, height, mask.Get(), reinterpret_cast<BITMAPINFO*>(&bmi), DIB_RGB_COLORS))
+    {
+        OutputApiError("GetDIBits");
+        return false;
+    }
+
     {
         std::lock_guard<std::mutex> lock(bufferMutex_);
-
         buffer_.ExpandIfNeeded(width * height * 4);
-        if (!::GetDIBits(hDcMem, info.hbmColor, 0, height, buffer_.Get(), reinterpret_cast<BITMAPINFO*>(&bmi), DIB_RGB_COLORS))
-        {
-            OutputApiError("GetDIBits");
-            return false;
-        }
 
-        if (!::GetDIBits(hDcMem, info.hbmMask, 0, height, mask.Get(), reinterpret_cast<BITMAPINFO*>(&bmi), DIB_RGB_COLORS))
-        {
-            OutputApiError("GetDIBits");
-            return false;
-        }
-
-        auto color32 = buffer_.As<UINT>();
+        auto buffer32 = buffer_.As<UINT>();
+        auto color32 = color.As<UINT>();
         auto mask32 = mask.As<UINT>();
-        for (UINT i = 0; i < width * height; ++i)
+
+        const auto n = width * height;
+        for (UINT x = 0; x < width; ++x) 
         {
-            color32[i] ^= mask32[i];
+            for (UINT y = 0; y < height; ++y)
+            {
+                const auto i = y * width + x;
+                const auto j = (height - 1 - y) * width + x;
+                buffer32[j] = color32[i] ^ mask32[i];
+            }
         }
     }
 
@@ -130,7 +146,7 @@ bool IconTexture::UploadOnce()
     {
         D3D11_TEXTURE2D_DESC desc;
         unityTexture_.load()->GetDesc(&desc);
-        if (desc.Width != GetWidth() && desc.Height != GetHeight())
+        if (desc.Width != GetWidth() || desc.Height != GetHeight())
         {
             Debug::Error(__FUNCTION__, " => Texture size is wrong.");
             return false;
