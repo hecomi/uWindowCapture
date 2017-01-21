@@ -28,6 +28,8 @@ public:
     void TriggerGpuUpload();
 
 private:
+    void CreateDevice();
+
     DevicePtr device_;
     std::thread initThread_;
     ThreadLoop threadLoop_;

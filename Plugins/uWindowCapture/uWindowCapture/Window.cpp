@@ -14,19 +14,19 @@ using namespace Microsoft::WRL;
 Window::Window(HWND hWnd, int id)
     : window_(hWnd)
     , id_(id)
-    , texture_(std::make_shared<WindowTexture>(this))
+    , windowTexture_(std::make_shared<WindowTexture>(this))
 {
     if (hWnd == ::GetDesktopWindow())
     {
         title_ = L"Desktop";
         isDesktop_ = true;
-        texture_->SetCaptureMode(CaptureMode::BitBlt);
+        windowTexture_->SetCaptureMode(CaptureMode::BitBlt);
     }
     else
     {
         isAltTabWindow_ = ::IsAltTabWindow(hWnd);
         const auto mode = (owner_ == NULL) ? CaptureMode::PrintWindow : CaptureMode::BitBltAlpha;
-        texture_->SetCaptureMode(mode);
+        windowTexture_->SetCaptureMode(mode);
     }
 }
 
@@ -189,13 +189,13 @@ UINT Window::GetZOrder() const
 
 UINT Window::GetBufferWidth() const
 {
-    return texture_->bufferWidth_;
+    return windowTexture_->bufferWidth_;
 }
 
 
 UINT Window::GetBufferHeight() const
 {
-    return texture_->bufferHeight_;
+    return windowTexture_->bufferHeight_;
 }
 
 
@@ -219,30 +219,32 @@ const std::wstring& Window::GetTitle() const
 
 void Window::SetTexturePtr(ID3D11Texture2D* ptr)
 {
-    texture_->SetUnityTexturePtr(ptr);
+    windowTexture_->SetUnityTexturePtr(ptr);
 }
 
 
 ID3D11Texture2D* Window::GetTexturePtr() const
 {
-    return texture_->GetUnityTexturePtr();
+    return windowTexture_->GetUnityTexturePtr();
 }
 
 
 void Window::SetCaptureMode(CaptureMode mode)
 {
-    texture_->SetCaptureMode(mode);
+    windowTexture_->SetCaptureMode(mode);
 }
 
 
 CaptureMode Window::GetCaptureMode() const
 {
-    return texture_->GetCaptureMode();
+    return windowTexture_->GetCaptureMode();
 }
 
 
 void Window::Capture()
 {
+    // Run this scope in the thread loop managed by CaptureManager.
+
     if (!IsWindow() || !IsVisible())
     {
         return;
@@ -250,33 +252,35 @@ void Window::Capture()
 
     UWC_SCOPE_TIMER(WindowCapture)
 
-    if (CaptureWindow())
-    {
-        RequestUpload();
-    }
+    CaptureWindowTexture();
 }
 
 
-BOOL Window::CaptureWindow()
+BOOL Window::CaptureWindowTexture()
 {
     if (!IsWindow() || !IsVisible()) return -1;
 
-    return texture_->Capture();
-}
-
-
-void Window::RequestUpload()
-{
-    if (auto& uploader = WindowManager::GetUploadManager())
+    if (windowTexture_->Capture())
     {
-        uploader->RequestUpload(id_);
+        if (auto& uploader = WindowManager::GetUploadManager())
+        {
+            uploader->RequestUpload(id_);
+        }
     }
 }
 
 
-void Window::UploadTextureToGpu()
+void Window::Upload()
 {
-    if (texture_->Upload())
+    // Run this scope in the thread loop managed by UploadManager.
+
+    UploadWindowTexture();
+}
+
+
+void Window::UploadWindowTexture()
+{
+    if (windowTexture_->Upload())
     {
         hasNewTextureUploaded_ = true;
     }
@@ -285,8 +289,10 @@ void Window::UploadTextureToGpu()
 
 void Window::Render()
 {
+    // Run this scope in the unity rendering thread.
+
     if (!hasNewTextureUploaded_) return;
     hasNewTextureUploaded_ = false;
 
-    texture_->Render();
+    windowTexture_->Render();
 }

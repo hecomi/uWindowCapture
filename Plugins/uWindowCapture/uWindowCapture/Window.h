@@ -47,8 +47,8 @@ public:
     CaptureMode GetCaptureMode() const;
 
     void Capture();
+    void Upload();
     void Render();
-    void UploadTextureToGpu();
 
     bool IsAltTab() const;
     bool IsDesktop() const;
@@ -66,10 +66,10 @@ public:
     BOOL MoveAndScaleWindow(int x, int y, int width, int height);
 
 private:
-    BOOL CaptureWindow();
-    void RequestUpload();
+    BOOL CaptureWindowTexture();
+    void UploadWindowTexture();
 
-    std::shared_ptr<class WindowTexture> texture_;
+    std::shared_ptr<class WindowTexture> windowTexture_;
 
     const int id_ = -1;
     const HWND window_ = nullptr;

@@ -23,44 +23,7 @@ UploadManager::UploadManager()
 {
     initThread_ = std::thread([this]
     {
-        ComPtr<IDXGIDevice1> dxgiDevice;
-        if (FAILED(GetUnityDevice()->QueryInterface(IID_PPV_ARGS(&dxgiDevice)))) {
-            Debug::Error(__FUNCTION__, " => QueryInterface from IUnityGraphicsD3D11 to IDXGIDevice1 failed.");
-            return;
-        }
-
-        ComPtr<IDXGIAdapter> dxgiAdapter;
-        if (FAILED(dxgiDevice->GetAdapter(&dxgiAdapter))) {
-            Debug::Error(__FUNCTION__, " => QueryInterface from IDXGIDevice1 to IDXGIAdapter failed.");
-            return;
-        }
-
-        const auto driverType = D3D_DRIVER_TYPE_UNKNOWN;
-        const auto flags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
-        const D3D_FEATURE_LEVEL featureLevelsRequested[] =
-        {
-            D3D_FEATURE_LEVEL_11_0,
-            D3D_FEATURE_LEVEL_10_1,
-            D3D_FEATURE_LEVEL_10_0,
-            D3D_FEATURE_LEVEL_9_3,
-            D3D_FEATURE_LEVEL_9_2,
-            D3D_FEATURE_LEVEL_9_1
-        };
-        const UINT numLevelsRequested = sizeof(featureLevelsRequested) / sizeof(D3D_FEATURE_LEVEL);
-        D3D_FEATURE_LEVEL featureLevelsSupported;
-
-        D3D11CreateDevice(
-            dxgiAdapter.Get(),
-            driverType,
-            nullptr,
-            flags,
-            featureLevelsRequested,
-            numLevelsRequested,
-            D3D11_SDK_VERSION,
-            &device_,
-            &featureLevelsSupported,
-            nullptr);
-
+        CreateDevice();
         StartUploadThread();
     });
 }
@@ -74,6 +37,48 @@ UploadManager::~UploadManager()
     }
 
     StopUploadThread();
+}
+
+
+void UploadManager::CreateDevice()
+{
+    ComPtr<IDXGIDevice1> dxgiDevice;
+    if (FAILED(GetUnityDevice()->QueryInterface(IID_PPV_ARGS(&dxgiDevice)))) {
+        Debug::Error(__FUNCTION__, " => QueryInterface from IUnityGraphicsD3D11 to IDXGIDevice1 failed.");
+        return;
+    }
+
+    ComPtr<IDXGIAdapter> dxgiAdapter;
+    if (FAILED(dxgiDevice->GetAdapter(&dxgiAdapter))) {
+        Debug::Error(__FUNCTION__, " => QueryInterface from IDXGIDevice1 to IDXGIAdapter failed.");
+        return;
+    }
+
+    const auto driverType = D3D_DRIVER_TYPE_UNKNOWN;
+    const auto flags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
+    const D3D_FEATURE_LEVEL featureLevelsRequested[] =
+    {
+        D3D_FEATURE_LEVEL_11_0,
+        D3D_FEATURE_LEVEL_10_1,
+        D3D_FEATURE_LEVEL_10_0,
+        D3D_FEATURE_LEVEL_9_3,
+        D3D_FEATURE_LEVEL_9_2,
+        D3D_FEATURE_LEVEL_9_1
+    };
+    const UINT numLevelsRequested = sizeof(featureLevelsRequested) / sizeof(D3D_FEATURE_LEVEL);
+    D3D_FEATURE_LEVEL featureLevelsSupported;
+
+    D3D11CreateDevice(
+        dxgiAdapter.Get(),
+        driverType,
+        nullptr,
+        flags,
+        featureLevelsRequested,
+        numLevelsRequested,
+        D3D11_SDK_VERSION,
+        &device_,
+        &featureLevelsSupported,
+        nullptr);
 }
 
 
@@ -122,7 +127,7 @@ void UploadManager::StartUploadThread()
         {
             if (auto window = WindowManager::Get().GetWindow(id))
             {
-                window->UploadTextureToGpu();
+                window->Upload();
             }
         }
     }, std::chrono::microseconds(10) /* check uploading every 10 us */);
