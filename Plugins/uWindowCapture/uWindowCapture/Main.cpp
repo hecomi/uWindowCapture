@@ -269,6 +269,24 @@ extern "C"
         return 0;
     }
 
+    UNITY_INTERFACE_EXPORT UINT UNITY_INTERFACE_API UwcGetWindowIconWidth(int id)
+    {
+        if (auto window = GetWindow(id))
+        {
+            return window->GetIconWidth();
+        }
+        return 0;
+    }
+
+    UNITY_INTERFACE_EXPORT UINT UNITY_INTERFACE_API UwcGetWindowIconHeight(int id)
+    {
+        if (auto window = GetWindow(id))
+        {
+            return window->GetIconHeight();
+        }
+        return 0;
+    }
+
     UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcUpdateWindowTitle(int id)
     {
         if (auto window = GetWindow(id))
@@ -309,6 +327,23 @@ extern "C"
         if (auto window = GetWindow(id))
         {
             window->SetWindowTexture(ptr);
+        }
+    }
+
+    UNITY_INTERFACE_EXPORT ID3D11Texture2D* UNITY_INTERFACE_API UwcGetWindowIconTexturePtr(int id)
+    {
+        if (auto window = GetWindow(id))
+        {
+            return window->GetIconTexture();
+        }
+        return nullptr;
+    }
+
+    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcSetWindowIconTexturePtr(int id, ID3D11Texture2D* ptr)
+    {
+        if (auto window = GetWindow(id))
+        {
+            window->SetIconTexture(ptr);
         }
     }
 

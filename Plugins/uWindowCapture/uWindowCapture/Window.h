@@ -33,6 +33,8 @@ public:
     UINT GetZOrder() const;
     UINT GetBufferWidth() const;
     UINT GetBufferHeight() const;
+    UINT GetIconWidth() const;
+    UINT GetIconHeight() const;
 
     void UpdateTitle();
     UINT GetTitleLength() const;

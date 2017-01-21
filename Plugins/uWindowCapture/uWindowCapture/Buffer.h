@@ -31,6 +31,11 @@ public:
 
     ~Buffer() {}
 
+    bool Empty() const
+    {
+        return size_ == 0;
+    }
+
     void ExpandIfNeeded(UINT size)
     {
         if (size > size_)

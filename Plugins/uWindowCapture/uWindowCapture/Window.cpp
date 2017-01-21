@@ -11,6 +11,7 @@ Window::Window(HWND hWnd, int id)
     : window_(hWnd)
     , id_(id)
     , windowTexture_(std::make_shared<WindowTexture>(this))
+    , iconTexture_(std::make_shared<IconTexture>(this))
 {
     if (hWnd == ::GetDesktopWindow())
     {
@@ -195,6 +196,18 @@ UINT Window::GetBufferHeight() const
 }
 
 
+UINT Window::GetIconWidth() const
+{
+    return iconTexture_->GetWidth();
+}
+
+
+UINT Window::GetIconHeight() const
+{
+    return iconTexture_->GetHeight();
+}
+
+
 void Window::UpdateTitle()
 {
     ::GetWindowTitle(window_, title_);
@@ -260,8 +273,10 @@ void Window::Capture()
 
     UWC_SCOPE_TIMER(WindowCapture)
 
-    if (windowTexture_->Capture() && iconTexture_->CaptureOnce())
+    if (windowTexture_->Capture())
     {
+        iconTexture_->CaptureOnce();
+
         if (auto& uploader = WindowManager::GetUploadManager())
         {
             uploader->RequestUpload(id_);
@@ -274,8 +289,9 @@ void Window::Upload()
 {
     // Run this scope in the thread loop managed by UploadManager.
 
-    if (windowTexture_->Upload() && iconTexture_->UploadOnce())
+    if (windowTexture_->Upload())
     {
+        iconTexture_->UploadOnce();
         hasNewTextureUploaded_ = true;
     }
 }
