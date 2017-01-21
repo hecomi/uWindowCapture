@@ -2,9 +2,7 @@
 
 #include <Windows.h>
 #include <d3d11.h>
-#include <wrl/client.h>
 #include <string>
-#include <mutex>
 #include <atomic>
 
 #include "Buffer.h"
@@ -40,8 +38,11 @@ public:
     UINT GetTitleLength() const;
     const std::wstring& GetTitle() const;
 
-    void SetTexturePtr(ID3D11Texture2D* ptr);
-    ID3D11Texture2D* GetTexturePtr() const;
+    void SetWindowTexture(ID3D11Texture2D* ptr);
+    ID3D11Texture2D* GetWindowTexture() const;
+
+    void SetIconTexture(ID3D11Texture2D* ptr);
+    ID3D11Texture2D* GetIconTexture() const;
 
     void SetCaptureMode(CaptureMode mode);
     CaptureMode GetCaptureMode() const;
@@ -66,10 +67,8 @@ public:
     BOOL MoveAndScaleWindow(int x, int y, int width, int height);
 
 private:
-    BOOL CaptureWindowTexture();
-    void UploadWindowTexture();
-
     std::shared_ptr<class WindowTexture> windowTexture_;
+    std::shared_ptr<class IconTexture> iconTexture_;
 
     const int id_ = -1;
     const HWND window_ = nullptr;

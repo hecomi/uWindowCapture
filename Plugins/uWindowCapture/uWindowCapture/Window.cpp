@@ -1,13 +1,9 @@
-#include <vector>
-#include <algorithm>
-
 #include "Window.h"
 #include "WindowTexture.h"
+#include "IconTexture.h"
 #include "WindowManager.h"
 #include "Debug.h"
 #include "Util.h"
-
-using namespace Microsoft::WRL;
 
 
 
@@ -189,13 +185,13 @@ UINT Window::GetZOrder() const
 
 UINT Window::GetBufferWidth() const
 {
-    return windowTexture_->bufferWidth_;
+    return windowTexture_->GetWidth();
 }
 
 
 UINT Window::GetBufferHeight() const
 {
-    return windowTexture_->bufferHeight_;
+    return windowTexture_->GetHeight();
 }
 
 
@@ -217,15 +213,27 @@ const std::wstring& Window::GetTitle() const
 }
 
 
-void Window::SetTexturePtr(ID3D11Texture2D* ptr)
+void Window::SetWindowTexture(ID3D11Texture2D* ptr)
 {
     windowTexture_->SetUnityTexturePtr(ptr);
 }
 
 
-ID3D11Texture2D* Window::GetTexturePtr() const
+ID3D11Texture2D* Window::GetWindowTexture() const
 {
     return windowTexture_->GetUnityTexturePtr();
+}
+
+
+void Window::SetIconTexture(ID3D11Texture2D* ptr)
+{
+    iconTexture_->SetUnityTexturePtr(ptr);
+}
+
+
+ID3D11Texture2D* Window::GetIconTexture() const
+{
+    return iconTexture_->GetUnityTexturePtr();
 }
 
 
@@ -252,15 +260,7 @@ void Window::Capture()
 
     UWC_SCOPE_TIMER(WindowCapture)
 
-    CaptureWindowTexture();
-}
-
-
-BOOL Window::CaptureWindowTexture()
-{
-    if (!IsWindow() || !IsVisible()) return -1;
-
-    if (windowTexture_->Capture())
+    if (windowTexture_->Capture() && iconTexture_->CaptureOnce())
     {
         if (auto& uploader = WindowManager::GetUploadManager())
         {
@@ -274,13 +274,7 @@ void Window::Upload()
 {
     // Run this scope in the thread loop managed by UploadManager.
 
-    UploadWindowTexture();
-}
-
-
-void Window::UploadWindowTexture()
-{
-    if (windowTexture_->Upload())
+    if (windowTexture_->Upload() && iconTexture_->UploadOnce())
     {
         hasNewTextureUploaded_ = true;
     }
@@ -295,4 +289,5 @@ void Window::Render()
     hasNewTextureUploaded_ = false;
 
     windowTexture_->Render();
+    iconTexture_->RenderOnce();
 }

@@ -1,6 +1,3 @@
-#include <vector>
-#include <algorithm>
-
 #include "WindowTexture.h"
 #include "Window.h"
 #include "WindowManager.h"
@@ -48,6 +45,18 @@ void WindowTexture::SetCaptureMode(CaptureMode mode)
 CaptureMode WindowTexture::GetCaptureMode() const
 {
     return captureMode_;
+}
+
+
+UINT WindowTexture::GetWidth() const
+{
+    return bufferWidth_;
+}
+
+
+UINT WindowTexture::GetHeight() const
+{
+    return bufferHeight_;
 }
 
 

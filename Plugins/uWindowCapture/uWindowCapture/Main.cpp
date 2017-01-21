@@ -299,7 +299,7 @@ extern "C"
     {
         if (auto window = GetWindow(id))
         {
-            return window->GetTexturePtr();
+            return window->GetWindowTexture();
         }
         return nullptr;
     }
@@ -308,7 +308,7 @@ extern "C"
     {
         if (auto window = GetWindow(id))
         {
-            window->SetTexturePtr(ptr);
+            window->SetWindowTexture(ptr);
         }
     }
 

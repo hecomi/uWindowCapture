@@ -3,7 +3,6 @@
 #include <Windows.h>
 #include <d3d11.h>
 #include <wrl/client.h>
-#include <string>
 #include <mutex>
 #include <atomic>
 
@@ -24,15 +23,18 @@ class Window;
 
 class WindowTexture
 {
-friend Window;
 public:
     explicit WindowTexture(Window* window);
     ~WindowTexture();
 
     void SetUnityTexturePtr(ID3D11Texture2D* ptr);
     ID3D11Texture2D* GetUnityTexturePtr() const;
+
     void SetCaptureMode(CaptureMode mode);
     CaptureMode GetCaptureMode() const;
+
+    UINT GetWidth() const;
+    UINT GetHeight() const;
 
     bool Capture();
     bool Upload();
