@@ -11,6 +11,7 @@
 #include "UploadManager.h"
 #include "CaptureManager.h"
 #include "Window.h"
+#include "WindowTexture.h"
 #include "WindowManager.h"
 
 #pragma comment(lib, "dxgi.lib")

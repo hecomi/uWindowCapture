@@ -27,6 +27,7 @@
     <ClInclude Include="CaptureManager.h" />
     <ClInclude Include="UploadManager.h" />
     <ClInclude Include="WindowQueue.h" />
+    <ClInclude Include="WindowTexture.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp" />
@@ -40,5 +41,6 @@
     <ClCompile Include="CaptureManager.cpp" />
     <ClCompile Include="UploadManager.cpp" />
     <ClCompile Include="WindowQueue.cpp" />
+    <ClCompile Include="WindowTexture.cpp" />
   </ItemGroup>
 </Project>

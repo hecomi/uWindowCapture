@@ -1,7 +1,10 @@
 ﻿using UnityEngine;
 using uWindowCapture;
 
-public class FindAndCaptureWindow : MonoBehaviour
+namespace uWindowCapture
+{
+
+public class UwcFindAndCaptureWindow : MonoBehaviour
 {
     Window window = null;
     public string target = "";
@@ -36,4 +39,6 @@ public class FindAndCaptureWindow : MonoBehaviour
         window.captureMode = mode;
         window.RequestCapture(CapturePriority.High);
     }
+}
+
 }

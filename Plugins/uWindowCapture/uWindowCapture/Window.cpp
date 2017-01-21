@@ -2,12 +2,10 @@
 #include <algorithm>
 
 #include "Window.h"
+#include "WindowTexture.h"
 #include "WindowManager.h"
-#include "UploadManager.h"
-#include "Unity.h"
-#include "Message.h"
-#include "Util.h"
 #include "Debug.h"
+#include "Util.h"
 
 using namespace Microsoft::WRL;
 
@@ -16,25 +14,31 @@ using namespace Microsoft::WRL;
 Window::Window(HWND hWnd, int id)
     : window_(hWnd)
     , id_(id)
+    , texture_(std::make_shared<WindowTexture>(this))
 {
     if (hWnd == ::GetDesktopWindow())
     {
         title_ = L"Desktop";
         isDesktop_ = true;
-        mode_ = CaptureMode::BitBlt;
+        texture_->SetCaptureMode(CaptureMode::BitBlt);
     }
     else
     {
         isAltTabWindow_ = ::IsAltTabWindow(hWnd);
-        mode_ = (owner_ == NULL) ? CaptureMode::PrintWindow : CaptureMode::BitBltAlpha;
+        const auto mode = (owner_ == NULL) ? CaptureMode::PrintWindow : CaptureMode::BitBltAlpha;
+        texture_->SetCaptureMode(mode);
     }
 }
 
 
 Window::~Window()
 {
-    std::lock_guard<std::mutex> lock(bufferMutex_);
-    DeleteBitmap();
+}
+
+
+int Window::GetId() const
+{
+    return id_;
 }
 
 
@@ -185,13 +189,13 @@ UINT Window::GetZOrder() const
 
 UINT Window::GetBufferWidth() const
 {
-    return bufferWidth_;
+    return texture_->bufferWidth_;
 }
 
 
 UINT Window::GetBufferHeight() const
 {
-    return bufferHeight_;
+    return texture_->bufferHeight_;
 }
 
 
@@ -213,155 +217,51 @@ const std::wstring& Window::GetTitle() const
 }
 
 
-void Window::CreateBitmapIfNeeded(HDC hDc, UINT width, UINT height)
-{
-    std::lock_guard<std::mutex> lock(bufferMutex_);
-
-    if (bufferWidth_ == width && bufferHeight_ == height) return;
-    if (width == 0 || height == 0) return;
-
-    bufferWidth_ = width;
-    bufferHeight_ = height;
-    buffer_.ExpandIfNeeded(width * height * 4);
-
-    DeleteBitmap();
-    bitmap_ = ::CreateCompatibleBitmap(hDc, width, height);
-
-    MessageManager::Get().Add({ MessageType::WindowSizeChanged, id_, window_ });
-}
-
-
-void Window::DeleteBitmap()
-{
-    if (bitmap_ != nullptr) 
-    {
-        if (!::DeleteObject(bitmap_)) OutputApiError("DeleteObject");
-        bitmap_ = nullptr;
-    }
-}
-
-
 void Window::SetTexturePtr(ID3D11Texture2D* ptr)
 {
-    unityTexture_ = ptr;
+    texture_->SetUnityTexturePtr(ptr);
 }
 
 
 ID3D11Texture2D* Window::GetTexturePtr() const
 {
-    return unityTexture_;
+    return texture_->GetUnityTexturePtr();
 }
 
 
 void Window::SetCaptureMode(CaptureMode mode)
 {
-    mode_ = mode;
+    texture_->SetCaptureMode(mode);
 }
 
 
 CaptureMode Window::GetCaptureMode() const
 {
-    return mode_;
+    return texture_->GetCaptureMode();
 }
 
 
 void Window::Capture()
 {
-    if (!IsWindow() || !IsVisible() || (mode_ == CaptureMode::None))
+    if (!IsWindow() || !IsVisible())
     {
         return;
     }
 
     UWC_SCOPE_TIMER(WindowCapture)
 
-    if (CaptureInternal())
+    if (CaptureWindow())
     {
         RequestUpload();
     }
 }
 
 
-BOOL Window::CaptureInternal()
+BOOL Window::CaptureWindow()
 {
     if (!IsWindow() || !IsVisible()) return -1;
 
-    auto hDc = ::GetDC(window_);
-
-    {
-        BITMAP header;
-        ZeroMemory(&header, sizeof(BITMAP));
-
-        auto hBitmap = GetCurrentObject(hDc, OBJ_BITMAP);
-        GetObject(hBitmap, sizeof(BITMAP), &header);
-
-        const auto width = header.bmWidth;
-        const auto height = header.bmHeight;
-
-        if (width == 0 || height == 0)
-        {
-            if (!::ReleaseDC(window_, hDc)) OutputApiError("ReleaseDC");
-            return -1;
-        }
-
-        CreateBitmapIfNeeded(hDc, width, height);
-    }
-
-    auto hDcMem = ::CreateCompatibleDC(hDc);
-    HGDIOBJ preObject = ::SelectObject(hDcMem, bitmap_);
-
-    BOOL result = false;
-    switch (mode_)
-    {
-        case CaptureMode::PrintWindow:
-        {
-            result = ::PrintWindow(window_, hDcMem, PW_RENDERFULLCONTENT);
-            if (!result) OutputApiError("PrintWindow");
-            break;
-        }
-        case CaptureMode::BitBlt:
-        {
-            result = ::BitBlt(hDcMem, 0, 0, bufferWidth_, bufferHeight_, hDc, 0, 0, SRCCOPY);
-            if (!result) OutputApiError("BitBlt");
-            break;
-        }
-        case CaptureMode::BitBltAlpha:
-        {
-            result = ::BitBlt(hDcMem, 0, 0, bufferWidth_, bufferHeight_, hDc, 0, 0, SRCCOPY | CAPTUREBLT);
-            if (!result) OutputApiError("BitBlt");
-            break;
-        }
-        default:
-        {
-            break;
-        }
-    }
-
-    if (result)
-    {
-        BITMAPINFOHEADER bmi {};
-        bmi.biWidth       = static_cast<LONG>(bufferWidth_);
-        bmi.biHeight      = -static_cast<LONG>(bufferHeight_);
-        bmi.biPlanes      = 1;
-        bmi.biSize        = sizeof(BITMAPINFOHEADER);
-        bmi.biBitCount    = 32;
-        bmi.biCompression = BI_RGB;
-        bmi.biSizeImage   = 0;
-
-        {
-            std::lock_guard<std::mutex> lock(bufferMutex_);
-            if (!::GetDIBits(hDcMem, bitmap_, 0, bufferHeight_, buffer_.Get(), reinterpret_cast<BITMAPINFO*>(&bmi), DIB_RGB_COLORS))
-            {
-                OutputApiError("GetDIBits");
-            }
-        }
-    }
-
-    ::SelectObject(hDcMem, preObject);
-
-    if (!::DeleteDC(hDcMem)) OutputApiError("DeleteDC");
-    if (!::ReleaseDC(window_, hDc)) OutputApiError("ReleaseDC");
-
-    return result;
+    return texture_->Capture();
 }
 
 
@@ -376,64 +276,10 @@ void Window::RequestUpload()
 
 void Window::UploadTextureToGpu()
 {
-    if (!unityTexture_.load()) return;
-
-    UWC_SCOPE_TIMER(UploadTexture)
-
-    std::lock_guard<std::mutex> lock(sharedTextureMutex_);
-
+    if (texture_->Upload())
     {
-        D3D11_TEXTURE2D_DESC desc;
-        unityTexture_.load()->GetDesc(&desc);
-        if (desc.Width != bufferWidth_ && desc.Height != bufferHeight_)
-        {
-            return;
-        }
+        hasNewTextureUploaded_ = true;
     }
-
-    bool shouldUpdateTexture = true;
-
-    if (sharedTexture_)
-    {
-        D3D11_TEXTURE2D_DESC desc;
-        sharedTexture_->GetDesc(&desc);
-        if (desc.Width == bufferWidth_ && desc.Height == bufferHeight_)
-        {
-            shouldUpdateTexture = false;
-        }
-    }
-
-    auto& uploader = WindowManager::GetUploadManager();
-    if (!uploader) return;
-
-    if (shouldUpdateTexture)
-    {
-        sharedTexture_ = uploader->CreateCompatibleSharedTexture(unityTexture_.load());
-
-        if (!sharedTexture_)
-        {
-            Debug::Error(__FUNCTION__, " => Shared texture is null.");
-            return;
-        }
-
-        ComPtr<IDXGIResource> dxgiResource;
-        sharedTexture_.As(&dxgiResource);
-        if (FAILED(dxgiResource->GetSharedHandle(&sharedHandle_)))
-        {
-            Debug::Error(__FUNCTION__, " => GetSharedHandle() failed.");
-            return;
-        }
-    }
-
-    {
-        std::lock_guard<std::mutex> lock(bufferMutex_);
-        ComPtr<ID3D11DeviceContext> context;
-        uploader->GetDevice()->GetImmediateContext(&context);
-        context->UpdateSubresource(sharedTexture_.Get(), 0, nullptr, buffer_.Get(), bufferWidth_ * 4, 0);
-        context->Flush();
-    }
-
-    hasNewTextureUploaded_ = true;
 }
 
 
@@ -442,24 +288,5 @@ void Window::Render()
     if (!hasNewTextureUploaded_) return;
     hasNewTextureUploaded_ = false;
 
-    UWC_SCOPE_TIMER(Render)
-
-    if (unityTexture_.load() && sharedTexture_ && sharedHandle_)
-    {
-        std::lock_guard<std::mutex> lock(sharedTextureMutex_);
-
-        ComPtr<ID3D11DeviceContext> context;
-        GetUnityDevice()->GetImmediateContext(&context);
-
-        ComPtr<ID3D11Texture2D> texture;
-        if (FAILED(GetUnityDevice()->OpenSharedResource(sharedHandle_, __uuidof(ID3D11Texture2D), &texture)))
-        {
-            Debug::Error(__FUNCTION__, " => OpenSharedResource() failed.");
-            return;
-        }
-
-        context->CopyResource(unityTexture_.load(), texture.Get());
-
-        MessageManager::Get().Add({ MessageType::WindowCaptured, id_, window_ });
-    }
+    texture_->Render();
 }
