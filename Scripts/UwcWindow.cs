@@ -20,6 +20,8 @@ public class Window
 
         onCaptured.AddListener(OnCaptured);
         onSizeChanged.AddListener(OnSizeChanged);
+
+        CreateIconTexture();
     }
 
     public System.IntPtr handle
@@ -168,6 +170,16 @@ public class Window
         get { return Lib.GetWindowBufferHeight(id); }
     }
 
+    public int iconWidth
+    {
+        get { return Lib.GetWindowIconWidth(id); }
+    }
+
+    public int iconHeight
+    {
+        get { return Lib.GetWindowIconHeight(id); }
+    }
+
     public Texture2D texture
     {
         get;
@@ -176,6 +188,12 @@ public class Window
 
     private Texture2D backTexture_;
     private bool willTextureSizeChange_ = false;
+
+    public Texture2D iconTexture
+    {
+        get;
+        private set;
+    }
 
     public CaptureMode captureMode
     {
@@ -195,12 +213,28 @@ public class Window
         get { return onSizeChanged_; } 
     }
 
+    private UnityEvent onIconCaptured_ = new UnityEvent();
+    public UnityEvent onIconCaptured 
+    { 
+        get { return onIconCaptured_; } 
+    }
+
     public void RequestCapture(CapturePriority priority = CapturePriority.High)
     {
         Lib.RequestCaptureWindow(id, priority);
     }
 
     void OnSizeChanged()
+    {
+        CreateWindowTexture();
+    }
+
+    void OnCaptured()
+    {
+        UpdateWindowTexture();
+    }
+
+    void CreateWindowTexture()
     {
         var w = bufferWidth;
         var h = bufferHeight;
@@ -213,7 +247,7 @@ public class Window
         }
     }
 
-    void OnCaptured()
+    void UpdateWindowTexture()
     {
         if (willTextureSizeChange_) {
             Object.DestroyImmediate(texture);
@@ -221,6 +255,15 @@ public class Window
             backTexture_ = null;
             willTextureSizeChange_ = false;
         }
+    }
+
+    void CreateIconTexture()
+    {
+        var w = iconWidth;
+        var h = iconHeight;
+        if (w == 0 || h == 0) return;
+        iconTexture = new Texture2D(w, h, TextureFormat.BGRA32, false);
+        Lib.SetWindowIconTexturePtr(id, iconTexture.GetNativeTexturePtr());
     }
 
     public void Move(int x, int y)

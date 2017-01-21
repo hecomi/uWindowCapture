@@ -35,6 +35,7 @@ public enum MessageType
     WindowRemoved = 1,
     WindowCaptured = 2,
     WindowSizeChanged = 3,
+    IconCaptured = 4,
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -114,6 +115,10 @@ public static class Lib
     public static extern int GetWindowBufferWidth(int id);
     [DllImport(name, EntryPoint = "UwcGetWindowBufferHeight")]
     public static extern int GetWindowBufferHeight(int id);
+    [DllImport(name, EntryPoint = "UwcGetWindowIconWidth")]
+    public static extern int GetWindowIconWidth(int id);
+    [DllImport(name, EntryPoint = "UwcGetWindowIconHeight")]
+    public static extern int GetWindowIconHeight(int id);
     [DllImport(name, EntryPoint = "UwcUpdateWindowTitle")]
     private static extern void UpdateWindowTitle(int id);
     [DllImport(name, EntryPoint = "UwcGetWindowTitleLength")]
@@ -124,6 +129,10 @@ public static class Lib
     public static extern IntPtr GetWindowTexturePtr(int id);
     [DllImport(name, EntryPoint = "UwcSetWindowTexturePtr")]
     public static extern void SetWindowTexturePtr(int id, IntPtr texturePtr);
+    [DllImport(name, EntryPoint = "UwcGetWindowIconTexturePtr")]
+    public static extern IntPtr GetWindowIconTexturePtr(int id);
+    [DllImport(name, EntryPoint = "UwcSetWindowIconTexturePtr")]
+    public static extern void SetWindowIconTexturePtr(int id, IntPtr texturePtr);
     [DllImport(name, EntryPoint = "UwcGetWindowCaptureMode")]
     public static extern CaptureMode GetWindowCaptureMode(int id);
     [DllImport(name, EntryPoint = "UwcSetWindowCaptureMode")]

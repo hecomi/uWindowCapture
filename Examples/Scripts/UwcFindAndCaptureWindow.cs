@@ -7,8 +7,12 @@ namespace uWindowCapture
 public class UwcFindAndCaptureWindow : MonoBehaviour
 {
     Window window = null;
+
     public string target = "";
     public CaptureMode mode;
+    public Renderer iconRenderer;
+
+    Material iconMaterial_;
 
     void Update()
     {
@@ -22,6 +26,7 @@ public class UwcFindAndCaptureWindow : MonoBehaviour
         if (window != null) {
             UpdateScale();
             UpdateTexture();
+            UpdateIconTexture();
         }
     }
 
@@ -38,6 +43,25 @@ public class UwcFindAndCaptureWindow : MonoBehaviour
         GetComponent<Renderer>().material.mainTexture = window.texture;
         window.captureMode = mode;
         window.RequestCapture(CapturePriority.High);
+    }
+
+    void UpdateIconTexture()
+    {
+        if (!iconRenderer) return;
+        if (!iconMaterial_) {
+            iconMaterial_ = iconRenderer.material;
+        }
+        iconMaterial_.mainTexture = window.iconTexture;
+
+        {
+            var pos = transform.position;
+            var scale = transform.localScale; 
+            var iconScale = iconRenderer.transform.localScale;
+            scale.z = 0;
+            iconRenderer.transform.position = 
+                pos + 
+                new Vector3((-scale.x + iconScale.x) * 0.5f, (scale.y + iconScale.y) * 0.5f, 0f);
+        }
     }
 }
 

@@ -147,6 +147,13 @@ public class UwcManager : MonoBehaviour
                     }
                     break;
                 }
+                case MessageType.IconCaptured: {
+                    var window = Find(message.windowHandle);
+                    if (window != null && window.onSizeChanged != null) {
+                        window.onIconCaptured.Invoke();
+                    }
+                    break;
+                }
                 default: {
                     break;
                 }
