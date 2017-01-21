@@ -208,12 +208,6 @@ UINT Window::GetIconHeight() const
 }
 
 
-void Window::UpdateTitle()
-{
-    ::GetWindowTitle(window_, title_);
-}
-
-
 UINT Window::GetTitleLength() const
 {
     return static_cast<UINT>(title_.length());

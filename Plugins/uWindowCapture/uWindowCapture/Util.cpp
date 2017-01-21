@@ -2,6 +2,7 @@
 
 #include <vector>
 #include "Util.h"
+#include "Debug.h"
 
 
 
@@ -68,6 +69,27 @@ bool GetWindowTitle(HWND hWnd, std::wstring& outTitle)
     }
 
     return false;
+}
+
+
+bool GetWindowTitle(HWND hWnd, std::wstring& outTitle, int timeout)
+{
+    UINT length = 0;
+    if (FAILED(::SendMessageTimeoutW(hWnd, WM_GETTEXTLENGTH, 0, 0, SMTO_ABORTIFHUNG | SMTO_BLOCK, timeout, reinterpret_cast<PDWORD_PTR>(&length))))
+    {
+        return false;
+    }
+    if (length == 0) return false;
+
+    std::vector<WCHAR> buf(length + 1);
+    DWORD result;
+    if (FAILED(::SendMessageTimeoutW(hWnd, WM_GETTEXT, buf.size(), reinterpret_cast<LPARAM>(&buf[0]), SMTO_ABORTIFHUNG | SMTO_BLOCK, timeout, reinterpret_cast<PDWORD_PTR>(&result))))
+    {
+        return false;
+    }
+
+    outTitle = &buf[0];
+    return true;
 }
 
 

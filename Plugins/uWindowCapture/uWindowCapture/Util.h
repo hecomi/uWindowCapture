@@ -11,6 +11,7 @@
 bool IsAltTabWindow(HWND hWnd);
 UINT GetWindowZOrder(HWND hWnd);
 bool GetWindowTitle(HWND hWnd, std::wstring& outTitle);
+bool GetWindowTitle(HWND hWnd, std::wstring& outTitle, int timeout);
 
 
 // Releaser

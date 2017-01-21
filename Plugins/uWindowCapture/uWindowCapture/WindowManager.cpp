@@ -180,6 +180,7 @@ void WindowManager::UpdateWindows()
                 window->threadId_ = info.threadId;
                 window->rect_ = std::move(info.rect);
                 window->zOrder_ = info.zOrder;
+                window->title_ = info.title;
             }
         }
     }
@@ -219,6 +220,12 @@ void WindowManager::UpdateWindowHandleList()
         info.zOrder = ::GetWindowZOrder(hWnd);
         ::GetWindowRect(hWnd, &info.rect);
         info.threadId = ::GetWindowThreadProcessId(hWnd, &info.processId);
+
+        auto title = info.title;
+        if (::GetWindowTitle(hWnd, title, 200))
+        {
+            info.title = title;
+        }
 
         auto thiz = reinterpret_cast<WindowManager*>(lParam);
         thiz->windowHandleList_[1].push_back(info);
