@@ -20,6 +20,7 @@ public class Window
 
         onCaptured.AddListener(OnCaptured);
         onSizeChanged.AddListener(OnSizeChanged);
+        onIconCaptured.AddListener(OnIconCaptured);
 
         CreateIconTexture();
     }
@@ -180,19 +181,20 @@ public class Window
         get { return Lib.GetWindowIconHeight(id); }
     }
 
+    private Texture2D backTexture_;
+    private bool willTextureSizeChange_ = false;
     public Texture2D texture
     {
         get;
         private set;
     }
 
-    private Texture2D backTexture_;
-    private bool willTextureSizeChange_ = false;
-
+    private Texture2D iconTexture_;
+    private Texture2D errorIconTexture_;
+    private bool hasIconTextureCaptured_ = false;
     public Texture2D iconTexture
     {
-        get;
-        private set;
+        get { return hasIconTextureCaptured_ ? iconTexture_ : errorIconTexture_; }
     }
 
     public CaptureMode captureMode
@@ -234,6 +236,11 @@ public class Window
         UpdateWindowTexture();
     }
 
+    void OnIconCaptured()
+    {
+        hasIconTextureCaptured_ = true;
+    }
+
     void CreateWindowTexture()
     {
         var w = bufferWidth;
@@ -262,8 +269,9 @@ public class Window
         var w = iconWidth;
         var h = iconHeight;
         if (w == 0 || h == 0) return;
-        iconTexture = new Texture2D(w, h, TextureFormat.BGRA32, false);
-        Lib.SetWindowIconTexturePtr(id, iconTexture.GetNativeTexturePtr());
+        iconTexture_ = new Texture2D(w, h, TextureFormat.BGRA32, false);
+        Lib.SetWindowIconTexturePtr(id, iconTexture_.GetNativeTexturePtr());
+        errorIconTexture_ = Resources.Load<Texture2D>("uWindowCapture/Textures/uWC_No_Image");
     }
 
     public void Move(int x, int y)
