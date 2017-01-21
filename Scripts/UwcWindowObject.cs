@@ -27,13 +27,8 @@ public class UwcWindowObject : MonoBehaviour
     {
         captureMode = window.captureMode;
         window.RequestCapture(CapturePriority.High);
-        window.onCaptured += OnCaptured;
+        window.onCaptured.AddListener(OnCaptured);
         renderer_.enabled = false;
-    }
-
-    void OnDestroy()
-    {
-        window.onCaptured -= OnCaptured;
     }
 
     void Update()
