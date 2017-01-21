@@ -66,6 +66,10 @@ public:
     BOOL IsHungUp() const;
     BOOL IsTouchable() const;
 
+    BOOL MoveWindow(int x, int y);
+    BOOL ScaleWindow(int width, int height);
+    BOOL MoveAndScaleWindow(int x, int y, int width, int height);
+
 private:
     void CreateBitmapIfNeeded(HDC hDc, UINT width, UINT height);
     void DeleteBitmap();
@@ -83,8 +87,8 @@ private:
     DWORD threadId_ = -1;
     std::wstring title_ = L"";
 
-    RECT cachedRect_;
-    UINT cachedZOrder_ = 0;
+    RECT rect_;
+    UINT zOrder_ = 0;
 
     Microsoft::WRL::ComPtr<ID3D11Texture2D> sharedTexture_;
     HANDLE sharedHandle_;

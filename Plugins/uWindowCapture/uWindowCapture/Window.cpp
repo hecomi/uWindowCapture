@@ -134,33 +134,52 @@ BOOL Window::IsTouchable() const
 }
 
 
+BOOL Window::MoveWindow(int x, int y)
+{
+    MoveAndScaleWindow(x, y, GetWidth(), GetHeight());
+}
+
+
+BOOL Window::ScaleWindow(int width, int height)
+{
+    MoveAndScaleWindow(GetX(), GetY(), width, height);
+}
+
+
+BOOL Window::MoveAndScaleWindow(int x, int y, int width, int height)
+{
+    bool repaint = (width != GetWidth() || height != GetHeight());
+    return ::MoveWindow(window_, x, y, width, height, repaint);
+}
+
+
 UINT Window::GetX() const
 {
-    return cachedRect_.left;
+    return rect_.left;
 }
 
 
 UINT Window::GetY() const
 {
-    return cachedRect_.top;
+    return rect_.top;
 }
 
 
 UINT Window::GetWidth() const
 {
-    return cachedRect_.right - cachedRect_.left;
+    return rect_.right - rect_.left;
 }
 
 
 UINT Window::GetHeight() const
 {
-    return cachedRect_.bottom - cachedRect_.top;
+    return rect_.bottom - rect_.top;
 }
 
 
 UINT Window::GetZOrder() const
 {
-    return cachedZOrder_;
+    return zOrder_;
 }
 
 

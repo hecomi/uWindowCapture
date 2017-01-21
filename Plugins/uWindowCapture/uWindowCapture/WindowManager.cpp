@@ -169,8 +169,8 @@ void WindowManager::UpdateWindows()
                 window->instance_ = info.hInstance;
                 window->processId_ = info.processId;
                 window->threadId_ = info.threadId;
-                window->cachedRect_ = std::move(info.rect);
-                window->cachedZOrder_ = info.zOrder;
+                window->rect_ = std::move(info.rect);
+                window->zOrder_ = info.zOrder;
             }
         }
     }
