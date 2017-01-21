@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.Events;
 
 namespace uWindowCapture
 {
@@ -16,14 +17,9 @@ public class Window
         this.handle = handle;
         this.id = id;
         this.isAlive = true;
-        this.onCaptured += OnCaptured;
-        this.onSizeChanged += OnSizeChanged;
-    }
 
-    ~Window()
-    {
-        this.onCaptured -= OnCaptured;
-        this.onSizeChanged -= OnSizeChanged;
+        onCaptured.AddListener(OnCaptured);
+        onSizeChanged.AddListener(OnSizeChanged);
     }
 
     public System.IntPtr handle
@@ -187,18 +183,16 @@ public class Window
         set { Lib.SetWindowCaptureMode(id, value); }
     }
 
-    public delegate void Event();
-
-    public Event onCaptured
-    {
-        get;
-        set;
+    private UnityEvent onCaptured_ = new UnityEvent();
+    public UnityEvent onCaptured 
+    { 
+        get { return onCaptured_; } 
     }
 
-    public Event onSizeChanged
+    private UnityEvent onSizeChanged_ = new UnityEvent();
+    public UnityEvent onSizeChanged
     {
-        get;
-        set;
+        get { return onSizeChanged_; } 
     }
 
     public void RequestCapture(CapturePriority priority = CapturePriority.High)

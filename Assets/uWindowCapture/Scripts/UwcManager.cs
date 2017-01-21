@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.Events;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -32,18 +33,18 @@ public class UwcManager : MonoBehaviour
     public static event Lib.DebugLogDelegate onDebugLog = msg => Debug.Log(msg);
     public static event Lib.DebugLogDelegate onDebugErr = msg => Debug.LogError(msg);
 
-    public delegate void WindowAddedHandler(Window window);
-    public static WindowAddedHandler onWindowAdded
+    public class WindowAddedEvent : UnityEvent<Window> {}
+    private WindowAddedEvent onWindowAdded_ = new WindowAddedEvent();
+    public static WindowAddedEvent onWindowAdded
     {
-        get;
-        set;
+        get { return instance.onWindowAdded_; }
     }
 
-    public delegate void WindowRemovedHandler(System.IntPtr handle);
-    public static WindowRemovedHandler onWindowRemoved
+    public class WindowRemovedEvent : UnityEvent<System.IntPtr> {}
+    private WindowRemovedEvent onWindowRemoved_ = new WindowRemovedEvent();
+    public static WindowRemovedEvent onWindowRemoved
     {
-        get;
-        set;
+        get { return instance.onWindowRemoved_; }
     }
 
     System.IntPtr renderEventFunc_;
@@ -120,14 +121,14 @@ public class UwcManager : MonoBehaviour
                 case MessageType.WindowAdded: {
                     var window = new Window(message.windowHandle, message.windowId);
                     windows.Add(message.windowHandle, window);
-                    if (onWindowAdded != null) onWindowAdded(window);
+                    onWindowAdded.Invoke(window);
                     break;
                 }
                 case MessageType.WindowRemoved: {
                     var window = Find(message.windowHandle);
                     if (window != null) {
                         window.isAlive = false;
-                        if (onWindowRemoved != null) onWindowRemoved(message.windowHandle);
+                        onWindowRemoved.Invoke(message.windowHandle);
                         windows.Remove(message.windowHandle);
                     }
                     break;
@@ -135,14 +136,14 @@ public class UwcManager : MonoBehaviour
                 case MessageType.WindowCaptured: {
                     var window = Find(message.windowHandle);
                     if (window != null && window.onCaptured != null) {
-                        window.onCaptured();
+                        window.onCaptured.Invoke();
                     }
                     break;
                 }
                 case MessageType.WindowSizeChanged: {
                     var window = Find(message.windowHandle);
                     if (window != null && window.onSizeChanged != null) {
-                        window.onSizeChanged();
+                        window.onSizeChanged.Invoke();
                     }
                     break;
                 }

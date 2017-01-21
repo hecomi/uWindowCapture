@@ -17,21 +17,12 @@ public class UwcWindowManager : MonoBehaviour
 
     void Start()
     {
+        UwcManager.onWindowAdded.AddListener(OnWindowAdded);
+        UwcManager.onWindowRemoved.AddListener(OnWindowRemoved);
+
         foreach (var pair in UwcManager.windows) {
             OnWindowAdded(pair.Value);
         }
-    }
-
-    void OnEnable()
-    {
-        UwcManager.onWindowAdded += OnWindowAdded;
-        UwcManager.onWindowRemoved += OnWindowRemoved;
-    }
-
-    void OnDisable()
-    {
-        UwcManager.onWindowAdded -= OnWindowAdded;
-        UwcManager.onWindowRemoved -= OnWindowRemoved;
     }
 
     UwcWindowObject FindParent(Window window)
