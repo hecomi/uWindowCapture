@@ -136,21 +136,25 @@ public class Window
     public int x
     {
         get { return Lib.GetWindowX(id); }
+        set { Move(value, y); }
     }
 
     public int y
     {
         get { return Lib.GetWindowY(id); }
+        set { Move(x, value); }
     }
 
     public int width
     {
         get { return Lib.GetWindowWidth(id); }
+        set { Scale(value, height); }
     }
 
     public int height
     {
         get { return Lib.GetWindowHeight(id); }
+        set { Scale(width, value); }
     }
 
     public int zOrder
@@ -222,6 +226,27 @@ public class Window
             texture = backTexture_;
             backTexture_ = null;
             willTextureSizeChange_ = false;
+        }
+    }
+
+    public void Move(int x, int y)
+    {
+        if (!Lib.MoveWindow(id, x, y)) {
+            Debug.Log("MoveWindow() failed.");
+        }
+    }
+
+    public void Scale(int width, int height)
+    {
+        if (!Lib.ScaleWindow(id, width, height)) {
+            Debug.Log("ScaleWindow() failed.");
+        }
+    }
+
+    public void MoveAndScale(int x, int y, int width, int height)
+    {
+        if (!Lib.MoveAndScaleWindow(id, x, y, width, height)) {
+            Debug.Log("MOveAndScaleWindow() failed.");
         }
     }
 }

@@ -149,11 +149,11 @@ public static class Lib
     [DllImport(name, EntryPoint = "UwcIsWindowTouchable")]
     public static extern bool IsWindowTouchable(int id);
     [DllImport(name, EntryPoint = "UwcMoveWindow")]
-    public static extern bool UwcMoveWindow(int id);
+    public static extern bool MoveWindow(int id, int x, int y);
     [DllImport(name, EntryPoint = "UwcScaleWindow")]
-    public static extern bool UwcScaleWindow(int id);
+    public static extern bool ScaleWindow(int id, int width, int height);
     [DllImport(name, EntryPoint = "UwcMoveAndScaleWindow")]
-    public static extern bool UwcMoveAndScaleWindow(int id);
+    public static extern bool MoveAndScaleWindow(int id, int x, int y, int width, int height);
     [DllImport(name, EntryPoint = "UwcGetForegroundWindow")]
     public static extern IntPtr GetForegroundWindow();
     [DllImport(name, EntryPoint = "UwcGetCursorPosition")]
