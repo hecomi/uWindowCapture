@@ -4,14 +4,14 @@ using System.Collections.Generic;
 namespace uWindowCapture
 {
 
-[RequireComponent(typeof(UwcWindowManager))]
+[RequireComponent(typeof(UwcWindowObjectManager))]
 public abstract class UwcLayouter : MonoBehaviour
 {
-    UwcWindowManager manager_;
+    UwcWindowObjectManager manager_;
 
     void Start()
     {
-        manager_ = GetComponent<UwcWindowManager>();
+        manager_ = GetComponent<UwcWindowObjectManager>();
     }
 
     void LateUpdate()

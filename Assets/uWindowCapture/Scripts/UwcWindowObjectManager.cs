@@ -5,7 +5,7 @@ using System.Collections.Generic;
 namespace uWindowCapture
 {
 
-public class UwcWindowManager : MonoBehaviour
+public class UwcWindowObjectManager : MonoBehaviour
 {
     [SerializeField] GameObject windowPrefab;
 

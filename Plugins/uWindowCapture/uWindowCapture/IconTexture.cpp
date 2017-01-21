@@ -51,7 +51,18 @@ bool IconTexture::CaptureOnce()
     if (hasCaptured_) return true;
 
     auto hWnd = window_->GetHandle();
-    auto hIcon = reinterpret_cast<HICON>(SendMessage(hWnd, WM_GETICON, ICON_BIG, 0));
+
+
+    auto hIcon = reinterpret_cast<HICON>(GetClassLongPtr(hWnd, GCLP_HICON));
+    if (hIcon == nullptr)
+    {
+        hIcon = reinterpret_cast<HICON>(SendMessage(hWnd, WM_GETICON, ICON_BIG, 0));
+        if (hIcon == nullptr)
+        {
+            Debug::Error(__FUNCTION__, " => Could not get HICON.");
+            return false;
+        }
+    }
 
     const auto width = GetWidth();
     const auto height = GetHeight();
@@ -96,7 +107,7 @@ bool IconTexture::CaptureOnce()
 
         auto color32 = buffer_.As<UINT>();
         auto mask32 = mask.As<UINT>();
-        for (int i = 0; i < width * height; ++i)
+        for (UINT i = 0; i < width * height; ++i)
         {
             color32[i] ^= mask32[i];
         }
@@ -121,6 +132,7 @@ bool IconTexture::UploadOnce()
         unityTexture_.load()->GetDesc(&desc);
         if (desc.Width != GetWidth() && desc.Height != GetHeight())
         {
+            Debug::Error(__FUNCTION__, " => Texture size is wrong.");
             return false;
         }
     }
