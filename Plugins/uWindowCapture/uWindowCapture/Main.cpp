@@ -426,11 +426,11 @@ extern "C"
         }
     }
 
-    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcScaleWindow(int id, int x, int y)
+    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcScaleWindow(int id, int width, int height)
     {
         if (auto window = GetWindow(id))
         {
-            window->ScaleWindow(x, y);
+            window->ScaleWindow(width, height);
         }
     }
 

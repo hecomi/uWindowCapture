@@ -17,9 +17,23 @@ public class FindAndCaptureWindow : MonoBehaviour
         }
 
         if (window != null) {
-            GetComponent<Renderer>().material.mainTexture = window.texture;
-            window.captureMode = mode;
-            window.RequestCapture(CapturePriority.High);
+            UpdateScale();
+            UpdateTexture();
         }
+    }
+
+    void UpdateScale()
+    {
+        var baseScale = 1000f;
+        var width = window.width / baseScale;
+        var height = window.height / baseScale;
+        transform.localScale = new Vector3(width, height, 1f);
+    }
+
+    void UpdateTexture()
+    {
+        GetComponent<Renderer>().material.mainTexture = window.texture;
+        window.captureMode = mode;
+        window.RequestCapture(CapturePriority.High);
     }
 }
