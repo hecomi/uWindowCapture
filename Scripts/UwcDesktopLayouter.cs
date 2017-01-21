@@ -55,7 +55,7 @@ public class UwcDesktopLayouter : UwcLayouter
         var y = (Screen.height / basePixel) - (t + h / 2);
         var z = window.zOrder * zMargin;
 
-        var targetPos = offset + new Vector3(x, y, z);
+        var targetPos = transform.localToWorldMatrix.MultiplyPoint3x4(offset + new Vector3(x, y, z));
         windowObject.transform.position = (useFilter ? 
             Vector3.Slerp(windowObject.transform.position, targetPos, filter) :
             targetPos);
@@ -70,7 +70,7 @@ public class UwcDesktopLayouter : UwcLayouter
 
         var parent = windowObject.transform.parent;
         var targetWorldScale = new Vector3(w, h, 1f);
-        var targetLocalScale = parent.worldToLocalMatrix.MultiplyVector(targetWorldScale);
+        var targetLocalScale = (parent.worldToLocalMatrix * transform.localToWorldMatrix).MultiplyVector(targetWorldScale);
 
         windowObject.transform.localScale = (useFilter ?
             Vector3.Slerp(windowObject.transform.localScale, targetLocalScale, filter) :
