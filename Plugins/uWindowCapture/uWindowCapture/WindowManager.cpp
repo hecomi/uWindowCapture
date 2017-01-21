@@ -14,9 +14,18 @@ UWC_SINGLETON_INSTANCE(WindowManager)
 
 void WindowManager::Initialize()
 {
-    uploadManager_ = std::make_unique<UploadManager>();
-    captureManager_ = std::make_unique<CaptureManager>();
-    StartWindowHandleListThread();
+    {
+        UWC_SCOPE_TIMER(InitUploadManager);
+        uploadManager_ = std::make_unique<UploadManager>();
+    }
+    {
+        UWC_SCOPE_TIMER(InitCaptureManager);
+        captureManager_ = std::make_unique<CaptureManager>();
+    }
+    {
+        UWC_SCOPE_TIMER(StartThread);
+        StartWindowHandleListThread();
+    }
 }
 
 

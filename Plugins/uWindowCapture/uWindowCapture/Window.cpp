@@ -136,13 +136,13 @@ BOOL Window::IsTouchable() const
 
 BOOL Window::MoveWindow(int x, int y)
 {
-    MoveAndScaleWindow(x, y, GetWidth(), GetHeight());
+    return MoveAndScaleWindow(x, y, GetWidth(), GetHeight());
 }
 
 
 BOOL Window::ScaleWindow(int width, int height)
 {
-    MoveAndScaleWindow(GetX(), GetY(), width, height);
+    return MoveAndScaleWindow(GetX(), GetY(), width, height);
 }
 
 

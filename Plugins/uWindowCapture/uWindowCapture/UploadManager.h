@@ -29,6 +29,7 @@ public:
 
 private:
     DevicePtr device_;
+    std::thread initThread_;
     ThreadLoop threadLoop_;
     WindowQueue uploadQueue_;
     std::atomic<bool> hasUploadTriggered_ = false;
