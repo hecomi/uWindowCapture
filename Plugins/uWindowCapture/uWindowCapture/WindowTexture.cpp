@@ -94,14 +94,20 @@ bool WindowTexture::Capture()
     auto hDc = ::GetDC(hWnd);
 
     {
+        // Check window size from HDC to get correct values for non-DPI-scaled applications.
         BITMAP header;
         ZeroMemory(&header, sizeof(BITMAP));
-
         auto hBitmap = GetCurrentObject(hDc, OBJ_BITMAP);
         GetObject(hBitmap, sizeof(BITMAP), &header);
+        auto width = header.bmWidth;
+        auto height = header.bmHeight;
 
-        const auto width = header.bmWidth;
-        const auto height = header.bmHeight;
+        // If failed, use window size (for example, UWP uses this)
+        if (width == 0 || height == 0)
+        {
+            width = window_->GetWidth();
+            height = window_->GetHeight();
+        }
 
         if (width == 0 || height == 0)
         {
@@ -184,6 +190,7 @@ bool WindowTexture::Upload()
         unityTexture_.load()->GetDesc(&desc);
         if (desc.Width != bufferWidth_ && desc.Height != bufferHeight_)
         {
+            Debug::Error(__FUNCTION__, " => Texture size is wrong.");
             return false;
         }
     }
