@@ -16,6 +16,7 @@ public class UwcWindowObject : MonoBehaviour
     int updatedFrame_ = 0;
     Material material_;
     Renderer renderer_;
+    bool hasBeenCaptured_ = false;
 
     void Awake()
     {
@@ -41,6 +42,10 @@ public class UwcWindowObject : MonoBehaviour
             gameObject.name = window.title;
         }
 
+        if (hasBeenCaptured_) {
+            renderer_.enabled = !window.isIconic && window.isVisible;
+        }
+
         updatedFrame_++;
     }
 
@@ -61,7 +66,7 @@ public class UwcWindowObject : MonoBehaviour
 
     void OnCaptured()
     {
-        renderer_.enabled = true;
+        hasBeenCaptured_ = true;
     }
 }
 

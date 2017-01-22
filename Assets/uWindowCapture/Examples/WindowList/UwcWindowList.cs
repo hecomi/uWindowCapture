@@ -22,7 +22,7 @@ public class UwcWindowList : MonoBehaviour
 
     void OnWindowAdded(Window window)
     {
-        if (!window.isAltTabWindow) return;
+        if (!window.isAltTabWindow || string.IsNullOrEmpty(window.title)) return;
 
         var gameObject = Instantiate(windowListItem, listRoot, false);
         var listItem = gameObject.GetComponent<UwcWindowListItem>();

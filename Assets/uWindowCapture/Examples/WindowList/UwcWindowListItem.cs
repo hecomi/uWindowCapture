@@ -21,7 +21,11 @@ public class UwcWindowListItem : MonoBehaviour
     {
         if (window == null) return;
 
-        icon.texture = window.iconTexture;
+        if (!window.hasIconTexture && !window.isIconic) {
+            icon.texture = window.texture;
+        } else {
+            icon.texture = window.iconTexture;
+        }
 
         var windowTitle = window.title;
         title.text = string.IsNullOrEmpty(windowTitle) ? "-No Name-" : windowTitle;
