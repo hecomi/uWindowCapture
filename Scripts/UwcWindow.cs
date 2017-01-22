@@ -192,6 +192,11 @@ public class Window
     private Texture2D iconTexture_;
     private Texture2D errorIconTexture_;
     private bool hasIconTextureCaptured_ = false;
+    public bool hasIconTexture
+    {
+        get { return hasIconTextureCaptured_; }
+    }
+
     public Texture2D iconTexture
     {
         get { return hasIconTextureCaptured_ ? iconTexture_ : errorIconTexture_; }
