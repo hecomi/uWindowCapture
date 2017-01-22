@@ -46,16 +46,9 @@ public class UwcDesktopLayouter : UwcLayouter
     void MoveWindow(UwcWindowObject windowObject, bool useFilter)
     {
         var window = windowObject.window;
-
-        var w = window.width / basePixel;
-        var h = window.height / basePixel;
-        var l = window.x / basePixel;
-        var t = window.y / basePixel;
-        var x = (l + w / 2);
-        var y = (Screen.height / basePixel) - (t + h / 2);
-        var z = window.zOrder * zMargin;
-
-        var targetPos = transform.localToWorldMatrix.MultiplyPoint3x4(offset + new Vector3(x, y, z));
+        var pos = UwcWindowUtil.ConvertDesktopCoordToUnityPosition(window, basePixel);
+        pos.z = window.zOrder * zMargin;
+        var targetPos = transform.localToWorldMatrix.MultiplyPoint3x4(offset + pos);
         windowObject.transform.position = (useFilter ? 
             Vector3.Slerp(windowObject.transform.position, targetPos, filter) :
             targetPos);
@@ -85,11 +78,6 @@ public class UwcDesktopLayouter : UwcLayouter
             windowObject.transform.localScale = Vector3.zero;
         } else {
             ScaleWindow(windowObject, false);
-        }
-
-        var title = windowObject.window.title;
-        if (!string.IsNullOrEmpty(title)) {
-            windowObject.transform.name = title;
         }
     }
 

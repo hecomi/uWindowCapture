@@ -25,6 +25,12 @@ public class Window
         CreateIconTexture();
     }
 
+    public Window parentWindow
+    {
+        get;
+        set;
+    }
+
     public System.IntPtr handle
     {
         get;
@@ -64,12 +70,12 @@ public class Window
 
     public bool isChild
     {
-        get { return owner != System.IntPtr.Zero; }
+        get { return parentWindow != null; }
     }
 
     public bool isRoot
     {
-        get { return owner == System.IntPtr.Zero; }
+        get { return parentWindow == null; }
     }
 
     public bool isVisible

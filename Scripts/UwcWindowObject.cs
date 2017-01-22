@@ -5,9 +5,10 @@ namespace uWindowCapture
 
 public class UwcWindowObject : MonoBehaviour
 {
+    const int MIDDLE_PRIORITY_MAX_Z = 5;
+
     public Window window { get; set; }
-    public Window parent { get; set; }
-    public bool isChild { get; /* only window manager set this. */ set; }
+    public UwcWindowObject parent;
 
     public CaptureMode captureMode = CaptureMode.PrintWindow;
     public int skipFrame = 10;
@@ -57,7 +58,7 @@ public class UwcWindowObject : MonoBehaviour
             var priority = CapturePriority.Low;
             if (window == UwcManager.cursorWindow) {
                 priority = CapturePriority.High;
-            } else if (window.zOrder < 5) {
+            } else if (window.zOrder < MIDDLE_PRIORITY_MAX_Z) {
                 priority = CapturePriority.Middle;
             }
             window.RequestCapture(priority);
