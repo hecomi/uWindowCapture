@@ -240,6 +240,10 @@ void WindowManager::UpdateWindowHandleList()
         OutputApiError("EnumWindows");
     }
 
+    std::sort(windowHandleList_[1].begin(), windowHandleList_[1].end(), [](const auto& a, const auto& b) {
+        return a.hOwner == nullptr && b.hOwner != nullptr;
+    });
+
     {
         std::lock_guard<std::mutex> lock(windowsHandleListMutex_);
         std::swap(windowHandleList_[0], windowHandleList_[1]);

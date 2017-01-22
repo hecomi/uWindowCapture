@@ -111,6 +111,36 @@ public class UwcManager : MonoBehaviour
         cursorWindowHandle_ = Lib.GetWindowUnderCursor();
     }
 
+    Window FindParent(Window window)
+    {
+        if (windows_.ContainsKey(window.owner)) {
+            return windows[window.owner];
+        }
+
+        if (windows_.ContainsKey(window.parent)) {
+            return windows[window.parent];
+        }
+
+        foreach (var pair in windows) {
+            var parent = pair.Value;
+            if (!parent.isChild &&
+                parent.processId == window.processId && 
+                parent.threadId == window.threadId) {
+                return parent;
+            }
+        }
+
+        return null;
+    }
+
+    Window AddWindow(System.IntPtr handle, int id)
+    {
+        var window = new Window(handle, id);
+        window.parentWindow = FindParent(window);
+        windows.Add(handle, window);
+        return window;
+    }
+
     void UpdateMessages()
     {
         var messages = Lib.GetMessages();
@@ -119,8 +149,7 @@ public class UwcManager : MonoBehaviour
             var message = messages[i];
             switch (message.type) {
                 case MessageType.WindowAdded: {
-                    var window = new Window(message.windowHandle, message.windowId);
-                    windows.Add(message.windowHandle, window);
+                    var window = AddWindow(message.windowHandle, message.windowId);
                     onWindowAdded.Invoke(window);
                     break;
                 }
