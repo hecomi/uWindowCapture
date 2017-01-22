@@ -30,18 +30,18 @@ public class UwcHorizontalLayouter : UwcLayouter
 
             var width = window.width / baseWidth;
             var height = window.height / baseWidth;
-            var offset = new Vector3(10 * (preWidth + width) / 2, 0f, 0f);
+            var offset = new Vector3((preWidth + width) / 2, 0f, 0f);
 
-            if (window.isChild) {
-                transform.localScale = new Vector3(width, 1f, height);
+            if (!window.isChild) {
+                transform.localScale = new Vector3(width, height, 1f);
                 pos += offset;
                 transform.position = pos;
             } else {
                 if (windows.ContainsKey(window.owner)) {
                     var owner = windows[window.owner];
-                    transform.localPosition = new Vector3(0f, 0.1f, 0f);
+                    transform.localPosition = new Vector3(0f, 0f, 0.1f);
                     transform.localRotation = Quaternion.identity;
-                    transform.localScale = (new Vector3(width / owner.transform.localScale.x, 1f, height / owner.transform.localScale.z));
+                    transform.localScale = (new Vector3(width / owner.transform.localScale.x, height / owner.transform.localScale.y, 1f));
                 }
             }
 
