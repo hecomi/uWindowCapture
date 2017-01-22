@@ -6,11 +6,14 @@ namespace uWindowCapture
 
 public class UwcHorizontalLayouter : UwcLayouter
 {
-    const int WINDOW_BASE_PIXEL = 1000;
-
     [SerializeField] 
     [Tooltip("meter / 1000 pixel")]
     float scale = 1f;
+
+    float basePixel
+    {
+        get { return 1000f / scale; }
+    }
 
     void MoveAndScaleChildWindow(UwcWindowObject windowObject, float width, float height)
     {
@@ -18,8 +21,8 @@ public class UwcHorizontalLayouter : UwcLayouter
         var windowTransform = windowObject.transform;
 
         var parentTransform = windowTransform.parent;
-        var parentDesktopPos = UwcWindowUtil.ConvertDesktopCoordToUnityPosition(window.parentWindow, WINDOW_BASE_PIXEL);
-        var desktopPos = UwcWindowUtil.ConvertDesktopCoordToUnityPosition(window, WINDOW_BASE_PIXEL);
+        var parentDesktopPos = UwcWindowUtil.ConvertDesktopCoordToUnityPosition(window.parentWindow, basePixel);
+        var desktopPos = UwcWindowUtil.ConvertDesktopCoordToUnityPosition(window, basePixel);
         var localPos = desktopPos - parentDesktopPos;
         localPos.x *= 2f / parentTransform.lossyScale.x * transform.localScale.x;
         localPos.y *= 2f / parentTransform.lossyScale.y * transform.localScale.y;
@@ -40,7 +43,7 @@ public class UwcHorizontalLayouter : UwcLayouter
             var windowObject = enumerator.Current.Value;
             var window = windowObject.window;
 
-            var baseWidth = windowObject.GetComponent<MeshFilter>().sharedMesh.bounds.extents.x * WINDOW_BASE_PIXEL / scale;
+            var baseWidth = windowObject.GetComponent<MeshFilter>().sharedMesh.bounds.extents.x * basePixel;
             var width = window.width / baseWidth;
             var height = window.height / baseWidth;
 

@@ -6,8 +6,6 @@ namespace uWindowCapture
 
 public class UwcDesktopLayouter : UwcLayouter
 {
-    const float BASE_PIXEL = 1000f;
-
     [SerializeField] 
     [Tooltip("meter / 1000 pixel")]
     float scale = 1f;
@@ -30,7 +28,7 @@ public class UwcDesktopLayouter : UwcLayouter
 
     float basePixel
     {
-        get { return BASE_PIXEL / scale; }
+        get { return 1000f / scale; }
     }
 
     Vector3 offset
