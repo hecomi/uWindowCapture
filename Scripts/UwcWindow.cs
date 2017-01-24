@@ -6,17 +6,14 @@ namespace uWindowCapture
 
 public class Window
 {
-    public int id 
-    { 
-        get; 
-        private set; 
-    }
-
-    public Window(System.IntPtr handle, int id)
+    public Window(System.IntPtr handle, int id, Window parentWindow)
     {
         this.handle = handle;
         this.id = id;
         this.isAlive = true;
+        this.parentWindow = parentWindow;
+
+        Debug.Log(parentWindow);
 
         onCaptured.AddListener(OnCaptured);
         onSizeChanged.AddListener(OnSizeChanged);
@@ -25,10 +22,21 @@ public class Window
         CreateIconTexture();
     }
 
+    public int id 
+    { 
+        get; 
+        private set; 
+    }
+
+    public int parentId
+    {
+        get { return Lib.GetWindowParentId(id); }
+    }
+
     public Window parentWindow
     {
         get;
-        set;
+        private set;
     }
 
     public System.IntPtr handle
@@ -37,14 +45,14 @@ public class Window
         private set;
     }
 
-    public System.IntPtr owner
+    public System.IntPtr ownerHandle
     {
-        get { return Lib.GetWindowOwner(id); }
+        get { return Lib.GetWindowOwnerHandle(id); }
     }
 
-    public System.IntPtr parent
+    public System.IntPtr parentHandle
     {
-        get { return Lib.GetWindowParent(id); }
+        get { return Lib.GetWindowParentHandle(id); }
     }
 
     public System.IntPtr instance
@@ -68,14 +76,14 @@ public class Window
         set;
     }
 
-    public bool isChild
-    {
-        get { return parentWindow != null; }
-    }
-
     public bool isRoot
     {
         get { return parentWindow == null; }
+    }
+
+    public bool isChild
+    {
+        get { return !isRoot; }
     }
 
     public bool isVisible
@@ -239,7 +247,7 @@ public class Window
         get { return onChildAdded_; } 
     }
 
-    public class ChildRemovedEvent : UnityEvent<System.IntPtr> {}
+    public class ChildRemovedEvent : UnityEvent<Window> {}
     private ChildRemovedEvent onChildRemoved_ = new ChildRemovedEvent();
     public ChildRemovedEvent onChildRemoved
     { 

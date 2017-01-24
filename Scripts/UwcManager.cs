@@ -40,7 +40,7 @@ public class UwcManager : MonoBehaviour
         get { return instance.onWindowAdded_; }
     }
 
-    public class WindowRemovedEvent : UnityEvent<System.IntPtr> {}
+    public class WindowRemovedEvent : UnityEvent<Window> {}
     private WindowRemovedEvent onWindowRemoved_ = new WindowRemovedEvent();
     public static WindowRemovedEvent onWindowRemoved
     {
@@ -49,16 +49,16 @@ public class UwcManager : MonoBehaviour
 
     System.IntPtr renderEventFunc_;
 
-    Dictionary<System.IntPtr, Window> windows_ = new Dictionary<System.IntPtr, Window>();
-    static public Dictionary<System.IntPtr, Window> windows
+    Dictionary<int, Window> windows_ = new Dictionary<int, Window>();
+    static public Dictionary<int, Window> windows
     {
         get { return instance.windows_; }
     }
 
-    System.IntPtr cursorWindowHandle_ = System.IntPtr.Zero;
+    int cursorWindowId_ = -1;
     static public Window cursorWindow
     {
-        get { return Find(instance.cursorWindowHandle_); }
+        get { return Find(instance.cursorWindowId_); }
     }
 
     void Awake()
@@ -108,40 +108,27 @@ public class UwcManager : MonoBehaviour
 
     void UpdateWindowInfo()
     {
-        cursorWindowHandle_ = Lib.GetWindowUnderCursor();
+        cursorWindowId_ = Lib.GetWindowIdUnderCursor();
     }
 
-    Window FindParent(Window window)
+    Window FindParent(int id)
     {
-        if (windows_.ContainsKey(window.owner)) {
-            return windows[window.owner];
-        }
+        var parentId = Lib.GetWindowParentId(id);
+        if (parentId == -1) return null;
 
-        if (windows_.ContainsKey(window.parent)) {
-            return windows[window.parent];
-        }
-
-        foreach (var pair in windows) {
-            var parent = pair.Value;
-            if (!parent.isChild &&
-                parent.processId == window.processId && 
-                parent.threadId == window.threadId) {
-                return parent;
-            }
-        }
-
-        return null;
+        Window parent;
+        windows.TryGetValue(parentId, out parent);
+        return parent;
     }
 
     Window AddWindow(System.IntPtr handle, int id)
     {
-        var window = new Window(handle, id);
-        var parent = FindParent(window);
+        var parent = FindParent(id);
+        var window = new Window(handle, id, parent);
+        windows.Add(id, window);
         if (parent != null) {
-            window.parentWindow = parent;
             parent.onChildAdded.Invoke(window);
         }
-        windows.Add(handle, window);
         return window;
     }
 
@@ -160,33 +147,33 @@ public class UwcManager : MonoBehaviour
                     break;
                 }
                 case MessageType.WindowRemoved: {
-                    var window = Find(handle);
+                    var window = Find(id);
                     if (window != null) {
                         window.isAlive = false;
                         if (window.parentWindow != null) {
-                            window.parentWindow.onChildRemoved.Invoke(handle);
+                            window.parentWindow.onChildRemoved.Invoke(window);
                         }
-                        onWindowRemoved.Invoke(handle);
-                        windows.Remove(handle);
+                        onWindowRemoved.Invoke(window);
+                        windows.Remove(id);
                     }
                     break;
                 }
                 case MessageType.WindowCaptured: {
-                    var window = Find(handle);
+                    var window = Find(id);
                     if (window != null) {
                         window.onCaptured.Invoke();
                     }
                     break;
                 }
                 case MessageType.WindowSizeChanged: {
-                    var window = Find(handle);
+                    var window = Find(id);
                     if (window != null) {
                         window.onSizeChanged.Invoke();
                     }
                     break;
                 }
                 case MessageType.IconCaptured: {
-                    var window = Find(handle);
+                    var window = Find(id);
                     if (window != null) {
                         window.onIconCaptured.Invoke();
                     }
@@ -199,13 +186,11 @@ public class UwcManager : MonoBehaviour
         }
     }
 
-    static public Window Find(System.IntPtr handle)
+    static public Window Find(int id)
     {
-        if (handle == System.IntPtr.Zero) return null;
-        if (windows.ContainsKey(handle)) {
-            return windows[handle];
-        }
-        return null;
+        Window window = null;
+        windows.TryGetValue(id, out window);
+        return window;
     }
 
     static public Window Find(string title)

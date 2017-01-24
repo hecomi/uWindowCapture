@@ -35,7 +35,7 @@ public class UwcHorizontalLayouter : UwcLayouter
         windowTransform.localScale = toLocalMatrix.MultiplyVector(new Vector3(width, height, 1f));
     }
 
-    public override void UpdateLayout(Dictionary<System.IntPtr, UwcWindowObject> windows)
+    public override void UpdateLayout(Dictionary<int, UwcWindowObject> windows)
     {
         var pos = Vector3.zero;
         var preWidth = 0f;

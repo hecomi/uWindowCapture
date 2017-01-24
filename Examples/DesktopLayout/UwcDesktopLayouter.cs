@@ -79,7 +79,7 @@ public class UwcDesktopLayouter : UwcLayouter
         }
     }
 
-    public override void UpdateLayout(Dictionary<System.IntPtr, UwcWindowObject> windows)
+    public override void UpdateLayout(Dictionary<int, UwcWindowObject> windows)
     {
         var enumerator = windows.GetEnumerator();
         while (enumerator.MoveNext()) {

@@ -10,8 +10,8 @@ public class UwcWindowObjectManager : MonoBehaviour
     [SerializeField] GameObject windowPrefab;
     [SerializeField] bool showOnlyAltTabWindow = true;
 
-    Dictionary<System.IntPtr, UwcWindowObject> windows_ = new Dictionary<System.IntPtr, UwcWindowObject>();
-    public Dictionary<System.IntPtr, UwcWindowObject> windows
+    Dictionary<int, UwcWindowObject> windows_ = new Dictionary<int, UwcWindowObject>();
+    public Dictionary<int, UwcWindowObject> windows
     {
         get { return windows_; }
     }
@@ -47,7 +47,7 @@ public class UwcWindowObjectManager : MonoBehaviour
             layouters[i].InitWindow(windowObject);
         }
 
-        windows_.Add(window.handle, windowObject);
+        windows_.Add(window.id, windowObject);
     }
 
     void OnWindowAdded(Window window)
@@ -56,31 +56,31 @@ public class UwcWindowObjectManager : MonoBehaviour
 
         if (window.parentWindow != null) {
             UwcWindowObject parent;
-            windows.TryGetValue(window.parentWindow.handle, out parent);
+            windows.TryGetValue(window.parentWindow.id, out parent);
             AddWindowObject(window, parent);
         } else if (window.isVisible) {
             AddWindowObject(window, null);
         }
     }
 
-    void RemoveChildWindowsRecursively(System.IntPtr handle, Transform transform)
+    void RemoveChildWindowsRecursively(int id, Transform transform)
     {
         for (int i = 0; i < transform.childCount; ++i) {
             var child = transform.GetChild(i);
             var windowObject = child.GetComponent<UwcWindowObject>();
             if (windowObject) {
-                RemoveChildWindowsRecursively(windowObject.window.handle, child);
+                RemoveChildWindowsRecursively(windowObject.window.id, child);
             }
         }
-        windows_.Remove(handle);
+        windows_.Remove(id);
     }
 
-    void OnWindowRemoved(System.IntPtr handle)
+    void OnWindowRemoved(Window window)
     {
         UwcWindowObject windowObject;
-        windows_.TryGetValue(handle, out windowObject);
+        windows_.TryGetValue(window.id, out windowObject);
         if (windowObject) {
-            RemoveChildWindowsRecursively(handle, windowObject.transform);
+            RemoveChildWindowsRecursively(window.id, windowObject.transform);
             Destroy(windowObject.gameObject);
         }
     }
