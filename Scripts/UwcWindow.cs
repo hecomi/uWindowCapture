@@ -232,6 +232,20 @@ public class Window
         get { return onIconCaptured_; } 
     }
 
+    public class ChildAddedEvent : UnityEvent<Window> {}
+    private ChildAddedEvent onChildAdded_ = new ChildAddedEvent();
+    public ChildAddedEvent onChildAdded
+    { 
+        get { return onChildAdded_; } 
+    }
+
+    public class ChildRemovedEvent : UnityEvent<System.IntPtr> {}
+    private ChildRemovedEvent onChildRemoved_ = new ChildRemovedEvent();
+    public ChildRemovedEvent onChildRemoved
+    { 
+        get { return onChildRemoved_; } 
+    }
+
     public void RequestCapture(CapturePriority priority = CapturePriority.High)
     {
         Lib.RequestCaptureWindow(id, priority);

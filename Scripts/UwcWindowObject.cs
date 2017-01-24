@@ -12,17 +12,24 @@ public class UwcWindowObject : MonoBehaviour
 
     public CaptureMode captureMode = CaptureMode.PrintWindow;
     public int skipFrame = 10;
-    public bool updateTitleEveryFrame = false;
-
     int updatedFrame_ = 0;
+
     Material material_;
     Renderer renderer_;
+    MeshFilter meshFilter_;
+
     bool hasBeenCaptured_ = false;
+
+    public Vector3 meshExtents
+    {
+        get { return meshFilter_.sharedMesh.bounds.extents; }
+    }
 
     void Awake()
     {
         renderer_ = GetComponent<Renderer>();
         material_ = renderer_.material; // clone
+        meshFilter_ = GetComponent<MeshFilter>();
     }
 
     void Start()
@@ -35,19 +42,23 @@ public class UwcWindowObject : MonoBehaviour
 
     void Update()
     {
+        UpdateTexture();
+        UpdateRenderer();
+        updatedFrame_++;
+    }
+
+    void UpdateTexture()
+    {
         if (material_.mainTexture != window.texture) {
             material_.mainTexture = window.texture;
         }
+    }
 
-        if (updateTitleEveryFrame) {
-            gameObject.name = window.title;
-        }
-
+    void UpdateRenderer()
+    {
         if (hasBeenCaptured_) {
             renderer_.enabled = !window.isIconic && window.isVisible;
         }
-
-        updatedFrame_++;
     }
 
     void OnWillRenderObject()
@@ -68,6 +79,10 @@ public class UwcWindowObject : MonoBehaviour
     void OnCaptured()
     {
         hasBeenCaptured_ = true;
+
+        if (window.isAltTabWindow) {
+            name = window.title;
+        }
     }
 }
 

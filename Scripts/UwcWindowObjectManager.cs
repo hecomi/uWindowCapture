@@ -8,7 +8,6 @@ namespace uWindowCapture
 public class UwcWindowObjectManager : MonoBehaviour
 {
     [SerializeField] GameObject windowPrefab;
-
     [SerializeField] bool showOnlyAltTabWindow = true;
 
     Dictionary<System.IntPtr, UwcWindowObject> windows_ = new Dictionary<System.IntPtr, UwcWindowObject>();

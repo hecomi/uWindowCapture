@@ -136,7 +136,11 @@ public class UwcManager : MonoBehaviour
     Window AddWindow(System.IntPtr handle, int id)
     {
         var window = new Window(handle, id);
-        window.parentWindow = FindParent(window);
+        var parent = FindParent(window);
+        if (parent != null) {
+            window.parentWindow = parent;
+            parent.onChildAdded.Invoke(window);
+        }
         windows.Add(handle, window);
         return window;
     }
@@ -147,37 +151,42 @@ public class UwcManager : MonoBehaviour
 
         for (int i = 0; i < messages.Length; ++i) {
             var message = messages[i];
+            var id = message.windowId;
+            var handle = message.windowHandle;
             switch (message.type) {
                 case MessageType.WindowAdded: {
-                    var window = AddWindow(message.windowHandle, message.windowId);
+                    var window = AddWindow(handle, id);
                     onWindowAdded.Invoke(window);
                     break;
                 }
                 case MessageType.WindowRemoved: {
-                    var window = Find(message.windowHandle);
+                    var window = Find(handle);
                     if (window != null) {
                         window.isAlive = false;
-                        onWindowRemoved.Invoke(message.windowHandle);
-                        windows.Remove(message.windowHandle);
+                        if (window.parentWindow != null) {
+                            window.parentWindow.onChildRemoved.Invoke(handle);
+                        }
+                        onWindowRemoved.Invoke(handle);
+                        windows.Remove(handle);
                     }
                     break;
                 }
                 case MessageType.WindowCaptured: {
-                    var window = Find(message.windowHandle);
+                    var window = Find(handle);
                     if (window != null) {
                         window.onCaptured.Invoke();
                     }
                     break;
                 }
                 case MessageType.WindowSizeChanged: {
-                    var window = Find(message.windowHandle);
+                    var window = Find(handle);
                     if (window != null) {
                         window.onSizeChanged.Invoke();
                     }
                     break;
                 }
                 case MessageType.IconCaptured: {
-                    var window = Find(message.windowHandle);
+                    var window = Find(handle);
                     if (window != null) {
                         window.onIconCaptured.Invoke();
                     }
