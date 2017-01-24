@@ -19,14 +19,16 @@ public class UwcHorizontalLayouter : UwcLayouter
     {
         var window = windowObject.window;
         var windowTransform = windowObject.transform;
-
         var parentTransform = windowTransform.parent;
+
         var parentDesktopPos = UwcWindowUtil.ConvertDesktopCoordToUnityPosition(window.parentWindow, basePixel);
         var desktopPos = UwcWindowUtil.ConvertDesktopCoordToUnityPosition(window, basePixel);
         var localPos = desktopPos - parentDesktopPos;
+
         localPos.x *= 2f / parentTransform.lossyScale.x * transform.localScale.x;
         localPos.y *= 2f / parentTransform.lossyScale.y * transform.localScale.y;
         localPos.z = (window.zOrder - window.parentWindow.zOrder) * 0.1f;
+
         windowTransform.localPosition = localPos;
 
         var toLocalMatrix = parentTransform.worldToLocalMatrix * transform.localToWorldMatrix;
@@ -43,7 +45,7 @@ public class UwcHorizontalLayouter : UwcLayouter
             var windowObject = enumerator.Current.Value;
             var window = windowObject.window;
 
-            var baseWidth = windowObject.GetComponent<MeshFilter>().sharedMesh.bounds.extents.x * basePixel;
+            var baseWidth = windowObject.meshExtents.x * basePixel;
             var width = window.width / baseWidth;
             var height = window.height / baseWidth;
 
