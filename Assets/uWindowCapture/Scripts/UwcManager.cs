@@ -111,24 +111,10 @@ public class UwcManager : MonoBehaviour
         cursorWindowId_ = Lib.GetWindowIdUnderCursor();
     }
 
-    Window FindParent(int id)
+    Window AddWindow(int id)
     {
-        var parentId = Lib.GetWindowParentId(id);
-        if (parentId == -1) return null;
-
-        Window parent;
-        windows.TryGetValue(parentId, out parent);
-        return parent;
-    }
-
-    Window AddWindow(System.IntPtr handle, int id)
-    {
-        var parent = FindParent(id);
-        var window = new Window(handle, id, parent);
+        var window = new Window(id);
         windows.Add(id, window);
-        if (parent != null) {
-            parent.onChildAdded.Invoke(window);
-        }
         return window;
     }
 
@@ -139,10 +125,9 @@ public class UwcManager : MonoBehaviour
         for (int i = 0; i < messages.Length; ++i) {
             var message = messages[i];
             var id = message.windowId;
-            var handle = message.windowHandle;
             switch (message.type) {
                 case MessageType.WindowAdded: {
-                    var window = AddWindow(handle, id);
+                    var window = AddWindow(id);
                     onWindowAdded.Invoke(window);
                     break;
                 }
@@ -216,6 +201,16 @@ public class UwcManager : MonoBehaviour
             }
         }
         return list;
+    }
+
+    static public Window FindParent(int id)
+    {
+        var parentId = Lib.GetWindowParentId(id);
+        if (parentId == -1) return null;
+
+        Window parent;
+        windows.TryGetValue(parentId, out parent);
+        return parent;
     }
 }
 

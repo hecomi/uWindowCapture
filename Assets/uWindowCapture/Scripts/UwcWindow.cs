@@ -6,31 +6,27 @@ namespace uWindowCapture
 
 public class Window
 {
-    public Window(System.IntPtr handle, int id, Window parentWindow)
+    public Window(int id)
     {
-        this.handle = handle;
         this.id = id;
-        this.isAlive = true;
-        this.parentWindow = parentWindow;
-
-        Debug.Log(parentWindow);
+        isAlive = true;
 
         onCaptured.AddListener(OnCaptured);
         onSizeChanged.AddListener(OnSizeChanged);
         onIconCaptured.AddListener(OnIconCaptured);
 
         CreateIconTexture();
+
+        parentWindow = UwcManager.FindParent(id);
+        if (parentWindow != null) {
+            parentWindow.onChildAdded.Invoke(this);
+        }
     }
 
     public int id 
     { 
         get; 
         private set; 
-    }
-
-    public int parentId
-    {
-        get { return Lib.GetWindowParentId(id); }
     }
 
     public Window parentWindow
@@ -41,8 +37,7 @@ public class Window
 
     public System.IntPtr handle
     {
-        get;
-        private set;
+        get { return Lib.GetWindowHandle(id); }
     }
 
     public System.IntPtr ownerHandle

@@ -23,9 +23,9 @@ struct Message
 {
     MessageType type = MessageType::None;
     int windowId = -1;
-    HWND windowHandle = nullptr;
-    Message(MessageType type, int id, HWND handle)
-        : type(type), windowId(id), windowHandle(handle) {}
+    void* userData = nullptr;
+    Message(MessageType type, int id, void* userData)
+        : type(type), windowId(id), userData(userData) {}
 };
 
 
