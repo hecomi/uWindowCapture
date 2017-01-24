@@ -33,6 +33,7 @@ public:
     static const std::unique_ptr<UploadManager>& GetUploadManager();
 
 private:
+    std::shared_ptr<Window> FindParentWindow(const std::shared_ptr<Window>& window) const;
     std::shared_ptr<Window> FindOrAddWindow(HWND hwnd);
 
     void StartWindowHandleListThread();
@@ -63,7 +64,7 @@ private:
         UINT zOrder;
         std::wstring title;
     };
-    std::vector<WindowInfo> windowHandleList_[2];
+    std::vector<WindowInfo> windowInfoList_[2];
     mutable std::mutex windowsHandleListMutex_;
 };
 

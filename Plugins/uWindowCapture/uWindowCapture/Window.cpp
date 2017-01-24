@@ -8,7 +8,7 @@
 
 
 Window::Window(HWND hWnd, int id)
-    : window_(hWnd)
+    : hWnd_(hWnd)
     , id_(id)
     , windowTexture_(std::make_shared<WindowTexture>(this))
     , iconTexture_(std::make_shared<IconTexture>(this))
@@ -22,7 +22,7 @@ Window::Window(HWND hWnd, int id)
     else
     {
         isAltTabWindow_ = ::IsAltTabWindow(hWnd);
-        const auto mode = (owner_ == NULL) ? CaptureMode::PrintWindow : CaptureMode::BitBltAlpha;
+        const auto mode = (hWndOwner_ == NULL) ? CaptureMode::PrintWindow : CaptureMode::BitBltAlpha;
         windowTexture_->SetCaptureMode(mode);
     }
 }
@@ -39,21 +39,27 @@ int Window::GetId() const
 }
 
 
+int Window::GetParentId() const
+{
+    return parentId_;
+}
+
+
 HWND Window::GetHandle() const
 {
-    return window_;
+    return hWnd_;
 }
 
 
-HWND Window::GetOwner() const
+HWND Window::GetOwnerHandle() const
 {
-    return owner_;
+    return hWndOwner_;
 }
 
 
-HWND Window::GetParent() const
+HWND Window::GetParentHandle() const
 {
-    return parent_;
+    return hWndParent_;
 }
 
 
@@ -89,49 +95,49 @@ bool Window::IsDesktop() const
 
 BOOL Window::IsWindow() const
 {
-    return ::IsWindow(window_);
+    return ::IsWindow(hWnd_);
 }
 
 
 BOOL Window::IsVisible() const
 {
-    return ::IsWindowVisible(window_);
+    return ::IsWindowVisible(hWnd_);
 }
 
 
 BOOL Window::IsEnabled() const
 {
-    return ::IsWindowEnabled(window_);
+    return ::IsWindowEnabled(hWnd_);
 }
 
 
 BOOL Window::IsUnicode() const
 {
-    return ::IsWindowUnicode(window_);
+    return ::IsWindowUnicode(hWnd_);
 }
 
 
 BOOL Window::IsZoomed() const
 {
-    return ::IsZoomed(window_);
+    return ::IsZoomed(hWnd_);
 }
 
 
 BOOL Window::IsIconic() const
 {
-    return ::IsIconic(window_);
+    return ::IsIconic(hWnd_);
 }
 
 
 BOOL Window::IsHungUp() const
 {
-    return ::IsHungAppWindow(window_);
+    return ::IsHungAppWindow(hWnd_);
 }
 
 
 BOOL Window::IsTouchable() const
 {
-    return ::IsTouchWindow(window_, NULL);
+    return ::IsTouchWindow(hWnd_, NULL);
 }
 
 
@@ -150,7 +156,7 @@ BOOL Window::ScaleWindow(int width, int height)
 BOOL Window::MoveAndScaleWindow(int x, int y, int width, int height)
 {
     bool repaint = (width != GetWidth() || height != GetHeight());
-    return ::MoveWindow(window_, x, y, width, height, repaint);
+    return ::MoveWindow(hWnd_, x, y, width, height, repaint);
 }
 
 

@@ -89,10 +89,12 @@ public static class Lib
     private static extern void ClearMessages();
     [DllImport(name, EntryPoint = "UwcGetWindowHandle")]
     public static extern IntPtr GetWindowHandle(int id);
-    [DllImport(name, EntryPoint = "UwcGetWindowOwner")]
-    public static extern IntPtr GetWindowOwner(int id);
-    [DllImport(name, EntryPoint = "UwcGetWindowParent")]
-    public static extern IntPtr GetWindowParent(int id);
+    [DllImport(name, EntryPoint = "UwcGetWindowParentId")]
+    public static extern int GetWindowParentId(int id);
+    [DllImport(name, EntryPoint = "UwcGetWindowOwnerHandle")]
+    public static extern IntPtr GetWindowOwnerHandle(int id);
+    [DllImport(name, EntryPoint = "UwcGetWindowParentHandle")]
+    public static extern IntPtr GetWindowParentHandle(int id);
     [DllImport(name, EntryPoint = "UwcGetWindowInstance")]
     public static extern IntPtr GetWindowInstance(int id);
     [DllImport(name, EntryPoint = "UwcGetWindowProcessId")]
@@ -161,14 +163,12 @@ public static class Lib
     public static extern bool ScaleWindow(int id, int width, int height);
     [DllImport(name, EntryPoint = "UwcMoveAndScaleWindow")]
     public static extern bool MoveAndScaleWindow(int id, int x, int y, int width, int height);
-    [DllImport(name, EntryPoint = "UwcGetForegroundWindow")]
-    public static extern IntPtr GetForegroundWindow();
     [DllImport(name, EntryPoint = "UwcGetCursorPosition")]
     public static extern Point GetCursorPosition();
-    [DllImport(name, EntryPoint = "UwcGetWindowFromPoint")]
-    public static extern IntPtr GetWindowFromPoint(int x, int y);
-    [DllImport(name, EntryPoint = "UwcGetWindowUnderCursor")]
-    public static extern IntPtr GetWindowUnderCursor();
+    [DllImport(name, EntryPoint = "UwcGetWindowIdFromPoint")]
+    public static extern int GetWindowIdFromPoint(int x, int y);
+    [DllImport(name, EntryPoint = "UwcGetWindowIdUnderCursor")]
+    public static extern int GetWindowIdUnderCursor();
     [DllImport(name, EntryPoint = "UwcGetScreenWidth")]
     public static extern int GetScreenWidth();
     [DllImport(name, EntryPoint = "UwcGetScreenHeight")]

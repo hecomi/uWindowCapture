@@ -8,7 +8,7 @@ public class UwcWindowList : MonoBehaviour
 {
     [SerializeField] GameObject windowListItem;
     [SerializeField] Transform listRoot;
-    Dictionary<System.IntPtr, UwcWindowListItem> items_ = new Dictionary<System.IntPtr, UwcWindowListItem>();
+    Dictionary<int, UwcWindowListItem> items_ = new Dictionary<int, UwcWindowListItem>();
 
     void Start()
     {
@@ -27,15 +27,15 @@ public class UwcWindowList : MonoBehaviour
         var gameObject = Instantiate(windowListItem, listRoot, false);
         var listItem = gameObject.GetComponent<UwcWindowListItem>();
         listItem.window = window;
-        items_.Add(window.handle, listItem);
+        items_.Add(window.id, listItem);
 
         window.RequestCapture(CapturePriority.Low);
     }
 
-    void OnWindowRemoved(System.IntPtr handle)
+    void OnWindowRemoved(Window window)
     {
         UwcWindowListItem listItem;
-        items_.TryGetValue(handle, out listItem);
+        items_.TryGetValue(window.id, out listItem);
         if (listItem) {
             Destroy(listItem.gameObject);
         }

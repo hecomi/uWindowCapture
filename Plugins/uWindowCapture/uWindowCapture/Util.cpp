@@ -74,7 +74,7 @@ bool GetWindowTitle(HWND hWnd, std::wstring& outTitle)
 
 bool GetWindowTitle(HWND hWnd, std::wstring& outTitle, int timeout)
 {
-    UINT length = 0;
+    DWORD length = 0;
     if (FAILED(::SendMessageTimeoutW(hWnd, WM_GETTEXTLENGTH, 0, 0, SMTO_ABORTIFHUNG | SMTO_BLOCK, timeout, reinterpret_cast<PDWORD_PTR>(&length))))
     {
         return false;

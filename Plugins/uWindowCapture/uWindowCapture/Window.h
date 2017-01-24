@@ -19,9 +19,10 @@ public:
     ~Window();
 
     int GetId() const;
+    int GetParentId() const;
     HWND GetHandle() const;
-    HWND GetOwner() const;
-    HWND GetParent() const;
+    HWND GetOwnerHandle() const;
+    HWND GetParentHandle() const;
     HINSTANCE GetInstance() const;
     DWORD GetProcessId() const;
     DWORD GetThreadId() const;
@@ -72,11 +73,14 @@ private:
     std::shared_ptr<class IconTexture> iconTexture_;
 
     const int id_ = -1;
-    const HWND window_ = nullptr;
+    int parentId_ = -1;
+    int frameCount_ = 0;
+
+    const HWND hWnd_ = nullptr;
     RECT rect_;
     UINT zOrder_ = 0;
-    HWND owner_ = nullptr;
-    HWND parent_ = nullptr;
+    HWND hWndOwner_ = nullptr;
+    HWND hWndParent_ = nullptr;
     HINSTANCE instance_ = nullptr;
     DWORD processId_ = -1;
     DWORD threadId_ = -1;

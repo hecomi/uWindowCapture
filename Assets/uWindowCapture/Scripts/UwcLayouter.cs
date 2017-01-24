@@ -23,7 +23,7 @@ public abstract class UwcLayouter : MonoBehaviour
     {
     }
 
-    public virtual void UpdateLayout(Dictionary<System.IntPtr, UwcWindowObject> windows)
+    public virtual void UpdateLayout(Dictionary<int, UwcWindowObject> windows)
     {
     }
 }

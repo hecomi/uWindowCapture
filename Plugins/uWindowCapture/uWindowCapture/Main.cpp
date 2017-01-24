@@ -146,6 +146,15 @@ extern "C"
         MessageManager::Get().ClearAll();
     }
 
+    UNITY_INTERFACE_EXPORT int UNITY_INTERFACE_API UwcGetWindowParentId(int id)
+    {
+        if (auto window = GetWindow(id))
+        {
+            return window->GetParentId();
+        }
+        return -1;
+    }
+
     UNITY_INTERFACE_EXPORT HWND UNITY_INTERFACE_API UwcGetWindowHandle(int id)
     {
         if (auto window = GetWindow(id))
@@ -161,20 +170,20 @@ extern "C"
         WindowManager::GetCaptureManager()->RequestCapture(id, priority);
     }
 
-    UNITY_INTERFACE_EXPORT HWND UNITY_INTERFACE_API UwcGetWindowOwner(int id)
+    UNITY_INTERFACE_EXPORT HWND UNITY_INTERFACE_API UwcGetWindowOwnerHandle(int id)
     {
         if (auto window = GetWindow(id))
         {
-            return window->GetOwner();
+            return window->GetOwnerHandle();
         }
         return nullptr;
     }
 
-    UNITY_INTERFACE_EXPORT HWND UNITY_INTERFACE_API UwcGetWindowParent(int id)
+    UNITY_INTERFACE_EXPORT HWND UNITY_INTERFACE_API UwcGetWindowParentHandle(int id)
     {
         if (auto window = GetWindow(id))
         {
-            return window->GetParent();
+            return window->GetParentHandle();
         }
         return nullptr;
     }
@@ -470,11 +479,6 @@ extern "C"
         }
     }
 
-    UNITY_INTERFACE_EXPORT HWND UNITY_INTERFACE_API UwcGetForegroundWindow()
-    {
-        return ::GetForegroundWindow();
-    }
-
     UNITY_INTERFACE_EXPORT POINT UNITY_INTERFACE_API UwcGetCursorPosition()
     {
         POINT point;
@@ -482,24 +486,24 @@ extern "C"
         return point;
     }
 
-    UNITY_INTERFACE_EXPORT HWND UNITY_INTERFACE_API UwcGetWindowFromPoint(int x, int y)
+    UNITY_INTERFACE_EXPORT int UNITY_INTERFACE_API UwcGetWindowIdFromPoint(int x, int y)
     {
-        if (WindowManager::IsNull()) return nullptr;
+        if (WindowManager::IsNull()) return -1;
         if (auto window = WindowManager::Get().GetWindowFromPoint({ x, y }))
         {
-            return window->GetHandle();
+            return window->GetId();
         }
-        return nullptr;
+        return -1;
     }
 
-    UNITY_INTERFACE_EXPORT HWND UNITY_INTERFACE_API UwcGetWindowUnderCursor()
+    UNITY_INTERFACE_EXPORT int UNITY_INTERFACE_API UwcGetWindowIdUnderCursor()
     {
-        if (WindowManager::IsNull()) return nullptr;
+        if (WindowManager::IsNull()) return -1;
         if (auto window = WindowManager::Get().GetCursorWindow())
         {
-            return window->GetHandle();
+            return window->GetId();
         }
-        return nullptr;
+        return -1;
     }
 
     UNITY_INTERFACE_EXPORT UINT UNITY_INTERFACE_API UwcGetScreenWidth()
