@@ -8,7 +8,8 @@ namespace uWindowCapture
 public class UwcWindowObjectManager : MonoBehaviour
 {
     [SerializeField] GameObject windowPrefab;
-    [SerializeField] bool showOnlyAltTabWindow = true;
+    [SerializeField] bool removeNonAltTabWindows = true;
+    [SerializeField] bool removeNonTitleWindows = true;
 
     Dictionary<int, UwcWindowObject> windows_ = new Dictionary<int, UwcWindowObject>();
     public Dictionary<int, UwcWindowObject> windows
@@ -30,8 +31,10 @@ public class UwcWindowObjectManager : MonoBehaviour
     {
         if (!windowPrefab) return;
 
-        if (showOnlyAltTabWindow && (window.isRoot && !window.isAltTabWindow)) return;
+        if (removeNonAltTabWindows && (window.isRoot && !window.isAltTabWindow)) return;
 
+        if (removeNonTitleWindows && (parent == null && string.IsNullOrEmpty(window.title))) return;
+ 
         var parentTransform = parent ? parent.transform : transform; 
         var obj = Instantiate(windowPrefab, parentTransform) as GameObject;
         obj.name = window.title;
