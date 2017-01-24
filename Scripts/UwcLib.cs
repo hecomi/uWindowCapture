@@ -46,7 +46,7 @@ public struct Message
     [MarshalAs(UnmanagedType.I4)]
     public int windowId;
     [MarshalAs(UnmanagedType.I8)]
-    public IntPtr windowHandle;
+    public IntPtr userData;
 }
 
 [StructLayout(LayoutKind.Sequential)]
