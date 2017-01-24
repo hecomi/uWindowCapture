@@ -319,7 +319,7 @@ public class Window
     public void MoveAndScale(int x, int y, int width, int height)
     {
         if (!Lib.MoveAndScaleWindow(id, x, y, width, height)) {
-            Debug.Log("MOveAndScaleWindow() failed.");
+            Debug.Log("MoveAndScaleWindow() failed.");
         }
     }
 }
