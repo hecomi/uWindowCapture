@@ -29,7 +29,10 @@ public class UwcWindowObjectManager : MonoBehaviour
 
     public void AddWindowObject(UwcWindow window)
     {
-        if (!windowPrefab) return;
+        if (!windowPrefab) {
+            Debug.LogError("windowPrefab is null.");
+            return;
+        }
 
         var obj = Instantiate(windowPrefab, transform);
         obj.name = window.title;
