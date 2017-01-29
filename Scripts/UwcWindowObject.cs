@@ -31,6 +31,7 @@ public class UwcWindowObject : MonoBehaviour
         }
     }
 
+    public UwcWindowObjectManager manager { get; set; }
     public UwcWindowObject parent { get; set; }
 
     UwcWindowChangeEvent onWindowChanged_ = new UwcWindowChangeEvent();
