@@ -7,6 +7,8 @@ namespace uWindowCapture
 public class UwcWindowListItem : MonoBehaviour 
 {
     public UwcWindow window { get; set; }
+    public UwcWindowList list { get; set; }
+    public UwcWindowObject windowObject { get; set; }
     
     [SerializeField] RawImage icon;
     [SerializeField] Text title;
@@ -41,6 +43,17 @@ public class UwcWindowListItem : MonoBehaviour
             window.isIconic ? "Iconic" :
             window.isZoomed ? "Zoomed" :
             "-";
+    }
+
+    public void OnClick()
+    {
+        var manager = list.windowObjectManager;
+        if (windowObject == null) {
+            windowObject = manager.AddWindowObject(window);
+        } else {
+            manager.RemoveWindowObject(window);
+            windowObject = null;
+        }
     }
 }
 
