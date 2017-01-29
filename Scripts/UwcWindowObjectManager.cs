@@ -17,6 +17,18 @@ public class UwcWindowObjectManager : MonoBehaviour
         get { return windows_; }
     }
 
+    UwcWindowObjectEvent onWindowObjectAdded_ = new UwcWindowObjectEvent();
+    public UwcWindowObjectEvent onWindowObjectAdded 
+    { 
+        get { return onWindowObjectAdded_; }
+    }
+
+    UwcWindowObjectEvent onWindowObjectRemoved_ = new UwcWindowObjectEvent();
+    public UwcWindowObjectEvent onWindowObjectRemoved 
+    { 
+        get { return onWindowObjectRemoved_; }
+    }
+
     void Start()
     {
         UwcManager.onWindowAdded.AddListener(OnWindowAdded);
@@ -27,63 +39,39 @@ public class UwcWindowObjectManager : MonoBehaviour
         }
     }
 
-    void AddWindowObject(Window window, UwcWindowObject parent)
+    void AddWindowObject(UwcWindow window)
     {
         if (!windowPrefab) return;
 
-        if (removeNonAltTabWindows && (window.isRoot && !window.isAltTabWindow)) return;
-
-        if (removeNonTitleWindows && (parent == null && string.IsNullOrEmpty(window.title))) return;
- 
-        var parentTransform = parent ? parent.transform : transform; 
-        var obj = Instantiate(windowPrefab, parentTransform) as GameObject;
+        var obj = Instantiate(windowPrefab, transform);
         obj.name = window.title;
 
         var windowObject = obj.GetComponent<UwcWindowObject>();
         Assert.IsNotNull(windowObject, "Prefab must have UwcWindowObject component.");
         windowObject.window = window;
-        windowObject.parent = parent;
-
-        var layouters = GetComponents<UwcLayouter>();
-        for (int i = 0; i < layouters.Length; ++i) {
-            if (!layouters[i].enabled) continue;
-            layouters[i].InitWindow(windowObject);
-        }
 
         windows_.Add(window.id, windowObject);
+        onWindowObjectAdded.Invoke(windowObject);
     }
 
-    void OnWindowAdded(Window window)
+    void OnWindowAdded(UwcWindow window)
     {
         if (window.isDesktop) return;
+        if (window.parentWindow != null) return; // handled by UwcWindowObject
+        if (!window.isVisible) return;
 
-        if (window.parentWindow != null) {
-            UwcWindowObject parent;
-            windows.TryGetValue(window.parentWindow.id, out parent);
-            AddWindowObject(window, parent);
-        } else if (window.isVisible) {
-            AddWindowObject(window, null);
-        }
+        if (removeNonAltTabWindows && !window.isAltTabWindow) return;
+        if (removeNonTitleWindows && string.IsNullOrEmpty(window.title)) return;
+
+        AddWindowObject(window);
     }
 
-    void RemoveChildWindowsRecursively(int id, Transform transform)
-    {
-        for (int i = 0; i < transform.childCount; ++i) {
-            var child = transform.GetChild(i);
-            var windowObject = child.GetComponent<UwcWindowObject>();
-            if (windowObject) {
-                RemoveChildWindowsRecursively(windowObject.window.id, child);
-            }
-        }
-        windows_.Remove(id);
-    }
-
-    void OnWindowRemoved(Window window)
+    void OnWindowRemoved(UwcWindow window)
     {
         UwcWindowObject windowObject;
         windows_.TryGetValue(window.id, out windowObject);
         if (windowObject) {
-            RemoveChildWindowsRecursively(window.id, windowObject.transform);
+            onWindowObjectRemoved.Invoke(windowObject);
             Destroy(windowObject.gameObject);
         }
     }

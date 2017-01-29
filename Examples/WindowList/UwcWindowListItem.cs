@@ -6,7 +6,7 @@ namespace uWindowCapture
 
 public class UwcWindowListItem : MonoBehaviour 
 {
-    public Window window { get; set; }
+    public UwcWindow window { get; set; }
     
     [SerializeField] RawImage icon;
     [SerializeField] Text title;

@@ -20,7 +20,7 @@ public class UwcWindowList : MonoBehaviour
         }
     }
 
-    void OnWindowAdded(Window window)
+    void OnWindowAdded(UwcWindow window)
     {
         if (!window.isAltTabWindow || string.IsNullOrEmpty(window.title)) return;
 
@@ -32,7 +32,7 @@ public class UwcWindowList : MonoBehaviour
         window.RequestCapture(CapturePriority.Low);
     }
 
-    void OnWindowRemoved(Window window)
+    void OnWindowRemoved(UwcWindow window)
     {
         UwcWindowListItem listItem;
         items_.TryGetValue(window.id, out listItem);

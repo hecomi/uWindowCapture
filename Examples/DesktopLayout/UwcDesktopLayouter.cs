@@ -4,7 +4,8 @@ using System.Collections.Generic;
 namespace uWindowCapture
 {
 
-public class UwcDesktopLayouter : UwcLayouter
+[RequireComponent(typeof(UwcWindowObjectManager))]
+public class UwcDesktopLayouter : MonoBehaviour
 {
     [SerializeField] 
     [Tooltip("meter / 1000 pixel")]
@@ -34,6 +35,36 @@ public class UwcDesktopLayouter : UwcLayouter
     Vector3 offset
     {
         get { return new Vector3(-Lib.GetScreenWidth() / (2 * basePixel), 0f, 0f); }
+    }
+
+    UwcWindowObjectManager manager_;
+
+    void Awake()
+    {
+        manager_ = GetComponent<UwcWindowObjectManager>();
+        manager_.onWindowObjectAdded.AddListener(InitWindow);
+    }
+
+    void InitWindow(UwcWindowObject windowObject)
+    {
+        MoveWindow(windowObject, false);
+
+        if (useScaleFilter) {
+            windowObject.transform.localScale = Vector3.zero;
+        } else {
+            ScaleWindow(windowObject, false);
+        }
+    }
+
+    void Update()
+    {
+        var enumerator = manager_.windows.GetEnumerator();
+        while (enumerator.MoveNext()) {
+            var windowObject = enumerator.Current.Value;
+            CheckWindow(windowObject);
+            MoveWindow(windowObject, usePositionFilter);
+            ScaleWindow(windowObject, useScaleFilter);
+        }
     }
 
     void CheckWindow(UwcWindowObject windowObject)
@@ -66,28 +97,6 @@ public class UwcDesktopLayouter : UwcLayouter
         windowObject.transform.localScale = (useFilter ?
             Vector3.Slerp(windowObject.transform.localScale, targetLocalScale, filter) :
             targetLocalScale);
-    }
-
-    public override void InitWindow(UwcWindowObject windowObject)
-    {
-        MoveWindow(windowObject, false);
-
-        if (useScaleFilter) {
-            windowObject.transform.localScale = Vector3.zero;
-        } else {
-            ScaleWindow(windowObject, false);
-        }
-    }
-
-    public override void UpdateLayout(Dictionary<int, UwcWindowObject> windows)
-    {
-        var enumerator = windows.GetEnumerator();
-        while (enumerator.MoveNext()) {
-            var windowObject = enumerator.Current.Value;
-            CheckWindow(windowObject);
-            MoveWindow(windowObject, usePositionFilter);
-            ScaleWindow(windowObject, useScaleFilter);
-        }
     }
 }
 

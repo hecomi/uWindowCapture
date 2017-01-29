@@ -4,9 +4,9 @@ using UnityEngine.Events;
 namespace uWindowCapture
 {
 
-public class Window
+public class UwcWindow
 {
-    public Window(int id)
+    public UwcWindow(int id)
     {
         this.id = id;
         isAlive = true;
@@ -29,7 +29,7 @@ public class Window
         private set; 
     }
 
-    public Window parentWindow
+    public UwcWindow parentWindow
     {
         get;
         private set;
@@ -235,14 +235,14 @@ public class Window
         get { return onIconCaptured_; } 
     }
 
-    public class ChildAddedEvent : UnityEvent<Window> {}
+    public class ChildAddedEvent : UnityEvent<UwcWindow> {}
     private ChildAddedEvent onChildAdded_ = new ChildAddedEvent();
     public ChildAddedEvent onChildAdded
     { 
         get { return onChildAdded_; } 
     }
 
-    public class ChildRemovedEvent : UnityEvent<Window> {}
+    public class ChildRemovedEvent : UnityEvent<UwcWindow> {}
     private ChildRemovedEvent onChildRemoved_ = new ChildRemovedEvent();
     public ChildRemovedEvent onChildRemoved
     { 
@@ -305,21 +305,21 @@ public class Window
     public void Move(int x, int y)
     {
         if (!Lib.MoveWindow(id, x, y)) {
-            Debug.Log("MoveWindow() failed.");
+            Debug.LogError("MoveWindow() failed.");
         }
     }
 
     public void Scale(int width, int height)
     {
         if (!Lib.ScaleWindow(id, width, height)) {
-            Debug.Log("ScaleWindow() failed.");
+            Debug.LogError("ScaleWindow() failed.");
         }
     }
 
     public void MoveAndScale(int x, int y, int width, int height)
     {
         if (!Lib.MoveAndScaleWindow(id, x, y, width, height)) {
-            Debug.Log("MoveAndScaleWindow() failed.");
+            Debug.LogError("MoveAndScaleWindow() failed.");
         }
     }
 }

@@ -1,12 +1,11 @@
 ﻿using UnityEngine;
-using System.Collections.Generic;
 
 namespace uWindowCapture
 {
 
 public class UwcFindAndCaptureWindow : MonoBehaviour
 {
-    Window window = null;
+    UwcWindow window = null;
 
     [SerializeField] string target = "";
     [SerializeField] CaptureMode mode;
