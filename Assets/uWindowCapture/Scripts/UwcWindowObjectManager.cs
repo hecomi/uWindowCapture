@@ -27,11 +27,11 @@ public class UwcWindowObjectManager : MonoBehaviour
         get { return onWindowObjectRemoved_; }
     }
 
-    public void AddWindowObject(UwcWindow window)
+    public UwcWindowObject AddWindowObject(UwcWindow window)
     {
         if (!windowPrefab) {
             Debug.LogError("windowPrefab is null.");
-            return;
+            return null;
         }
 
         var obj = Instantiate(windowPrefab, transform);
@@ -50,6 +50,8 @@ public class UwcWindowObjectManager : MonoBehaviour
 
         windows_.Add(window.id, windowObject);
         onWindowObjectAdded.Invoke(windowObject);
+
+        return windowObject;
     }
 
     public void RemoveWindowObject(UwcWindow window)
@@ -58,6 +60,7 @@ public class UwcWindowObjectManager : MonoBehaviour
         windows_.TryGetValue(window.id, out windowObject);
         if (windowObject) {
             onWindowObjectRemoved.Invoke(windowObject);
+            windows_.Remove(window.id);
             Destroy(windowObject.gameObject);
         }
     }

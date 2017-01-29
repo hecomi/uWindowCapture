@@ -8,6 +8,9 @@ public class UwcWindowList : MonoBehaviour
 {
     [SerializeField] GameObject windowListItem;
     [SerializeField] Transform listRoot;
+
+    public UwcWindowObjectManager windowObjectManager;
+
     Dictionary<int, UwcWindowListItem> items_ = new Dictionary<int, UwcWindowListItem>();
 
     void Start()
@@ -27,6 +30,7 @@ public class UwcWindowList : MonoBehaviour
         var gameObject = Instantiate(windowListItem, listRoot, false);
         var listItem = gameObject.GetComponent<UwcWindowListItem>();
         listItem.window = window;
+        listItem.list = this;
         items_.Add(window.id, listItem);
 
         window.RequestCapture(CapturePriority.Low);
