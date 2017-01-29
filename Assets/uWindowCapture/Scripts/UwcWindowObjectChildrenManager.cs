@@ -7,12 +7,10 @@ namespace uWindowCapture
 [RequireComponent(typeof(UwcWindowObject))]
 public class UwcWindowObjectChildrenManager : MonoBehaviour 
 {
-    [SerializeField] 
-    GameObject childPrefab;
+    public GameObject childPrefab;
 
-    [SerializeField] 
     [Tooltip("Distance per z-order")]
-    float zDistance = 0.02f;
+    public float zDistance = 0.02f;
 
     UwcWindowObject windowObject_;
     Dictionary<int, UwcWindowObject> children = new Dictionary<int, UwcWindowObject>();
@@ -27,6 +25,18 @@ public class UwcWindowObjectChildrenManager : MonoBehaviour
     void Update()
     {
         UpdateChildren();
+    }
+
+    UwcWindowObject InstantiateChild()
+    {
+        var prefabChildrenManager = childPrefab.GetComponent<UwcWindowObjectChildrenManager>();
+        var childObject = Instantiate(childPrefab, transform);
+        var childWindowObject = childObject.GetComponent<UwcWindowObject>();
+        var childrenManager = childObject.GetComponent<UwcWindowObjectChildrenManager>();
+        if (prefabChildrenManager && childrenManager) {
+            childrenManager.childPrefab = prefabChildrenManager.childPrefab;
+        }
+        return childWindowObject;
     }
 
     void OnWindowChanged(UwcWindow newWindow, UwcWindow oldWindow)
@@ -51,14 +61,18 @@ public class UwcWindowObjectChildrenManager : MonoBehaviour
 
     void OnChildAdded(UwcWindow window)
     {
-        if (!childPrefab) return;
+        if (!childPrefab) {
+            Debug.LogError("childPrefab is not set.");
+            return;
+        }
 
-        var childObject = Instantiate(childPrefab, transform);
-        var childWindowObejct = childObject.GetComponent<UwcWindowObject>();
-        childWindowObejct.window = window;
-        childWindowObejct.scale = windowObject_.scale;
+        var childWindowObject = InstantiateChild();
+        childWindowObject.window = window;
+        childWindowObject.parent = windowObject_;
+        childWindowObject.manager = windowObject_.manager;
+        childWindowObject.scale = windowObject_.scale;
 
-        children.Add(window.id, childWindowObejct);
+        children.Add(window.id, childWindowObject);
     }
 
     void OnChildRemoved(UwcWindow window)

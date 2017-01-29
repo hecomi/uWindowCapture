@@ -8,8 +8,6 @@ namespace uWindowCapture
 public class UwcWindowObjectManager : MonoBehaviour
 {
     [SerializeField] GameObject windowPrefab;
-    [SerializeField] bool removeNonAltTabWindows = true;
-    [SerializeField] bool removeNonTitleWindows = true;
 
     Dictionary<int, UwcWindowObject> windows_ = new Dictionary<int, UwcWindowObject>();
     public Dictionary<int, UwcWindowObject> windows
@@ -29,17 +27,7 @@ public class UwcWindowObjectManager : MonoBehaviour
         get { return onWindowObjectRemoved_; }
     }
 
-    void Start()
-    {
-        UwcManager.onWindowAdded.AddListener(OnWindowAdded);
-        UwcManager.onWindowRemoved.AddListener(OnWindowRemoved);
-
-        foreach (var pair in UwcManager.windows) {
-            OnWindowAdded(pair.Value);
-        }
-    }
-
-    void AddWindowObject(UwcWindow window)
+    public void AddWindowObject(UwcWindow window)
     {
         if (!windowPrefab) return;
 
@@ -49,24 +37,19 @@ public class UwcWindowObjectManager : MonoBehaviour
         var windowObject = obj.GetComponent<UwcWindowObject>();
         Assert.IsNotNull(windowObject, "Prefab must have UwcWindowObject component.");
         windowObject.window = window;
+        windowObject.manager = this;
+
+        var prefabChildrenManager = windowPrefab.GetComponent<UwcWindowObjectChildrenManager>();
+        var childrenManager = windowObject.GetComponent<UwcWindowObjectChildrenManager>();
+        if (prefabChildrenManager && childrenManager) {
+            childrenManager.childPrefab = prefabChildrenManager.childPrefab;
+        }
 
         windows_.Add(window.id, windowObject);
         onWindowObjectAdded.Invoke(windowObject);
     }
 
-    void OnWindowAdded(UwcWindow window)
-    {
-        if (window.isDesktop) return;
-        if (window.parentWindow != null) return; // handled by UwcWindowObject
-        if (!window.isVisible) return;
-
-        if (removeNonAltTabWindows && !window.isAltTabWindow) return;
-        if (removeNonTitleWindows && string.IsNullOrEmpty(window.title)) return;
-
-        AddWindowObject(window);
-    }
-
-    void OnWindowRemoved(UwcWindow window)
+    public void RemoveWindowObject(UwcWindow window)
     {
         UwcWindowObject windowObject;
         windows_.TryGetValue(window.id, out windowObject);
