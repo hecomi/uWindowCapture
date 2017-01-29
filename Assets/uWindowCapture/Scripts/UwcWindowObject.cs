@@ -5,25 +5,80 @@ namespace uWindowCapture
 
 public class UwcWindowObject : MonoBehaviour
 {
-    const int MIDDLE_PRIORITY_MAX_Z = 5;
+    private UwcWindow window_;
+    public UwcWindow window 
+    { 
+        get 
+        {
+            return window_;
+        }
+        set 
+        {
+            if (window_ != null) {
+                window_.onCaptured.RemoveListener(OnCaptured);
+            }
 
-    public Window window { get; set; }
-    public UwcWindowObject parent;
+            onWindowChanged_.Invoke(value, window_);
+            window_ = value;
 
+            if (window_ != null) {
+                captureMode = window_.captureMode;
+                window_.RequestCapture(CapturePriority.High);
+                window_.onCaptured.AddListener(OnCaptured);
+            }
+
+            renderer_.enabled = false;
+        }
+    }
+
+    public UwcWindowObject parent { get; set; }
+
+    UwcWindowChangeEvent onWindowChanged_ = new UwcWindowChangeEvent();
+    public UwcWindowChangeEvent onWindowChanged
+    {
+        get { return onWindowChanged_; }
+    }
+
+    [Tooltip("Window scale (meter per 1000 pixel)")]
+    public float scale = 1f;
+    public float basePixel
+    {
+        get { return 1000f / scale; }
+    }
+
+    public float width
+    {
+        get 
+        {
+            var meshWidth = meshFilter_.sharedMesh.bounds.extents.x * 2f;
+            var baseWidth = meshWidth * basePixel;
+            return window.width / baseWidth;
+        }
+    }
+
+    public float height
+    {
+        get 
+        {
+            var meshHeight = meshFilter_.sharedMesh.bounds.extents.y * 2f;
+            var baseHeight = meshHeight * basePixel;
+            return window.height / baseHeight;
+        }
+    }
+
+    [Tooltip("CaptureMethod" +
+        "- BitBlt: fast but cannot capture some windows.\n" +
+        "- BitBltAlpha: BitBlt with alpha.\n" +
+        "- PrintWindow: slow but can capture almost all windows.")]
     public CaptureMode captureMode = CaptureMode.PrintWindow;
+
     public int skipFrame = 10;
     int updatedFrame_ = 0;
+    bool hasBeenCaptured_ = false;
 
     Material material_;
     Renderer renderer_;
     MeshFilter meshFilter_;
-
-    bool hasBeenCaptured_ = false;
-
-    public Vector3 meshExtents
-    {
-        get { return meshFilter_.sharedMesh.bounds.extents; }
-    }
 
     void Awake()
     {
@@ -32,23 +87,20 @@ public class UwcWindowObject : MonoBehaviour
         meshFilter_ = GetComponent<MeshFilter>();
     }
 
-    void Start()
-    {
-        captureMode = window.captureMode;
-        window.RequestCapture(CapturePriority.High);
-        window.onCaptured.AddListener(OnCaptured);
-        renderer_.enabled = false;
-    }
-
     void Update()
     {
+        if (window == null) return;
+
         UpdateTexture();
         UpdateRenderer();
+
         updatedFrame_++;
     }
 
     void UpdateTexture()
     {
+        if (window == null) return;
+
         if (material_.mainTexture != window.texture) {
             material_.mainTexture = window.texture;
         }
@@ -63,13 +115,15 @@ public class UwcWindowObject : MonoBehaviour
 
     void OnWillRenderObject()
     {
+        if (window == null) return;
+
         window.captureMode = captureMode;
 
         if (updatedFrame_ % skipFrame == 0) {
             var priority = CapturePriority.Low;
             if (window == UwcManager.cursorWindow) {
                 priority = CapturePriority.High;
-            } else if (window.zOrder < MIDDLE_PRIORITY_MAX_Z) {
+            } else if (window.zOrder < UwcSetting.MiddlePriorityMaxZ) {
                 priority = CapturePriority.Middle;
             }
             window.RequestCapture(priority);

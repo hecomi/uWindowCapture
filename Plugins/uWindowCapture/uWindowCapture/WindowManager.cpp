@@ -289,9 +289,15 @@ void WindowManager::UpdateWindowHandleList()
         OutputApiError("EnumWindows");
     }
 
-    std::sort(windowInfoList_[1].begin(), windowInfoList_[1].end(), [](const auto& a, const auto& b) {
-        return a.hOwner == nullptr && b.hOwner != nullptr;
-    });
+    std::sort(
+        windowInfoList_[1].begin(), 
+        windowInfoList_[1].end(), 
+        [](const auto& a, const auto& b) 
+        {
+            return 
+                a.hOwner == nullptr &&
+                b.hOwner != nullptr;
+        });
 
     {
         std::lock_guard<std::mutex> lock(windowsHandleListMutex_);

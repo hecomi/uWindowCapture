@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using UnityEngine.Events;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -33,30 +32,28 @@ public class UwcManager : MonoBehaviour
     public static event Lib.DebugLogDelegate onDebugLog = msg => Debug.Log(msg);
     public static event Lib.DebugLogDelegate onDebugErr = msg => Debug.LogError(msg);
 
-    public class WindowAddedEvent : UnityEvent<Window> {}
-    private WindowAddedEvent onWindowAdded_ = new WindowAddedEvent();
-    public static WindowAddedEvent onWindowAdded
+    private UwcWindowEvent onWindowAdded_ = new UwcWindowEvent();
+    public static UwcWindowEvent onWindowAdded
     {
         get { return instance.onWindowAdded_; }
     }
 
-    public class WindowRemovedEvent : UnityEvent<Window> {}
-    private WindowRemovedEvent onWindowRemoved_ = new WindowRemovedEvent();
-    public static WindowRemovedEvent onWindowRemoved
+    private UwcWindowEvent onWindowRemoved_ = new UwcWindowEvent();
+    public static UwcWindowEvent onWindowRemoved
     {
         get { return instance.onWindowRemoved_; }
     }
 
     System.IntPtr renderEventFunc_;
 
-    Dictionary<int, Window> windows_ = new Dictionary<int, Window>();
-    static public Dictionary<int, Window> windows
+    Dictionary<int, UwcWindow> windows_ = new Dictionary<int, UwcWindow>();
+    static public Dictionary<int, UwcWindow> windows
     {
         get { return instance.windows_; }
     }
 
     int cursorWindowId_ = -1;
-    static public Window cursorWindow
+    static public UwcWindow cursorWindow
     {
         get { return Find(instance.cursorWindowId_); }
     }
@@ -111,9 +108,9 @@ public class UwcManager : MonoBehaviour
         cursorWindowId_ = Lib.GetWindowIdUnderCursor();
     }
 
-    Window AddWindow(int id)
+    UwcWindow AddWindow(int id)
     {
-        var window = new Window(id);
+        var window = new UwcWindow(id);
         windows.Add(id, window);
         return window;
     }
@@ -171,14 +168,14 @@ public class UwcManager : MonoBehaviour
         }
     }
 
-    static public Window Find(int id)
+    static public UwcWindow Find(int id)
     {
-        Window window = null;
+        UwcWindow window = null;
         windows.TryGetValue(id, out window);
         return window;
     }
 
-    static public Window Find(string title)
+    static public UwcWindow Find(string title)
     {
         var enumerator = windows.GetEnumerator();
         while (enumerator.MoveNext()) {
@@ -190,9 +187,9 @@ public class UwcManager : MonoBehaviour
         return null;
     }
 
-    static public List<Window> FindAll(string title)
+    static public List<UwcWindow> FindAll(string title)
     {
-        var list = new List<Window>();
+        var list = new List<UwcWindow>();
         var enumerator = windows.GetEnumerator();
         while (enumerator.MoveNext()) {
             var window = enumerator.Current.Value;
@@ -203,12 +200,12 @@ public class UwcManager : MonoBehaviour
         return list;
     }
 
-    static public Window FindParent(int id)
+    static public UwcWindow FindParent(int id)
     {
         var parentId = Lib.GetWindowParentId(id);
         if (parentId == -1) return null;
 
-        Window parent;
+        UwcWindow parent;
         windows.TryGetValue(parentId, out parent);
         return parent;
     }
