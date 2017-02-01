@@ -45,6 +45,11 @@ public:
         }
     }
 
+    void Clear()
+    {
+        ZeroMemory(value_.get(), size_);
+    }
+
     void Reset()
     {
         value_.reset();

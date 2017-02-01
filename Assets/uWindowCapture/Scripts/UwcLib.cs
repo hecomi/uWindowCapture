@@ -36,6 +36,7 @@ public enum MessageType
     WindowCaptured = 2,
     WindowSizeChanged = 3,
     IconCaptured = 4,
+    CursorCaptured = 5,
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -169,6 +170,12 @@ public static class Lib
     public static extern int GetWindowIdFromPoint(int x, int y);
     [DllImport(name, EntryPoint = "UwcGetWindowIdUnderCursor")]
     public static extern int GetWindowIdUnderCursor();
+    [DllImport(name, EntryPoint = "UwcGetCursorWidth")]
+    public static extern int GetCursorWidth();
+    [DllImport(name, EntryPoint = "UwcGetCursorHeight")]
+    public static extern int GetCursorHeight();
+    [DllImport(name, EntryPoint = "UwcSetCursorTexturePtr")]
+    public static extern void SetCursorTexturePtr(IntPtr ptr);
     [DllImport(name, EntryPoint = "UwcGetScreenWidth")]
     public static extern int GetScreenWidth();
     [DllImport(name, EntryPoint = "UwcGetScreenHeight")]

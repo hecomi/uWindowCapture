@@ -136,6 +136,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="CaptureManager.cpp" />
+    <ClCompile Include="Cursor.cpp" />
     <ClCompile Include="IconTexture.cpp" />
     <ClCompile Include="Unity.cpp" />
     <ClCompile Include="Debug.cpp" />
@@ -152,6 +153,7 @@
   <ItemGroup>
     <ClInclude Include="Buffer.h" />
     <ClInclude Include="CaptureManager.h" />
+    <ClInclude Include="Cursor.h" />
     <ClInclude Include="IconTexture.h" />
     <ClInclude Include="Unity.h" />
     <ClInclude Include="Debug.h" />

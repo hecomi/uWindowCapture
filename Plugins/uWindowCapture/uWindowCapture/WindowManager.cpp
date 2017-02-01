@@ -23,6 +23,10 @@ void WindowManager::Initialize()
         captureManager_ = std::make_unique<CaptureManager>();
     }
     {
+        UWC_SCOPE_TIMER(Cursor);
+        cursor_ = std::make_unique<Cursor>();
+    }
+    {
         UWC_SCOPE_TIMER(StartThread);
         StartWindowHandleListThread();
     }
@@ -34,6 +38,7 @@ void WindowManager::Finalize()
     StopWindowHandleListThread();
     captureManager_.reset();
     uploadManager_.reset();
+    cursor_.reset();
     windows_.clear();
 }
 
@@ -47,6 +52,7 @@ void WindowManager::Update()
 void WindowManager::Render()
 {
     RenderWindows();
+    cursor_->Render();
 }
 
 
@@ -74,6 +80,12 @@ const std::unique_ptr<CaptureManager>& WindowManager::GetCaptureManager()
 const std::unique_ptr<UploadManager>& WindowManager::GetUploadManager()
 {
     return WindowManager::Get().uploadManager_;
+}
+
+
+const std::unique_ptr<Cursor>& WindowManager::GetCursor()
+{
+    return WindowManager::Get().cursor_;
 }
 
 

@@ -1,89 +1,121 @@
-#include "IconTexture.h"
-#include "Window.h"
-#include "WindowManager.h"
-#include "UploadManager.h"
+#include "Cursor.h"
 #include "Debug.h"
-#include "Unity.h"
 #include "Util.h"
+#include "WindowManager.h"
+#include "Unity.h"
 #include "Message.h"
 
 using namespace Microsoft::WRL;
 
 
 
-IconTexture::IconTexture(Window* window)
-    : window_(window)
+Cursor::Cursor()
+{
+    threadLoop_.Start([&] 
+    {
+        Capture();
+    }, std::chrono::microseconds(16666));
+}
+
+
+Cursor::~Cursor()
 {
 }
 
 
-IconTexture::~IconTexture()
+UINT Cursor::GetWidth() const
 {
+    return width_;
 }
 
 
-UINT IconTexture::GetWidth() const
+UINT Cursor::GetHeight() const
 {
-    return ::GetSystemMetrics(SM_CXICON);
+    return height_;
 }
 
 
-UINT IconTexture::GetHeight() const
+bool Cursor::HasCaptured() const
 {
-    return ::GetSystemMetrics(SM_CYICON);
+    return hasCaptured_;
 }
 
 
-void IconTexture::SetUnityTexturePtr(ID3D11Texture2D* ptr)
+bool Cursor::HasUploaded() const
+{
+    return hasUploaded_;
+}
+
+
+void Cursor::SetUnityTexturePtr(ID3D11Texture2D* ptr)
 {
     unityTexture_ = ptr;
 }
 
 
-ID3D11Texture2D* IconTexture::GetUnityTexturePtr() const
+ID3D11Texture2D* Cursor::GetUnityTexturePtr() const
 {
     return unityTexture_;
 }
 
 
-bool IconTexture::CaptureOnce()
+bool Cursor::Capture()
 {
-    if (hasCaptured_) return true;
+    std::lock_guard<std::mutex> lock(cursorMutex_);
 
-    auto hWnd = window_->GetHandle();
-
-    auto hIcon = reinterpret_cast<HICON>(::GetClassLongPtr(hWnd, GCLP_HICON));
-    if (hIcon == nullptr)
+    CURSORINFO cursorInfo;
+    cursorInfo.cbSize = sizeof(CURSORINFO);
+    if (!::GetCursorInfo(&cursorInfo))
     {
-        const auto hr = ::SendMessageTimeout(hWnd, WM_GETICON, ICON_BIG, 0, SMTO_ABORTIFHUNG | SMTO_BLOCK, 1000, reinterpret_cast<PDWORD_PTR>(&hIcon));
-        if (FAILED(hr))
-        {
-
-            hIcon = reinterpret_cast<HICON>(::LoadImage(window_->GetInstance(), IDI_APPLICATION, IMAGE_ICON, 0, 0, LR_SHARED));
-            if (hIcon == nullptr)
-            {
-                Debug::Error(__FUNCTION__, " => Could not get HICON.");
-                return false;
-            }
-        }
+        OutputApiError("GetCursorInfo");
+        return false;
     }
 
-    const auto width = GetWidth();
-    const auto height = GetHeight();
+    x_ = cursorInfo.ptScreenPos.x;
+    y_ = cursorInfo.ptScreenPos.y;
 
-    ICONINFO info;
-    if (!::GetIconInfo(hIcon, &info))
+    if (cursorInfo.flags != CURSOR_SHOWING)
+    {
+        buffer_.Reset();
+        hasCaptured_ = true;
+        return true;
+    }
+
+    ICONINFO iconInfo;
+    ZeroMemory(&iconInfo, sizeof(ICONINFO));
+    if (!::GetIconInfo(cursorInfo.hCursor, &iconInfo))
     {
         OutputApiError("GetIconInfo");
         return false;
     }
 
+    BITMAP bmpColor;
+    ZeroMemory(&bmpColor, sizeof(BITMAP));
+    if (!::GetObject(iconInfo.hbmColor, sizeof(BITMAP), &bmpColor))
+    {
+        OutputApiError("GetIconInfo");
+        return false;
+    }
+    ScopedReleaser hbmColorReleaser([&] { ::DeleteObject(iconInfo.hbmColor); });
+
+    BITMAP bmpMask;
+    ZeroMemory(&bmpMask, sizeof(BITMAP));
+    if (!::GetObject(iconInfo.hbmMask, sizeof(BITMAP), &bmpMask))
+    {
+        OutputApiError("GetIconInfo");
+        return false;
+    }
+    ScopedReleaser hbmMaskReleaser([&] { ::DeleteObject(iconInfo.hbmMask); });
+
+    width_ = bmpColor.bmWidth;
+    height_ = bmpColor.bmHeight;
+
     auto hDcMem = ::CreateCompatibleDC(NULL);
     ScopedReleaser hDcReleaser([&] { ::DeleteDC(hDcMem); });
 
     BITMAPINFOHEADER bmi {};
-    bmi.biWidth       = static_cast<LONG>(width);
-    bmi.biHeight      = -static_cast<LONG>(height);
+    bmi.biWidth       = static_cast<LONG>(width_);
+    bmi.biHeight      = -static_cast<LONG>(height_);
     bmi.biPlanes      = 1;
     bmi.biSize        = sizeof(BITMAPINFOHEADER);
     bmi.biBitCount    = 32;
@@ -92,8 +124,8 @@ bool IconTexture::CaptureOnce()
 
     // Get color image
     Buffer<BYTE> color;
-    color.ExpandIfNeeded(width * height * 4);
-    if (!::GetDIBits(hDcMem, info.hbmColor, 0, height, color.Get(), reinterpret_cast<BITMAPINFO*>(&bmi), DIB_RGB_COLORS))
+    color.ExpandIfNeeded(width_ * height_ * 4);
+    if (!::GetDIBits(hDcMem, iconInfo.hbmColor, 0, height_, color.Get(), reinterpret_cast<BITMAPINFO*>(&bmi), DIB_RGB_COLORS))
     {
         OutputApiError("GetDIBits");
         return false;
@@ -101,8 +133,8 @@ bool IconTexture::CaptureOnce()
     
     // Get mask image
     Buffer<BYTE> mask;
-    mask.ExpandIfNeeded(width * height * 4);
-    if (!::GetDIBits(hDcMem, info.hbmMask, 0, height, mask.Get(), reinterpret_cast<BITMAPINFO*>(&bmi), DIB_RGB_COLORS))
+    mask.ExpandIfNeeded(width_ * height_ * 4);
+    if (!::GetDIBits(hDcMem, iconInfo.hbmMask, 0, height_ * 2, mask.Get(), reinterpret_cast<BITMAPINFO*>(&bmi), DIB_RGB_COLORS))
     {
         OutputApiError("GetDIBits");
         return false;
@@ -110,20 +142,20 @@ bool IconTexture::CaptureOnce()
 
     {
         std::lock_guard<std::mutex> lock(bufferMutex_);
-        buffer_.ExpandIfNeeded(width * height * 4);
+        buffer_.ExpandIfNeeded(width_ * height_ * 4);
 
         auto buffer32 = buffer_.As<UINT>();
         auto color32 = color.As<UINT>();
         auto mask32 = mask.As<UINT>();
 
-        const auto n = width * height;
-        for (UINT x = 0; x < width; ++x) 
+        const auto n = width_ * height_;
+        for (UINT x = 0; x < width_; ++x) 
         {
-            for (UINT y = 0; y < height; ++y)
+            for (UINT y = 0; y < height_; ++y)
             {
-                const auto i = y * width + x;
-                const auto j = (height - 1 - y) * width + x;
-                buffer32[j] = color32[i] ^ mask32[i];
+                const auto i = y * width_ + x;
+                const auto j = (height_ - 1 - y) * width_ + x;
+                buffer32[j] = color32[i];
             }
         }
     }
@@ -134,9 +166,9 @@ bool IconTexture::CaptureOnce()
 }
 
 
-bool IconTexture::UploadOnce()
+bool Cursor::Upload()
 {
-    if (hasUploaded_) return true;
+    if (!hasCaptured_) return false;
 
     if (!unityTexture_.load() || buffer_.Empty()) return false;
 
@@ -178,15 +210,16 @@ bool IconTexture::UploadOnce()
         context->Flush();
     }
 
+    hasCaptured_ = false;
     hasUploaded_ = true;
 
     return true;
 }
 
 
-bool IconTexture::RenderOnce()
+bool Cursor::Render()
 {
-    if (hasRendered_) return true;
+    if (!hasCaptured_) return false;
 
     if (!unityTexture_.load() || !sharedTexture_ || !sharedHandle_) return false;
 
@@ -204,7 +237,9 @@ bool IconTexture::RenderOnce()
 
     context->CopyResource(unityTexture_.load(), texture.Get());
 
-    MessageManager::Get().Add({ MessageType::IconCaptured, window_->GetId(), window_->GetHandle() });
+    MessageManager::Get().Add({ MessageType::CursorCaptured, -1, nullptr });
+
+    hasUploaded_ = false;
 
     return true;
 }

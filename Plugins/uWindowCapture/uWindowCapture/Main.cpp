@@ -11,6 +11,7 @@
 #include "UploadManager.h"
 #include "CaptureManager.h"
 #include "Window.h"
+#include "Cursor.h"
 #include "WindowTexture.h"
 #include "WindowManager.h"
 
@@ -504,6 +505,36 @@ extern "C"
             return window->GetId();
         }
         return -1;
+    }
+
+    UNITY_INTERFACE_EXPORT UINT UNITY_INTERFACE_API UwcGetCursorWidth()
+    {
+        if (WindowManager::IsNull()) return -1;
+        if (auto& cursor = WindowManager::Get().GetCursor())
+        {
+            return cursor->GetWidth();
+        }
+        return -1;
+    }
+
+    UNITY_INTERFACE_EXPORT UINT UNITY_INTERFACE_API UwcGetCursorHeight()
+    {
+        if (WindowManager::IsNull()) return -1;
+        if (auto& cursor = WindowManager::Get().GetCursor())
+        {
+            return cursor->GetHeight();
+        }
+        return -1;
+    }
+
+    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcSetCursorTexturePtr(ID3D11Texture2D* ptr)
+    {
+        if (WindowManager::IsNull()) return;
+        if (auto& cursor = WindowManager::Get().GetCursor())
+        {
+            cursor->SetUnityTexturePtr(ptr);
+        }
+        return;
     }
 
     UNITY_INTERFACE_EXPORT UINT UNITY_INTERFACE_API UwcGetScreenWidth()

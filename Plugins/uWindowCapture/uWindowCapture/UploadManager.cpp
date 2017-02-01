@@ -10,6 +10,7 @@
 #include "Util.h"
 #include "Window.h"
 #include "Unity.h"
+#include "Cursor.h"
 
 #pragma comment(lib, "d3d11.lib")
 
@@ -129,6 +130,12 @@ void UploadManager::StartUploadThread()
             {
                 window->Upload();
             }
+        }
+
+        // Check cursor upload
+        if (auto& cursor = WindowManager::Get().GetCursor())
+        {
+            cursor->Upload();
         }
     }, std::chrono::microseconds(10) /* check uploading every 10 us */);
 }

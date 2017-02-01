@@ -11,6 +11,7 @@
 #include "Thread.h"
 #include "CaptureManager.h"
 #include "UploadManager.h"
+#include "Cursor.h"
 
 
 class Window;
@@ -31,6 +32,7 @@ public:
 
     static const std::unique_ptr<CaptureManager>& GetCaptureManager();
     static const std::unique_ptr<UploadManager>& GetUploadManager();
+    static const std::unique_ptr<Cursor>& GetCursor();
 
 private:
     std::shared_ptr<Window> FindParentWindow(const std::shared_ptr<Window>& window) const;
@@ -45,6 +47,7 @@ private:
 
     std::unique_ptr<CaptureManager> captureManager_;
     std::unique_ptr<UploadManager> uploadManager_;
+    std::unique_ptr<Cursor> cursor_;
 
     std::map<int, std::shared_ptr<Window>> windows_;
     int lastWindowId_ = 0;

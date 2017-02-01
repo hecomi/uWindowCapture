@@ -150,6 +150,25 @@ bool WindowTexture::Capture()
 
     if (result)
     {
+        auto cursorWindow = WindowManager::Get().GetCursorWindow();
+        if (cursorWindow && cursorWindow->GetHandle() == window_->GetHandle())
+        {
+            CURSORINFO cursorInfo;
+            cursorInfo.cbSize = sizeof(CURSORINFO);
+            if (!::GetCursorInfo(&cursorInfo))
+            {
+                OutputApiError("GetCursorInfo");
+                return false;
+            }
+
+            if (cursorInfo.flags == CURSOR_SHOWING)
+            {
+                const auto windowLocalCursorX = cursorInfo.ptScreenPos.x - window_->GetX();
+                const auto windowLocalCursorY = cursorInfo.ptScreenPos.y - window_->GetY();
+                ::DrawIcon(hDcMem, windowLocalCursorX, windowLocalCursorY, cursorInfo.hCursor);
+            }
+        }
+
         BITMAPINFOHEADER bmi {};
         bmi.biWidth       = static_cast<LONG>(bufferWidth_);
         bmi.biHeight      = -static_cast<LONG>(bufferHeight_);

@@ -16,6 +16,7 @@ enum class MessageType : int
     WindowCaptured = 2,
     WindowSizeChanged = 3,
     IconCaptured = 4,
+    CursorCaptured = 4,
 };
 
 

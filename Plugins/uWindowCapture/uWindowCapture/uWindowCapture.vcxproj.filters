@@ -29,6 +29,7 @@
     <ClInclude Include="WindowQueue.h" />
     <ClInclude Include="WindowTexture.h" />
     <ClInclude Include="IconTexture.h" />
+    <ClInclude Include="Cursor.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp" />
@@ -44,5 +45,6 @@
     <ClCompile Include="WindowQueue.cpp" />
     <ClCompile Include="WindowTexture.cpp" />
     <ClCompile Include="IconTexture.cpp" />
+    <ClCompile Include="Cursor.cpp" />
   </ItemGroup>
 </Project>

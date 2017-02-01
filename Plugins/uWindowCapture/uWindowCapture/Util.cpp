@@ -74,15 +74,15 @@ bool GetWindowTitle(HWND hWnd, std::wstring& outTitle)
 
 bool GetWindowTitle(HWND hWnd, std::wstring& outTitle, int timeout)
 {
-    DWORD length = 0;
+    DWORD_PTR length = 0;
     if (FAILED(::SendMessageTimeoutW(hWnd, WM_GETTEXTLENGTH, 0, 0, SMTO_ABORTIFHUNG | SMTO_BLOCK, timeout, reinterpret_cast<PDWORD_PTR>(&length))))
     {
         return false;
     }
-    if (length == 0) return false;
+    if (length <= 0) return false;
 
     std::vector<WCHAR> buf(length + 1);
-    DWORD result;
+    DWORD_PTR result;
     if (FAILED(::SendMessageTimeoutW(hWnd, WM_GETTEXT, buf.size(), reinterpret_cast<LPARAM>(&buf[0]), SMTO_ABORTIFHUNG | SMTO_BLOCK, timeout, reinterpret_cast<PDWORD_PTR>(&result))))
     {
         return false;

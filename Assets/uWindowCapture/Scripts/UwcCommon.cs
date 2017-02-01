@@ -4,6 +4,10 @@ using UnityEngine.Events;
 namespace uWindowCapture
 {
 
+public class UwcEvent : UnityEvent
+{
+}
+
 public class UwcWindowEvent : UnityEvent<UwcWindow>
 {
 }
