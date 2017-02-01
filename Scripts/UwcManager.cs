@@ -44,6 +44,12 @@ public class UwcManager : MonoBehaviour
         get { return instance.onWindowRemoved_; }
     }
 
+    private UwcEvent onCursorCaptured_ = new UwcEvent();
+    public static UwcEvent onCursorCaptured
+    {
+        get { return instance.onCursorCaptured_; }
+    }
+
     System.IntPtr renderEventFunc_;
 
     Dictionary<int, UwcWindow> windows_ = new Dictionary<int, UwcWindow>();
@@ -56,6 +62,12 @@ public class UwcManager : MonoBehaviour
     static public UwcWindow cursorWindow
     {
         get { return Find(instance.cursorWindowId_); }
+    }
+
+    UwcCursor cursor_ = new UwcCursor();
+    static public UwcCursor cursor
+    {
+        get { return instance.cursor_; }
     }
 
     void Awake()
@@ -159,6 +171,10 @@ public class UwcManager : MonoBehaviour
                     if (window != null) {
                         window.onIconCaptured.Invoke();
                     }
+                    break;
+                }
+                case MessageType.CursorCaptured: {
+                    cursor.onCaptured.Invoke();
                     break;
                 }
                 default: {
