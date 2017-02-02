@@ -10,19 +10,14 @@ public class UwcCursor
         onCaptured.AddListener(OnCaptured);
     }
 
-    public Point point 
-    {
-        get { return Lib.GetCursorPosition(); }
-    }
-
     public int x
     {
-        get { return point.x; }
+        get { return Lib.GetCursorX(); }
     }
 
     public int y
     {
-        get { return point.y; }
+        get { return Lib.GetCursorY(); }
     }
 
     public int width
@@ -65,6 +60,8 @@ public class UwcCursor
 
         if (!texture || texture.width != w || texture.height != h) {
             texture = new Texture2D(w, h, TextureFormat.BGRA32, false);
+            texture.filterMode = FilterMode.Point;
+            texture.wrapMode = TextureWrapMode.Clamp;
             Lib.SetCursorTexturePtr(texture.GetNativeTexturePtr());
             onTextureChanged.Invoke();
         }

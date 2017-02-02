@@ -16,6 +16,11 @@ public:
     Cursor();
     ~Cursor();
 
+    void StartCapture();
+    void StopCapture();
+
+    UINT GetX() const;
+    UINT GetY() const;
     UINT GetWidth() const;
     UINT GetHeight() const;
 
@@ -29,6 +34,9 @@ public:
     bool Render();
 
 private:
+    void CreateBitmapIfNeeded(HDC hDc, UINT width, UINT height);
+    void DeleteBitmap();
+
     ThreadLoop threadLoop_;
 
     std::atomic<ID3D11Texture2D*> unityTexture_ = nullptr;
@@ -37,6 +45,7 @@ private:
     std::mutex sharedTextureMutex_;
 
     Buffer<BYTE> buffer_;
+    HBITMAP bitmap_ = nullptr;
     std::mutex bufferMutex_;
 
     std::atomic<UINT> width_ = 0;

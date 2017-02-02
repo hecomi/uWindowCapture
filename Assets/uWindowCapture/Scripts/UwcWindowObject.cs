@@ -1,10 +1,17 @@
 ﻿using UnityEngine;
+using System.Collections.Generic;
 
 namespace uWindowCapture
 {
 
 public class UwcWindowObject : MonoBehaviour
 {
+    private static HashSet<UwcWindowObject> list_ = new HashSet<UwcWindowObject>();
+    public static HashSet<UwcWindowObject> list
+    {
+        get { return list_; }
+    }
+
     private UwcWindow window_;
     public UwcWindow window 
     { 
@@ -86,6 +93,13 @@ public class UwcWindowObject : MonoBehaviour
         renderer_ = GetComponent<Renderer>();
         material_ = renderer_.material; // clone
         meshFilter_ = GetComponent<MeshFilter>();
+
+        list_.Add(this);
+    }
+
+    void OnDestroy()
+    {
+        list_.Remove(this);
     }
 
     void Update()

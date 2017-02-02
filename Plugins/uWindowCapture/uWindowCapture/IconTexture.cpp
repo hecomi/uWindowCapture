@@ -74,7 +74,7 @@ bool IconTexture::CaptureOnce()
     ICONINFO info;
     if (!::GetIconInfo(hIcon, &info))
     {
-        OutputApiError("GetIconInfo");
+        OutputApiError(__FUNCTION__, "GetIconInfo");
         return false;
     }
 
@@ -95,7 +95,7 @@ bool IconTexture::CaptureOnce()
     color.ExpandIfNeeded(width * height * 4);
     if (!::GetDIBits(hDcMem, info.hbmColor, 0, height, color.Get(), reinterpret_cast<BITMAPINFO*>(&bmi), DIB_RGB_COLORS))
     {
-        OutputApiError("GetDIBits");
+        OutputApiError(__FUNCTION__, "GetDIBits");
         return false;
     }
     
@@ -104,7 +104,7 @@ bool IconTexture::CaptureOnce()
     mask.ExpandIfNeeded(width * height * 4);
     if (!::GetDIBits(hDcMem, info.hbmMask, 0, height, mask.Get(), reinterpret_cast<BITMAPINFO*>(&bmi), DIB_RGB_COLORS))
     {
-        OutputApiError("GetDIBits");
+        OutputApiError(__FUNCTION__, "GetDIBits");
         return false;
     }
 

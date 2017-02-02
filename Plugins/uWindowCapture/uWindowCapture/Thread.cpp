@@ -82,3 +82,9 @@ bool ThreadLoop::IsRunning() const
 {
     return isRunning_;
 }
+
+
+bool ThreadLoop::HasFunction() const
+{
+    return func_ != nullptr;
+}

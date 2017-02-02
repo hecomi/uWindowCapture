@@ -507,6 +507,26 @@ extern "C"
         return -1;
     }
 
+    UNITY_INTERFACE_EXPORT UINT UNITY_INTERFACE_API UwcGetCursorX()
+    {
+        if (WindowManager::IsNull()) return -1;
+        if (auto& cursor = WindowManager::Get().GetCursor())
+        {
+            return cursor->GetX();
+        }
+        return -1;
+    }
+
+    UNITY_INTERFACE_EXPORT UINT UNITY_INTERFACE_API UwcGetCursorY()
+    {
+        if (WindowManager::IsNull()) return -1;
+        if (auto& cursor = WindowManager::Get().GetCursor())
+        {
+            return cursor->GetY();
+        }
+        return -1;
+    }
+
     UNITY_INTERFACE_EXPORT UINT UNITY_INTERFACE_API UwcGetCursorWidth()
     {
         if (WindowManager::IsNull()) return -1;

@@ -10,6 +10,7 @@
 
 // Error handling
 void OutputApiError(const char* apiName);
+void OutputApiError(const char* func, const char* apiName);
 
 
 // Logging

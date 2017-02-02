@@ -105,7 +105,7 @@ std::shared_ptr<Window> WindowManager::GetWindowFromPoint(POINT point) const
 {
     auto hWnd = ::WindowFromPoint(point);
 
-    if (hWnd)
+    while (hWnd != NULL)
     {
         auto it = std::find_if(
             windows_.begin(),
@@ -298,7 +298,7 @@ void WindowManager::UpdateWindowHandleList()
     static const auto EnumWindowsCallback = static_cast<EnumWindowsCallbackType>(_EnumWindowsCallback);
     if (!::EnumWindows(EnumWindowsCallback, reinterpret_cast<LPARAM>(this)))
     {
-        OutputApiError("EnumWindows");
+        OutputApiError(__FUNCTION__, "EnumWindows");
     }
 
     std::sort(

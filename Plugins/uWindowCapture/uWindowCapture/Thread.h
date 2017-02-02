@@ -20,6 +20,7 @@ public:
     void Restart();
     void Stop();
     bool IsRunning() const;
+    bool HasFunction() const;
 
 private:
     std::thread thread_;

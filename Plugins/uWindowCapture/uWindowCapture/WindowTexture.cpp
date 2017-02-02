@@ -82,7 +82,7 @@ void WindowTexture::DeleteBitmap()
 {
     if (bitmap_ != nullptr) 
     {
-        if (!::DeleteObject(bitmap_)) OutputApiError("DeleteObject");
+        if (!::DeleteObject(bitmap_)) OutputApiError(__FUNCTION__, "DeleteObject");
         bitmap_ = nullptr;
     }
 }
@@ -111,7 +111,7 @@ bool WindowTexture::Capture()
 
         if (width == 0 || height == 0)
         {
-            if (!::ReleaseDC(hWnd, hDc)) OutputApiError("ReleaseDC");
+            if (!::ReleaseDC(hWnd, hDc)) OutputApiError(__FUNCTION__, "ReleaseDC");
             return false;
         }
 
@@ -127,19 +127,19 @@ bool WindowTexture::Capture()
         case CaptureMode::PrintWindow:
         {
             result = ::PrintWindow(hWnd, hDcMem, PW_RENDERFULLCONTENT);
-            if (!result) OutputApiError("PrintWindow");
+            if (!result) OutputApiError(__FUNCTION__, "PrintWindow");
             break;
         }
         case CaptureMode::BitBlt:
         {
             result = ::BitBlt(hDcMem, 0, 0, bufferWidth_, bufferHeight_, hDc, 0, 0, SRCCOPY);
-            if (!result) OutputApiError("BitBlt");
+            if (!result) OutputApiError(__FUNCTION__, "BitBlt");
             break;
         }
         case CaptureMode::BitBltAlpha:
         {
             result = ::BitBlt(hDcMem, 0, 0, bufferWidth_, bufferHeight_, hDc, 0, 0, SRCCOPY | CAPTUREBLT);
-            if (!result) OutputApiError("BitBlt");
+            if (!result) OutputApiError(__FUNCTION__, "BitBlt");
             break;
         }
         default:
@@ -150,6 +150,7 @@ bool WindowTexture::Capture()
 
     if (result)
     {
+        // Draw cursor
         auto cursorWindow = WindowManager::Get().GetCursorWindow();
         if (cursorWindow && cursorWindow->GetHandle() == window_->GetHandle())
         {
@@ -157,7 +158,7 @@ bool WindowTexture::Capture()
             cursorInfo.cbSize = sizeof(CURSORINFO);
             if (!::GetCursorInfo(&cursorInfo))
             {
-                OutputApiError("GetCursorInfo");
+                OutputApiError(__FUNCTION__, "GetCursorInfo");
                 return false;
             }
 
@@ -182,15 +183,15 @@ bool WindowTexture::Capture()
             std::lock_guard<std::mutex> lock(bufferMutex_);
             if (!::GetDIBits(hDcMem, bitmap_, 0, bufferHeight_, buffer_.Get(), reinterpret_cast<BITMAPINFO*>(&bmi), DIB_RGB_COLORS))
             {
-                OutputApiError("GetDIBits");
+                OutputApiError(__FUNCTION__, "GetDIBits");
             }
         }
     }
 
     ::SelectObject(hDcMem, preObject);
 
-    if (!::DeleteDC(hDcMem)) OutputApiError("DeleteDC");
-    if (!::ReleaseDC(hWnd, hDc)) OutputApiError("ReleaseDC");
+    if (!::DeleteDC(hDcMem)) OutputApiError(__FUNCTION__, "DeleteDC");
+    if (!::ReleaseDC(hWnd, hDc)) OutputApiError(__FUNCTION__, "ReleaseDC");
 
     return !FAILED(result);
 }

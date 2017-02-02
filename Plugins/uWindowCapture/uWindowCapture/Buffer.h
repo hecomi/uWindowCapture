@@ -7,29 +7,13 @@ template <class T>
 class Buffer
 {
 public:
-    Buffer() {}
+    Buffer() = default;
+    ~Buffer() = default;
 
-    Buffer(const Buffer& other)
+    explicit Buffer(UINT size)
     {
-        value_.reset();
-        size_ = 0;
-        ExpandIfNeeded(other.size_);
-        memcpy_s(value_.get(), size_, other.value_.get(), other.size_);
+        ExpandIfNeeded(size);
     }
-
-    Buffer<T>& operator=(const Buffer& other)
-    {
-        if (&other == this) return *this;
-
-        value_.reset();
-        size_ = 0;
-        ExpandIfNeeded(other.size_);
-        memcpy_s(value_.get(), size_, other.value_.get(), other.size_);
-
-        return *this;
-    }
-
-    ~Buffer() {}
 
     bool Empty() const
     {
@@ -48,6 +32,11 @@ public:
     void Clear()
     {
         ZeroMemory(value_.get(), size_);
+    }
+
+    void Clear(int value)
+    {
+        memset(value_.get(), value, sizeof(T) * size_);
     }
 
     void Reset()
