@@ -64,6 +64,13 @@ public class UwcWindowObjectManager : MonoBehaviour
             Destroy(windowObject.gameObject);
         }
     }
+
+    public UwcWindowObject Get(int id)
+    {
+        UwcWindowObject window = null;
+        windows.TryGetValue(id, out window);
+        return window;
+    }
 }
 
 }

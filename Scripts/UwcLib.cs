@@ -170,6 +170,10 @@ public static class Lib
     public static extern int GetWindowIdFromPoint(int x, int y);
     [DllImport(name, EntryPoint = "UwcGetWindowIdUnderCursor")]
     public static extern int GetWindowIdUnderCursor();
+    [DllImport(name, EntryPoint = "UwcGetCursorX")]
+    public static extern int GetCursorX();
+    [DllImport(name, EntryPoint = "UwcGetCursorY")]
+    public static extern int GetCursorY();
     [DllImport(name, EntryPoint = "UwcGetCursorWidth")]
     public static extern int GetCursorWidth();
     [DllImport(name, EntryPoint = "UwcGetCursorHeight")]
