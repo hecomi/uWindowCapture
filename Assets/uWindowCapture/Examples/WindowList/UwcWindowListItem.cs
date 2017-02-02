@@ -4,8 +4,13 @@ using UnityEngine.UI;
 namespace uWindowCapture
 {
 
+[RequireComponent(typeof(Image))]
 public class UwcWindowListItem : MonoBehaviour 
 {
+    Image image_;
+    [SerializeField] Color selected;
+    [SerializeField] Color notSelected;
+
     public UwcWindow window { get; set; }
     public UwcWindowList list { get; set; }
     public UwcWindowObject windowObject { get; set; }
@@ -18,6 +23,12 @@ public class UwcWindowListItem : MonoBehaviour
     [SerializeField] Text width;
     [SerializeField] Text height;
     [SerializeField] Text status;
+
+    void Awake()
+    {
+        image_ = GetComponent<Image>();
+        image_.color = notSelected;
+    }
 
     void Update()
     {
@@ -50,9 +61,11 @@ public class UwcWindowListItem : MonoBehaviour
         var manager = list.windowObjectManager;
         if (windowObject == null) {
             windowObject = manager.AddWindowObject(window);
+            image_.color = selected;
         } else {
             manager.RemoveWindowObject(window);
             windowObject = null;
+            image_.color = notSelected;
         }
     }
 }
