@@ -52,13 +52,14 @@ bool IconTexture::CaptureOnce()
 
     auto hWnd = window_->GetHandle();
 
+    // TODO: cannot get icon if the window handle is the one for UWP.
     auto hIcon = reinterpret_cast<HICON>(::GetClassLongPtr(hWnd, GCLP_HICON));
     if (hIcon == nullptr)
     {
-        const auto hr = ::SendMessageTimeout(hWnd, WM_GETICON, ICON_BIG, 0, SMTO_ABORTIFHUNG | SMTO_BLOCK, 1000, reinterpret_cast<PDWORD_PTR>(&hIcon));
+        const UINT timeout = 100;
+        const auto hr = ::SendMessageTimeout(hWnd, WM_GETICON, ICON_BIG, 0, SMTO_ABORTIFHUNG | SMTO_BLOCK, timeout, reinterpret_cast<PDWORD_PTR>(&hIcon));
         if (FAILED(hr))
         {
-
             hIcon = reinterpret_cast<HICON>(::LoadImage(window_->GetInstance(), IDI_APPLICATION, IMAGE_ICON, 0, 0, LR_SHARED));
             if (hIcon == nullptr)
             {

@@ -35,12 +35,12 @@ void Debug::Finalize()
 void OutputApiError(const char* apiName)
 {
     const auto error = ::GetLastError();
-    Debug::Error(apiName, "() failed width error code: ", error);
+    Debug::Error(apiName, "() failed with error code: ", error);
 }
 
 
 void OutputApiError(const char* func, const char* apiName)
 {
     const auto error = ::GetLastError();
-    Debug::Error(func, "() => ", apiName, "() failed width error code: ", error);
+    Debug::Error(func, "() => ", apiName, "() failed with error code: ", error);
 }

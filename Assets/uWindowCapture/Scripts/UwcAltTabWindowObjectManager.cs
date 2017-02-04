@@ -22,7 +22,7 @@ public class UwcAltTabWindowObjectManager : UwcWindowObjectManager
         if (!window.isVisible) return;
 
         if (!window.isAltTabWindow) return;
-        if (string.IsNullOrEmpty(window.title)) return;
+        // if (string.IsNullOrEmpty(window.title)) return;
 
         AddWindowObject(window);
     }

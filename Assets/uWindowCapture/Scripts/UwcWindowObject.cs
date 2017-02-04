@@ -34,7 +34,7 @@ public class UwcWindowObject : MonoBehaviour
                 window_.onCaptured.AddListener(OnCaptured);
             }
 
-            renderer_.enabled = false;
+            // renderer_.enabled = false;
         }
     }
 
@@ -83,16 +83,19 @@ public class UwcWindowObject : MonoBehaviour
     public int skipFrame = 10;
     int updatedFrame_ = 0;
     bool hasBeenCaptured_ = false;
+    bool isValid_ = true;
 
     Material material_;
     Renderer renderer_;
     MeshFilter meshFilter_;
+    Collider collider_;
 
     void Awake()
     {
         renderer_ = GetComponent<Renderer>();
         material_ = renderer_.material; // clone
         meshFilter_ = GetComponent<MeshFilter>();
+        collider_ = GetComponent<Collider>();
 
         list_.Add(this);
     }
@@ -110,6 +113,9 @@ public class UwcWindowObject : MonoBehaviour
         UpdateRenderer();
 
         updatedFrame_++;
+
+        if (renderer_) renderer_.enabled = isValid_;
+        if (collider_) collider_.enabled = isValid_;
     }
 
     void UpdateTexture()
@@ -149,8 +155,9 @@ public class UwcWindowObject : MonoBehaviour
     {
         hasBeenCaptured_ = true;
 
+        name = window.title;
         if (window.isAltTabWindow) {
-            name = window.title;
+            isValid_ = !string.IsNullOrEmpty(name);
         }
     }
 }

@@ -91,7 +91,9 @@ void WindowTexture::DeleteBitmap()
 bool WindowTexture::Capture()
 {
     auto hWnd = window_->GetHandle();
+
     auto hDc = ::GetDC(hWnd);
+    ScopedReleaser hDcReleaser([&] { ::ReleaseDC(hWnd, hDc); });
 
     {
         // Check window size from HDC to get correct values for non-DPI-scaled applications.
@@ -119,49 +121,54 @@ bool WindowTexture::Capture()
     }
 
     auto hDcMem = ::CreateCompatibleDC(hDc);
-    HGDIOBJ preObject = ::SelectObject(hDcMem, bitmap_);
+    ScopedReleaser hDcMemRelaser([&] { ::DeleteDC(hDcMem); });
 
-    BOOL result = false;
+    HGDIOBJ preObject = ::SelectObject(hDcMem, bitmap_);
+    ScopedReleaser selectObject([&] { ::SelectObject(hDcMem, preObject); });
+
     switch (captureMode_)
     {
         case CaptureMode::PrintWindow:
         {
-            result = ::PrintWindow(hWnd, hDcMem, PW_RENDERFULLCONTENT);
-            if (!result) OutputApiError(__FUNCTION__, "PrintWindow");
+            if (!::PrintWindow(hWnd, hDcMem, PW_RENDERFULLCONTENT)) 
+            {
+                OutputApiError(__FUNCTION__, "PrintWindow");
+                return false;
+            }
             break;
         }
         case CaptureMode::BitBlt:
         {
-            result = ::BitBlt(hDcMem, 0, 0, bufferWidth_, bufferHeight_, hDc, 0, 0, SRCCOPY);
-            if (!result) OutputApiError(__FUNCTION__, "BitBlt");
+            if (!::BitBlt(hDcMem, 0, 0, bufferWidth_, bufferHeight_, hDc, 0, 0, SRCCOPY)) 
+            {
+                OutputApiError(__FUNCTION__, "BitBlt");
+                return false;
+            }
             break;
         }
         case CaptureMode::BitBltAlpha:
         {
-            result = ::BitBlt(hDcMem, 0, 0, bufferWidth_, bufferHeight_, hDc, 0, 0, SRCCOPY | CAPTUREBLT);
-            if (!result) OutputApiError(__FUNCTION__, "BitBlt");
+            if (!::BitBlt(hDcMem, 0, 0, bufferWidth_, bufferHeight_, hDc, 0, 0, SRCCOPY | CAPTUREBLT)) 
+            {
+                OutputApiError(__FUNCTION__, "BitBlt");
+                return false;
+            }
             break;
         }
         default:
         {
-            break;
+            return true;
         }
     }
 
-    if (result)
+    // Draw cursor
+    auto cursorWindow = WindowManager::Get().GetCursorWindow();
+    if (cursorWindow && cursorWindow->GetHandle() == window_->GetHandle())
     {
-        // Draw cursor
-        auto cursorWindow = WindowManager::Get().GetCursorWindow();
-        if (cursorWindow && cursorWindow->GetHandle() == window_->GetHandle())
+        CURSORINFO cursorInfo;
+        cursorInfo.cbSize = sizeof(CURSORINFO);
+        if (::GetCursorInfo(&cursorInfo))
         {
-            CURSORINFO cursorInfo;
-            cursorInfo.cbSize = sizeof(CURSORINFO);
-            if (!::GetCursorInfo(&cursorInfo))
-            {
-                OutputApiError(__FUNCTION__, "GetCursorInfo");
-                return false;
-            }
-
             if (cursorInfo.flags == CURSOR_SHOWING)
             {
                 const auto windowLocalCursorX = cursorInfo.ptScreenPos.x - window_->GetX();
@@ -169,31 +176,31 @@ bool WindowTexture::Capture()
                 ::DrawIcon(hDcMem, windowLocalCursorX, windowLocalCursorY, cursorInfo.hCursor);
             }
         }
-
-        BITMAPINFOHEADER bmi {};
-        bmi.biWidth       = static_cast<LONG>(bufferWidth_);
-        bmi.biHeight      = -static_cast<LONG>(bufferHeight_);
-        bmi.biPlanes      = 1;
-        bmi.biSize        = sizeof(BITMAPINFOHEADER);
-        bmi.biBitCount    = 32;
-        bmi.biCompression = BI_RGB;
-        bmi.biSizeImage   = 0;
-
+        else
         {
-            std::lock_guard<std::mutex> lock(bufferMutex_);
-            if (!::GetDIBits(hDcMem, bitmap_, 0, bufferHeight_, buffer_.Get(), reinterpret_cast<BITMAPINFO*>(&bmi), DIB_RGB_COLORS))
-            {
-                OutputApiError(__FUNCTION__, "GetDIBits");
-            }
+            OutputApiError(__FUNCTION__, "GetCursorInfo");
         }
     }
 
-    ::SelectObject(hDcMem, preObject);
+    BITMAPINFOHEADER bmi {};
+    bmi.biWidth       = static_cast<LONG>(bufferWidth_);
+    bmi.biHeight      = -static_cast<LONG>(bufferHeight_);
+    bmi.biPlanes      = 1;
+    bmi.biSize        = sizeof(BITMAPINFOHEADER);
+    bmi.biBitCount    = 32;
+    bmi.biCompression = BI_RGB;
+    bmi.biSizeImage   = 0;
 
-    if (!::DeleteDC(hDcMem)) OutputApiError(__FUNCTION__, "DeleteDC");
-    if (!::ReleaseDC(hWnd, hDc)) OutputApiError(__FUNCTION__, "ReleaseDC");
+    {
+        std::lock_guard<std::mutex> lock(bufferMutex_);
+        if (!::GetDIBits(hDcMem, bitmap_, 0, bufferHeight_, buffer_.Get(), reinterpret_cast<BITMAPINFO*>(&bmi), DIB_RGB_COLORS))
+        {
+            OutputApiError(__FUNCTION__, "GetDIBits");
+            return false;
+        }
+    }
 
-    return !FAILED(result);
+    return true;
 }
 
 

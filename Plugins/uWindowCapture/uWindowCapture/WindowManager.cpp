@@ -137,6 +137,8 @@ std::shared_ptr<Window> WindowManager::GetWindowFromPoint(POINT point) const
         {
             return it->second;
         }
+
+        hWnd = ::GetAncestor(hWnd, GA_PARENT);
     }
 
     return nullptr;
@@ -230,7 +232,7 @@ void WindowManager::UpdateWindows()
                 window->threadId_ = info.threadId;
                 window->rect_ = std::move(info.rect);
                 window->zOrder_ = info.zOrder;
-                window->title_ = info.title; 
+                window->title_ = std::move(info.title); 
 
                 if (window->frameCount_ == 0)
                 {
@@ -267,7 +269,7 @@ void WindowManager::UpdateWindowHandleList()
 {
     static const auto _EnumWindowsCallback = [](HWND hWnd, LPARAM lParam) -> BOOL
     {
-        if (!::IsWindow(hWnd) || !::IsWindowVisible(hWnd))
+        if (!::IsWindow(hWnd) || !::IsWindowVisible(hWnd) || ::IsHungAppWindow(hWnd))
         {
             return TRUE;
         }
@@ -281,12 +283,8 @@ void WindowManager::UpdateWindowHandleList()
         ::GetWindowRect(hWnd, &info.rect);
         info.threadId = ::GetWindowThreadProcessId(hWnd, &info.processId);
 
-        auto title = info.title;
         const UINT timeout = 200 /* milliseconds */;
-        if (::GetWindowTitle(hWnd, title, timeout))
-        {
-            info.title = title;
-        }
+        GetWindowTitle(hWnd, info.title, timeout);
 
         auto thiz = reinterpret_cast<WindowManager*>(lParam);
         thiz->windowInfoList_[1].push_back(info);
