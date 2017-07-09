@@ -10,8 +10,6 @@
 Window::Window(HWND hWnd, int id)
     : hWnd_(hWnd)
     , id_(id)
-    , windowTexture_(std::make_shared<WindowTexture>(this))
-    , iconTexture_(std::make_shared<IconTexture>(this))
 {
     if (hWnd == ::GetDesktopWindow())
     {

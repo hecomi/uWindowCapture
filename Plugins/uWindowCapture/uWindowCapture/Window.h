@@ -69,8 +69,8 @@ public:
     BOOL MoveAndScaleWindow(int x, int y, int width, int height);
 
 private:
-    std::shared_ptr<class WindowTexture> windowTexture_;
-    std::shared_ptr<class IconTexture> iconTexture_;
+    std::shared_ptr<class WindowTexture> windowTexture_ = std::make_shared<WindowTexture>(this);
+    std::shared_ptr<class IconTexture> iconTexture_ = std::make_shared<IconTexture>(this);
 
     const int id_ = -1;
     int parentId_ = -1;
