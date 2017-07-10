@@ -11,7 +11,7 @@ using namespace Microsoft::WRL;
 
 CaptureManager::CaptureManager()
 {
-    threadLoop_.Start([this] 
+    windowCaptureThreadLoop_.Start([this] 
     {
         // at first, check high queue.
         int id = highPriorityQueue_.Dequeue();
@@ -44,12 +44,24 @@ CaptureManager::CaptureManager()
             }
         }
     }, std::chrono::microseconds(100));
+
+    iconCaptureThreadLoop_.Start([this] 
+    {
+        int id = iconQueue_.Dequeue();
+        if (id >= 0)
+        {
+            if (auto window = WindowManager::Get().GetWindow(id))
+            {
+                window->CaptureIcon();
+            }
+        }
+    }, std::chrono::microseconds(100));
 }
 
 
 CaptureManager::~CaptureManager()
 {
-    threadLoop_.Stop();
+    windowCaptureThreadLoop_.Stop();
 }
 
 
@@ -73,4 +85,10 @@ void CaptureManager::RequestCapture(int id, CapturePriority priority)
             break;
         }
     }
+}
+
+
+void CaptureManager::RequestCaptureIcon(int id)
+{
+    iconQueue_.Enqueue(id);
 }

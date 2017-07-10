@@ -123,12 +123,23 @@ void UploadManager::StartUploadThread()
         if (!hasUploadTriggered_) return;
         hasUploadTriggered_ = false;
 
-        const int id = uploadQueue_.Dequeue();
-        if (id >= 0)
+        // Check window upload
+        const int windowId = windowUploadQueue_.Dequeue();
+        if (windowId >= 0)
         {
-            if (auto window = WindowManager::Get().GetWindow(id))
+            if (auto window = WindowManager::Get().GetWindow(windowId))
             {
                 window->Upload();
+            }
+        }
+
+        // Check icon upload
+        const int iconId = iconUploadQueue_.Dequeue();
+        if (iconId >= 0)
+        {
+            if (auto window = WindowManager::Get().GetWindow(iconId))
+            {
+                window->UploadIcon();
             }
         }
 
@@ -147,9 +158,15 @@ void UploadManager::StopUploadThread()
 }
 
 
-void UploadManager::RequestUpload(int id)
+void UploadManager::RequestUploadWindow(int id)
 {
-    uploadQueue_.Enqueue(id);
+    windowUploadQueue_.Enqueue(id);
+}
+
+
+void UploadManager::RequestUploadIcon(int id)
+{
+    iconUploadQueue_.Enqueue(id);
 }
 
 

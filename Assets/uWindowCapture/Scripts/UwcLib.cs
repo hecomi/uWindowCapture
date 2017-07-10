@@ -104,6 +104,8 @@ public static class Lib
     public static extern int GetWindowThreadId(int id);
     [DllImport(name, EntryPoint = "UwcRequestCaptureWindow")]
     public static extern void RequestCaptureWindow(int id, CapturePriority priority);
+    [DllImport(name, EntryPoint = "UwcRequestCaptureIcon")]
+    public static extern void RequestCaptureIcon(int id);
     [DllImport(name, EntryPoint = "UwcGetWindowX")]
     public static extern int GetWindowX(int id);
     [DllImport(name, EntryPoint = "UwcGetWindowY")]

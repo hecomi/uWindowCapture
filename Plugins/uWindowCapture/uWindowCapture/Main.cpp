@@ -171,6 +171,12 @@ extern "C"
         WindowManager::GetCaptureManager()->RequestCapture(id, priority);
     }
 
+    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcRequestCaptureIcon(int id)
+    {
+        if (WindowManager::IsNull()) return;
+        WindowManager::GetCaptureManager()->RequestCaptureIcon(id);
+    }
+
     UNITY_INTERFACE_EXPORT HWND UNITY_INTERFACE_API UwcGetWindowOwnerHandle(int id)
     {
         if (auto window = GetWindow(id))

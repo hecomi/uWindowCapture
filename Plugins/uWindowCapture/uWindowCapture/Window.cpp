@@ -273,11 +273,9 @@ void Window::Capture()
 
     if (windowTexture_->Capture())
     {
-        iconTexture_->CaptureOnce();
-
         if (auto& uploader = WindowManager::GetUploadManager())
         {
-            uploader->RequestUpload(id_);
+            uploader->RequestUploadWindow(id_);
         }
     }
 }
@@ -289,9 +287,42 @@ void Window::Upload()
 
     if (windowTexture_->Upload())
     {
-        iconTexture_->UploadOnce();
-        hasNewTextureUploaded_ = true;
+        hasNewWindowTextureUploaded_ = true;
     }
+}
+
+
+void Window::CaptureIcon()
+{
+    if (!IsWindow())
+    {
+        return;
+    }
+
+    if (!iconTexture_->CaptureOnce())
+    {
+        return;
+    }
+
+    if (auto& uploader = WindowManager::GetUploadManager())
+    {
+        uploader->RequestUploadIcon(id_);
+    }
+}
+
+
+void Window::UploadIcon()
+{
+    if (iconTexture_->UploadOnce())
+    {
+        hasNewIconTextureUploaded_ = true;
+    }
+}
+
+
+void Window::RenderIcon()
+{
+    iconTexture_->RenderOnce();
 }
 
 
@@ -299,9 +330,15 @@ void Window::Render()
 {
     // Run this scope in the unity rendering thread.
 
-    if (!hasNewTextureUploaded_) return;
-    hasNewTextureUploaded_ = false;
+    if (hasNewWindowTextureUploaded_)
+    {
+        hasNewWindowTextureUploaded_ = false;
+        windowTexture_->Render();
+    }
 
-    windowTexture_->Render();
-    iconTexture_->RenderOnce();
+    if (hasNewIconTextureUploaded_)
+    {
+        hasNewIconTextureUploaded_ = false;
+        iconTexture_->RenderOnce();
+    }
 }

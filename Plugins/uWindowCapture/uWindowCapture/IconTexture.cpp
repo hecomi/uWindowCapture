@@ -48,11 +48,11 @@ ID3D11Texture2D* IconTexture::GetUnityTexturePtr() const
 
 bool IconTexture::CaptureOnce()
 {
-    if (hasCaptured_) return true;
+    if (hasCaptured_) return false;
 
     auto hWnd = window_->GetHandle();
 
-    // TODO: cannot get icon if the window handle is the one for UWP.
+    // TODO: cannot get icon when the window is UWP.
     auto hIcon = reinterpret_cast<HICON>(::GetClassLongPtr(hWnd, GCLP_HICON));
     if (hIcon == nullptr)
     {
@@ -137,7 +137,7 @@ bool IconTexture::CaptureOnce()
 
 bool IconTexture::UploadOnce()
 {
-    if (hasUploaded_) return true;
+    if (hasUploaded_) return false;
 
     if (!unityTexture_.load() || buffer_.Empty()) return false;
 

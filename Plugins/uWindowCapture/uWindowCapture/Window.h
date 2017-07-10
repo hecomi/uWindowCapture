@@ -53,6 +53,10 @@ public:
     void Upload();
     void Render();
 
+    void CaptureIcon();
+    void UploadIcon();
+    void RenderIcon();
+
     bool IsAltTab() const;
     bool IsDesktop() const;
     BOOL IsWindow() const;
@@ -86,7 +90,8 @@ private:
     DWORD threadId_ = -1;
     std::wstring title_ = L"";
 
-    std::atomic<bool> hasNewTextureUploaded_ = false;
+    std::atomic<bool> hasNewWindowTextureUploaded_ = false;
+    std::atomic<bool> hasNewIconTextureUploaded_ = false;
     std::atomic<bool> isAlive_ = true;
     std::atomic<bool> isDesktop_ = false;
     std::atomic<bool> isAltTabWindow_ = false;

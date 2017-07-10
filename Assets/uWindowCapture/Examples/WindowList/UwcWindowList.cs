@@ -34,6 +34,7 @@ public class UwcWindowList : MonoBehaviour
         listItem.list = this;
         items_.Add(window.id, listItem);
 
+        window.RequestCaptureIcon();
         window.RequestCapture(CapturePriority.Low);
     }
 

@@ -249,6 +249,11 @@ public class UwcWindow
         get { return onChildRemoved_; } 
     }
 
+    public void RequestCaptureIcon()
+    {
+        Lib.RequestCaptureIcon(id);
+    }
+
     public void RequestCapture(CapturePriority priority = CapturePriority.High)
     {
         Lib.RequestCaptureWindow(id, priority);

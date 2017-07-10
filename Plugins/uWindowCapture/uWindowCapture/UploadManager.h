@@ -22,7 +22,8 @@ public:
 
     DevicePtr GetDevice();
     TexturePtr CreateCompatibleSharedTexture(const TexturePtr& texture);
-    void RequestUpload(int id);
+    void RequestUploadWindow(int id);
+    void RequestUploadIcon(int id);
     void StartUploadThread();
     void StopUploadThread();
     void TriggerGpuUpload();
@@ -33,6 +34,7 @@ private:
     DevicePtr device_;
     std::thread initThread_;
     ThreadLoop threadLoop_;
-    WindowQueue uploadQueue_;
+    WindowQueue windowUploadQueue_;
+    WindowQueue iconUploadQueue_;
     std::atomic<bool> hasUploadTriggered_ = false;
 };

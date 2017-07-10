@@ -22,10 +22,13 @@ public:
     CaptureManager();
     ~CaptureManager();
     void RequestCapture(int id, CapturePriority priority);
+    void RequestCaptureIcon(int id);
 
 private:
-    ThreadLoop threadLoop_;
+    ThreadLoop windowCaptureThreadLoop_;
+    ThreadLoop iconCaptureThreadLoop_;
     WindowQueue highPriorityQueue_;
     WindowQueue middlePriorityQueue_;
     WindowQueue lowPriorityQueue_;
+    WindowQueue iconQueue_;
 };
