@@ -80,6 +80,13 @@ public class UwcWindowObject : MonoBehaviour
         "- PrintWindow: slow but can capture almost all windows.")]
     public CaptureMode captureMode = CaptureMode.PrintWindow;
 
+    [Tooltip("CapturePriority" +
+        "- Auto (default): control priority automatically.\n" +
+        "- High: capture next frame.\n" +
+        "- Middle: add to queue.\n" + 
+        "- Low: capture only when no window capture requested.")]
+    public CapturePriority capturePriority = CapturePriority.Auto;
+
     public int skipFrame = 10;
     int updatedFrame_ = 0;
     bool hasBeenCaptured_ = false;
@@ -141,11 +148,14 @@ public class UwcWindowObject : MonoBehaviour
         window.captureMode = captureMode;
 
         if (updatedFrame_ % skipFrame == 0) {
-            var priority = CapturePriority.Low;
-            if (window == UwcManager.cursorWindow) {
-                priority = CapturePriority.High;
-            } else if (window.zOrder < UwcSetting.MiddlePriorityMaxZ) {
-                priority = CapturePriority.Middle;
+            var priority = capturePriority;
+            if (priority == CapturePriority.Auto) {
+                priority = CapturePriority.Low;
+                if (window == UwcManager.cursorWindow) {
+                    priority = CapturePriority.High;
+                } else if (window.zOrder < UwcSetting.MiddlePriorityMaxZ) {
+                    priority = CapturePriority.Middle;
+                }
             }
             window.RequestCapture(priority);
         }
