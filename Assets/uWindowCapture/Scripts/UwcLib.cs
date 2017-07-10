@@ -23,6 +23,7 @@ public enum CaptureMode
 
 public enum CapturePriority
 {
+    Auto = -1,
     High = 0,
     Middle = 1,
     Low = 2,
