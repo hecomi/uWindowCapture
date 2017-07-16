@@ -90,14 +90,15 @@ public class UwcWindowObjectChildrenManager : MonoBehaviour
         var window = child.window;
         var basePixel = child.basePixel;
 
-        var parentRatioX = transform.lossyScale.x / windowObject_.width;
-        var parentRatioY = transform.lossyScale.y / windowObject_.height;
+        var lossyScale = transform.lossyScale;
+        var parentRatioX = lossyScale.x / windowObject_.width;
+        var parentRatioY = lossyScale.y / windowObject_.height;
 
         var parentDesktopPos = UwcWindowUtil.ConvertDesktopCoordToUnityPosition(window.parentWindow, basePixel);
         var childDesktopPos = UwcWindowUtil.ConvertDesktopCoordToUnityPosition(window, basePixel);
         var localPos = childDesktopPos - parentDesktopPos;
-        localPos.x *= parentRatioX / transform.localScale.x;
-        localPos.y *= parentRatioY / transform.localScale.y;
+        localPos.x /= windowObject_.width;
+        localPos.y /= windowObject_.height;
         localPos.z = zDistance * (window.zOrder - window.parentWindow.zOrder) / transform.localScale.z;
         child.transform.localPosition = localPos;
 
