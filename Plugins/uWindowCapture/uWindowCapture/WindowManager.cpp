@@ -61,7 +61,7 @@ void WindowManager::StartWindowHandleListThread()
     windowHandleListThreadLoop_.Start([this]
     {
         UpdateWindowHandleList();
-    });
+    }, std::chrono::milliseconds(16));
 }
 
 

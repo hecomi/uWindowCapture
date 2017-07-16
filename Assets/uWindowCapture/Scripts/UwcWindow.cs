@@ -223,6 +223,7 @@ public class UwcWindow
         get { return onCaptured_; } 
     }
 
+    private bool isFirstSizeChangedEvent_ = true;
     private UnityEvent onSizeChanged_ = new UnityEvent();
     public UnityEvent onSizeChanged
     {
@@ -256,11 +257,19 @@ public class UwcWindow
 
     public void RequestCapture(CapturePriority priority = CapturePriority.High)
     {
+        if (!texture) {
+            CreateWindowTexture();
+        }
         Lib.RequestCaptureWindow(id, priority);
     }
 
     void OnSizeChanged()
     {
+        if (isFirstSizeChangedEvent_) {
+            isFirstSizeChangedEvent_ = false;
+            return;
+        }
+
         CreateWindowTexture();
     }
 
@@ -281,6 +290,9 @@ public class UwcWindow
         if (w == 0 || h == 0) return;
 
         if (!texture || texture.width != w || texture.height != h) {
+            if (backTexture_) {
+                Object.DestroyImmediate(backTexture_);
+            }
             backTexture_ = new Texture2D(w, h, TextureFormat.BGRA32, false);
             Lib.SetWindowTexturePtr(id, backTexture_.GetNativeTexturePtr());
             willTextureSizeChange_ = true;
@@ -290,7 +302,9 @@ public class UwcWindow
     void UpdateWindowTexture()
     {
         if (willTextureSizeChange_) {
-            Object.DestroyImmediate(texture);
+            if (texture) {
+                Object.DestroyImmediate(texture);
+            }
             texture = backTexture_;
             backTexture_ = null;
             willTextureSizeChange_ = false;
