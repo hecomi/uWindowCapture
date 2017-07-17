@@ -52,7 +52,10 @@ public class UwcWindowObjectChildrenManager : MonoBehaviour
 
             foreach (var pair in UwcManager.windows) {
                 var window = pair.Value;
-                if (window.isChild && window.parentWindow.id == newWindow.id) {
+                if (
+                    !window.isAltTabWindow &&
+                    window.isChild && 
+                    window.parentWindow.id == newWindow.id) {
                     OnChildAdded(window);
                 }
             }
@@ -102,10 +105,11 @@ public class UwcWindowObjectChildrenManager : MonoBehaviour
         localPos.z = zDistance * (window.zOrder - window.parentWindow.zOrder) / transform.localScale.z;
         child.transform.localPosition = localPos;
 
-        var worldToLocal = transform.worldToLocalMatrix;
-        var worldScale = new Vector3(child.width * parentRatioX, child.height * parentRatioY, 1f);
-        var localScale = worldToLocal.MultiplyVector(worldScale);
-        child.transform.localScale = localScale;
+        var worldScale = new Vector3(
+            child.width / windowObject_.width, 
+            child.height / windowObject_.height,
+            1f / transform.localScale.z);
+        child.transform.localScale = worldScale;
     }
 
     void UpdateChildren()

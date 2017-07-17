@@ -107,37 +107,42 @@ std::shared_ptr<Window> WindowManager::GetWindowFromPoint(POINT point) const
 
     while (hWnd != NULL)
     {
-        auto it = std::find_if(
-            windows_.begin(),
-            windows_.end(),
-            [hWnd](const auto& pair) 
-            { 
-                return pair.second->GetHandle() == hWnd; 
-            });
+        DWORD thread, process;
+        thread = ::GetWindowThreadProcessId(hWnd, &process);
 
-        if (it == windows_.end()) 
+        std::shared_ptr<Window> parent;
+        int maxZOrder = INT_MAX;
+
+        for (const auto& pair : windows_)
         {
-            DWORD thread, process;
-            thread = ::GetWindowThreadProcessId(hWnd, &process);
+            const auto& window = pair.second;
 
-            it = std::find_if(
-                windows_.begin(),
-                windows_.end(),
-                [=](const auto& pair) 
-                { 
-                    const auto& window = pair.second;
-                    return 
-                        window->GetOwnerHandle() == nullptr && 
-                        window->GetProcessId() == process && 
-                        window->GetThreadId() == thread;
-                });
+            // Return the window whose handle is same
+            if (window->GetHandle() == hWnd) 
+            {
+                return window;
+            }
+
+            // Keep windows whose process and thread ids are same
+            if ((window->GetThreadId() == thread) &&
+                (window->GetProcessId() == process))
+            {
+                const int zOrder = window->GetZOrder();
+                if (zOrder > maxZOrder)
+                {
+                    maxZOrder = zOrder;
+                    parent = window;
+                }
+            }
         }
 
-        if (it != windows_.end()) 
+        // Return parent if found.
+        if (parent)
         {
-            return it->second;
+            return parent;
         }
 
+        // Move next
         hWnd = ::GetAncestor(hWnd, GA_PARENT);
     }
 
@@ -153,39 +158,41 @@ std::shared_ptr<Window> WindowManager::GetCursorWindow() const
 
 std::shared_ptr<Window> WindowManager::FindParentWindow(const std::shared_ptr<Window>& window) const
 {
-    const auto it = std::find_if(
-        windows_.begin(), 
-        windows_.end(), 
-        [&window](const std::pair<int, std::shared_ptr<Window>>& pair) 
+    std::shared_ptr<Window> parent = nullptr;
+    int minDeltaZOrder = INT_MAX;
+    int selfZOrder = window->GetZOrder();
+
+    for (const auto& pair : windows_)
+    {
+        const auto& other = pair.second;
+
+        if (other->GetId() == window->GetId()) 
         {
-            const auto& other = pair.second;
+            continue;
+        }
 
-            if (other->GetId() == window->GetId()) 
+        if ((
+            other->GetHandle() == window->GetParentHandle() ||
+            other->GetHandle() == window->GetOwnerHandle()
+        ) || 
+        (
+            ((other->GetParentId()  == -1 || other->IsAltTab()) &&
+            other->GetProcessId() == window->GetProcessId() &&
+            other->GetThreadId()  == window->GetThreadId()) 
+        ))
+        {
+            // TODO: This is not accurate, should find the correct way to detect the parent.
+            const int zOrder = other->GetZOrder();
+            const int deltaZOrder = zOrder - selfZOrder;
+            if (deltaZOrder > 0 && deltaZOrder < minDeltaZOrder)
             {
-                return false;
+                minDeltaZOrder = deltaZOrder;
+                parent = other;
             }
+        }
+    }
 
-            if (other->GetHandle() == window->GetParentHandle()) 
-            {
-                return true;
-            }
-
-            if (other->GetHandle() == window->GetOwnerHandle())
-            {
-                return true;
-            }
-
-            if (other->GetParentId()  == -1 &&
-                other->GetProcessId() == window->GetProcessId() &&
-                other->GetThreadId()  == window->GetThreadId()) 
-            {
-                return true;
-            }
-
-            return false;
-        });
-
-    return (it != windows_.end()) ? it->second : nullptr;
+    return parent;
 }
 
 
