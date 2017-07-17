@@ -84,6 +84,7 @@ public class UwcManager : MonoBehaviour
 
     void OnApplicationQuit()
     {
+        Resources.UnloadUnusedAssets();
         Lib.Finalize();
     }
 
