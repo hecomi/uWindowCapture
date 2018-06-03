@@ -58,6 +58,8 @@ public class UwcWindowObject : MonoBehaviour
     {
         get 
         {
+            if (window == null) return 0f;
+
             var meshWidth = meshFilter_.sharedMesh.bounds.extents.x * 2f;
             var baseWidth = meshWidth * basePixel;
             return window.width / baseWidth;
@@ -68,19 +70,20 @@ public class UwcWindowObject : MonoBehaviour
     {
         get 
         {
+            if (window == null) return 0f;
+
             var meshHeight = meshFilter_.sharedMesh.bounds.extents.y * 2f;
             var baseHeight = meshHeight * basePixel;
             return window.height / baseHeight;
         }
     }
 
-    [Tooltip("CaptureMethod" +
-        "- BitBlt: fast but cannot capture some windows.\n" +
-        "- BitBltAlpha: BitBlt with alpha.\n" +
-        "- PrintWindow: slow but can capture almost all windows.")]
+    [Tooltip("CaptureMethod\n" +
+        "- PrintWindow: can capture almost all windows.\n" +
+        "- BitBlt: faster but cannot capture some windows.\n")]
     public CaptureMode captureMode = CaptureMode.PrintWindow;
 
-    [Tooltip("CapturePriority" +
+    [Tooltip("CapturePriority\n" +
         "- Auto (default): control priority automatically.\n" +
         "- High: capture next frame.\n" +
         "- Middle: add to queue.\n" + 

@@ -95,41 +95,42 @@ bool WindowTexture::Capture()
     auto hDc = ::GetDC(hWnd);
     ScopedReleaser hDcReleaser([&] { ::ReleaseDC(hWnd, hDc); });
 
-    int width = 0, height = 0;
-    switch (captureMode_)
     {
-        case CaptureMode::PrintWindow:
+        BITMAP header;
+        ZeroMemory(&header, sizeof(BITMAP));
+        auto hBitmap = ::GetCurrentObject(hDc, OBJ_BITMAP);
+        GetObject(hBitmap, sizeof(BITMAP), &header);
+        auto width = header.bmWidth;
+        auto height = header.bmHeight;
+
+        // If failed, use window size (for example, UWP uses this)
+        if (width == 0 || height == 0)
         {
-            // Check window size from HDC to get correct values for non-DPI-scaled applications.
-            BITMAP header;
-            ZeroMemory(&header, sizeof(BITMAP));
-            auto hBitmap = ::GetCurrentObject(hDc, OBJ_BITMAP);
-            GetObject(hBitmap, sizeof(BITMAP), &header);
-            width = header.bmWidth;
-            height = header.bmHeight;
-
-            // If failed, use window size (for example, UWP uses this)
-            if (width == 0 || height == 0)
-            {
-                width = window_->GetWidth();
-                height = window_->GetHeight();
-            }
-
-            if (width == 0 || height == 0)
-            {
-                return false;
-            }
-
-            break;
+            width = window_->GetWidth();
+            height = window_->GetHeight();
         }
-        case CaptureMode::BitBlt:
+
+        if (width == 0 || height == 0)
         {
-            width = window_->GetClientWidth();
-            height = window_->GetClientHeight();
-            break;
+            return false;
         }
+
+        if (captureMode_ == CaptureMode::BitBlt)
+        {
+            // Remove frame areas
+            const auto frameWidth = window_->GetWidth() - window_->GetClientWidth();
+            const auto frameHeight = window_->GetHeight() - window_->GetClientHeight();
+
+            // DPI
+            const auto dpiScaleX = ::GetDeviceCaps(hDc, LOGPIXELSX) / 96.f;
+            const auto dpiScaleY = ::GetDeviceCaps(hDc, LOGPIXELSY) / 96.f;
+
+            width -= static_cast<LONG>(ceil(frameWidth / dpiScaleX));
+            height -= static_cast<LONG>(ceil(frameHeight / dpiScaleY));
+        }
+
+        CreateBitmapIfNeeded(hDc, width, height);
     }
-    CreateBitmapIfNeeded(hDc, width, height);
 
     auto hDcMem = ::CreateCompatibleDC(hDc);
     ScopedReleaser hDcMemRelaser([&] { ::DeleteDC(hDcMem); });
