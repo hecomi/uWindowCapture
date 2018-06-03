@@ -4,7 +4,7 @@ namespace uWindowCapture
 {
 
 [RequireComponent(typeof(UwcWindowObject))]
-public class UwcSingleWindowObjectTest : MonoBehaviour
+public class UwcWindowObjectExample : MonoBehaviour
 {
     UwcWindowObject windowObject_;
 

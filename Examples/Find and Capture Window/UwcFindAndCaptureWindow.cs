@@ -22,6 +22,9 @@ public class UwcFindAndCaptureWindow : MonoBehaviour
     {
         if (window == null || !window.isAlive) {
             window = UwcManager.Find(target);
+            if (window != null) {
+                window.RequestCaptureIcon();
+            }
         }
 
         if (window != null) {
