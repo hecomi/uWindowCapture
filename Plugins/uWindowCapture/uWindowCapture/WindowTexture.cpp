@@ -174,8 +174,8 @@ bool WindowTexture::Capture()
         {
             if (cursorInfo.flags == CURSOR_SHOWING)
             {
-                const auto windowLocalCursorX = cursorInfo.ptScreenPos.x - window_->GetX();
-                const auto windowLocalCursorY = cursorInfo.ptScreenPos.y - window_->GetY();
+                const auto windowLocalCursorX = (cursorInfo.ptScreenPos.x - window_->GetX()) / dpiScaleX;
+                const auto windowLocalCursorY = (cursorInfo.ptScreenPos.y - window_->GetY()) / dpiScaleY;
                 ::DrawIcon(hDcMem, windowLocalCursorX, windowLocalCursorY, cursorInfo.hCursor);
             }
         }
