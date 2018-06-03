@@ -46,6 +46,13 @@ public class UwcWindowObjectChildrenManager : MonoBehaviour
         if (oldWindow != null) {
             oldWindow.onChildAdded.RemoveListener(OnChildAdded);
             oldWindow.onChildRemoved.RemoveListener(OnChildRemoved);
+
+            var enumerator = children.GetEnumerator();
+            while (enumerator.MoveNext()) {
+                var windowObject = enumerator.Current.Value;
+                Destroy(windowObject.gameObject);
+            }
+
             children.Clear();
         }
 
