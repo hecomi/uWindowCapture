@@ -31,6 +31,8 @@ public:
     UINT GetY() const;
     UINT GetWidth() const;
     UINT GetHeight() const;
+    UINT GetClientWidth() const;
+    UINT GetClientHeight() const;
     UINT GetZOrder() const;
     UINT GetBufferWidth() const;
     UINT GetBufferHeight() const;
@@ -81,7 +83,8 @@ private:
     int frameCount_ = 0;
 
     const HWND hWnd_ = nullptr;
-    RECT rect_;
+    RECT windowRect_;
+    RECT clientRect_;
     UINT zOrder_ = 0;
     HWND hWndOwner_ = nullptr;
     HWND hWndParent_ = nullptr;

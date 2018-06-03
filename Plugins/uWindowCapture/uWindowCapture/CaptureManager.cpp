@@ -9,6 +9,15 @@ using namespace Microsoft::WRL;
 
 
 
+namespace
+{
+    constexpr int kLoopMinTime = 100;
+}
+
+
+// ---
+
+
 CaptureManager::CaptureManager()
 {
     windowCaptureThreadLoop_.Start([this] 
@@ -43,7 +52,7 @@ CaptureManager::CaptureManager()
                 window->Capture();
             }
         }
-    }, std::chrono::microseconds(100));
+    }, std::chrono::microseconds(kLoopMinTime));
 
     iconCaptureThreadLoop_.Start([this] 
     {
@@ -55,7 +64,7 @@ CaptureManager::CaptureManager()
                 window->CaptureIcon();
             }
         }
-    }, std::chrono::microseconds(100));
+    }, std::chrono::microseconds(kLoopMinTime));
 }
 
 

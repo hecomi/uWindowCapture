@@ -14,7 +14,6 @@ enum class CaptureMode
     None = -1,
     PrintWindow = 0,
     BitBlt = 1,
-    BitBltAlpha = 2,
 };
 
 
@@ -44,7 +43,7 @@ private:
     void CreateBitmapIfNeeded(HDC hDc, UINT width, UINT height);
     void DeleteBitmap();
 
-    Window* const window_ = nullptr;
+    const Window* const window_;
     CaptureMode captureMode_ = CaptureMode::PrintWindow;
 
     std::atomic<ID3D11Texture2D*> unityTexture_ = nullptr;

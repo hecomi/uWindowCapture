@@ -95,30 +95,41 @@ bool WindowTexture::Capture()
     auto hDc = ::GetDC(hWnd);
     ScopedReleaser hDcReleaser([&] { ::ReleaseDC(hWnd, hDc); });
 
+    int width = 0, height = 0;
+    switch (captureMode_)
     {
-        // Check window size from HDC to get correct values for non-DPI-scaled applications.
-        BITMAP header;
-        ZeroMemory(&header, sizeof(BITMAP));
-        auto hBitmap = GetCurrentObject(hDc, OBJ_BITMAP);
-        GetObject(hBitmap, sizeof(BITMAP), &header);
-        auto width = header.bmWidth;
-        auto height = header.bmHeight;
-
-        // If failed, use window size (for example, UWP uses this)
-        if (width == 0 || height == 0)
+        case CaptureMode::PrintWindow:
         {
-            width = window_->GetWidth();
-            height = window_->GetHeight();
-        }
+            // Check window size from HDC to get correct values for non-DPI-scaled applications.
+            BITMAP header;
+            ZeroMemory(&header, sizeof(BITMAP));
+            auto hBitmap = ::GetCurrentObject(hDc, OBJ_BITMAP);
+            GetObject(hBitmap, sizeof(BITMAP), &header);
+            width = header.bmWidth;
+            height = header.bmHeight;
 
-        if (width == 0 || height == 0)
+            // If failed, use window size (for example, UWP uses this)
+            if (width == 0 || height == 0)
+            {
+                width = window_->GetWidth();
+                height = window_->GetHeight();
+            }
+
+            if (width == 0 || height == 0)
+            {
+                return false;
+            }
+
+            break;
+        }
+        case CaptureMode::BitBlt:
         {
-            if (!::ReleaseDC(hWnd, hDc)) OutputApiError(__FUNCTION__, "ReleaseDC");
-            return false;
+            width = window_->GetClientWidth();
+            height = window_->GetClientHeight();
+            break;
         }
-
-        CreateBitmapIfNeeded(hDc, width, height);
     }
+    CreateBitmapIfNeeded(hDc, width, height);
 
     auto hDcMem = ::CreateCompatibleDC(hDc);
     ScopedReleaser hDcMemRelaser([&] { ::DeleteDC(hDcMem); });
@@ -138,15 +149,6 @@ bool WindowTexture::Capture()
             break;
         }
         case CaptureMode::BitBlt:
-        {
-            if (!::BitBlt(hDcMem, 0, 0, bufferWidth_, bufferHeight_, hDc, 0, 0, SRCCOPY)) 
-            {
-                OutputApiError(__FUNCTION__, "BitBlt");
-                return false;
-            }
-            break;
-        }
-        case CaptureMode::BitBltAlpha:
         {
             if (!::BitBlt(hDcMem, 0, 0, bufferWidth_, bufferHeight_, hDc, 0, 0, SRCCOPY | CAPTUREBLT)) 
             {

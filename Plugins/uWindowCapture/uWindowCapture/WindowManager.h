@@ -63,7 +63,8 @@ private:
         HINSTANCE hInstance;
         DWORD processId;
         DWORD threadId;
-        RECT rect;
+        RECT windowRect;
+        RECT clientRect;
         UINT zOrder;
         std::wstring title;
     };

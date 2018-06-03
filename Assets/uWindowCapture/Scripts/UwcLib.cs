@@ -18,7 +18,6 @@ public enum CaptureMode
     None = -1,
     PrintWindow = 0,
     BitBlt = 1,
-    BitBltAlpha = 2,
 }
 
 public enum CapturePriority

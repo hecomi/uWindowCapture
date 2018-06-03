@@ -237,7 +237,8 @@ void WindowManager::UpdateWindows()
                 window->instance_ = info.hInstance;
                 window->processId_ = info.processId;
                 window->threadId_ = info.threadId;
-                window->rect_ = std::move(info.rect);
+                window->windowRect_ = std::move(info.windowRect);
+                window->clientRect_ = std::move(info.clientRect);
                 window->zOrder_ = info.zOrder;
                 window->title_ = std::move(info.title); 
 
@@ -287,7 +288,8 @@ void WindowManager::UpdateWindowHandleList()
         info.hParent = ::GetParent(hWnd);
         info.hInstance = reinterpret_cast<HINSTANCE>(::GetWindowLongPtr(hWnd, GWLP_HINSTANCE));
         info.zOrder = ::GetWindowZOrder(hWnd);
-        ::GetWindowRect(hWnd, &info.rect);
+        ::GetWindowRect(hWnd, &info.windowRect);
+        ::GetClientRect(hWnd, &info.clientRect);
         info.threadId = ::GetWindowThreadProcessId(hWnd, &info.processId);
 
         const UINT timeout = 200 /* milliseconds */;

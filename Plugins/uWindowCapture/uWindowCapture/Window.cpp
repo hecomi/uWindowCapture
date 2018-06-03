@@ -20,7 +20,7 @@ Window::Window(HWND hWnd, int id)
     else
     {
         isAltTabWindow_ = ::IsAltTabWindow(hWnd);
-        const auto mode = (hWndOwner_ == NULL) ? CaptureMode::PrintWindow : CaptureMode::BitBltAlpha;
+        const auto mode = (hWndOwner_ == NULL) ? CaptureMode::PrintWindow : CaptureMode::BitBlt;
         windowTexture_->SetCaptureMode(mode);
     }
 }
@@ -160,25 +160,37 @@ BOOL Window::MoveAndScaleWindow(int x, int y, int width, int height)
 
 UINT Window::GetX() const
 {
-    return rect_.left;
+    return windowRect_.left;
 }
 
 
 UINT Window::GetY() const
 {
-    return rect_.top;
+    return windowRect_.top;
 }
 
 
 UINT Window::GetWidth() const
 {
-    return rect_.right - rect_.left;
+    return windowRect_.right - windowRect_.left;
 }
 
 
 UINT Window::GetHeight() const
 {
-    return rect_.bottom - rect_.top;
+    return windowRect_.bottom - windowRect_.top;
+}
+
+
+UINT Window::GetClientWidth() const
+{
+    return clientRect_.right - clientRect_.left;
+}
+
+
+UINT Window::GetClientHeight() const
+{
+    return clientRect_.bottom - clientRect_.top;
 }
 
 
