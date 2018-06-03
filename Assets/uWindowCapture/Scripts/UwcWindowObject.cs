@@ -90,8 +90,8 @@ public class UwcWindowObject : MonoBehaviour
         "- Low: capture only when no window capture requested.")]
     public CapturePriority capturePriority = CapturePriority.Auto;
 
-    public int skipFrame = 10;
-    int updatedFrame_ = 0;
+    public int frameRate = 10;
+    float captureTimer_ = 0f;
     bool hasBeenCaptured_ = false;
     bool isValid_ = true;
 
@@ -122,7 +122,7 @@ public class UwcWindowObject : MonoBehaviour
         UpdateTexture();
         UpdateRenderer();
 
-        updatedFrame_++;
+        captureTimer_ += Time.deltaTime;
 
         if (renderer_) renderer_.enabled = isValid_;
         if (collider_) collider_.enabled = isValid_;
@@ -150,18 +150,24 @@ public class UwcWindowObject : MonoBehaviour
 
         window.captureMode = captureMode;
 
-        if (updatedFrame_ % skipFrame == 0) {
-            var priority = capturePriority;
-            if (priority == CapturePriority.Auto) {
-                priority = CapturePriority.Low;
-                if (window == UwcManager.cursorWindow) {
-                    priority = CapturePriority.High;
-                } else if (window.zOrder < UwcSetting.MiddlePriorityMaxZ) {
-                    priority = CapturePriority.Middle;
-                }
-            }
-            window.RequestCapture(priority);
+        float T = 1f / frameRate;
+        if (captureTimer_ < T) return;
+
+        while (captureTimer_  > T) {
+            captureTimer_ -= T;
         }
+
+        var priority = capturePriority;
+        if (priority == CapturePriority.Auto) {
+            priority = CapturePriority.Low;
+            if (window == UwcManager.cursorWindow) {
+                priority = CapturePriority.High;
+            } else if (window.zOrder < UwcSetting.MiddlePriorityMaxZ) {
+                priority = CapturePriority.Middle;
+            }
+        }
+
+        window.RequestCapture(priority);
     }
 
     void OnCaptured()
