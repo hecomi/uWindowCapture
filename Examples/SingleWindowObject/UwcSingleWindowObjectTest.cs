@@ -8,6 +8,8 @@ public class UwcSingleWindowObjectTest : MonoBehaviour
 {
     UwcWindowObject windowObject_;
 
+    string target_ = "";
+
     [SerializeField] 
     string target = "";
 
@@ -22,23 +24,29 @@ public class UwcSingleWindowObjectTest : MonoBehaviour
 
     void Update()
     {
-        if (windowObject_.window == null) {
-            FindWindow();
-        } else {
-            UpdateWindow();
-        }
+        UpdateTargetChange();
+        UpdateWindow();
     }
 
-    void FindWindow()
+    void UpdateTargetChange()
     {
-        var window = UwcManager.Find(target);
-        if (window != null) {
-            windowObject_.window = window;
+        if (target_ != target) {
+            target_ = target;
+            windowObject_.window = null;
+        }
+
+        if (windowObject_.window == null) {
+            var window = UwcManager.Find(target);
+            if (window != null) {
+                windowObject_.window = window;
+            }
         }
     }
 
     void UpdateWindow()
     {
+        if (windowObject_.window == null) return;
+
         var scalePerPixel = scale / UwcSetting.BasePixel;
         var width = windowObject_.window.width * scalePerPixel;
         var height = windowObject_.window.height * scalePerPixel;

@@ -41,9 +41,12 @@ public class UwcWindowObjectChildrenManager : MonoBehaviour
 
     void OnWindowChanged(UwcWindow newWindow, UwcWindow oldWindow)
     {
+        if (newWindow == oldWindow) return;
+
         if (oldWindow != null) {
             oldWindow.onChildAdded.RemoveListener(OnChildAdded);
             oldWindow.onChildRemoved.RemoveListener(OnChildRemoved);
+            children.Clear();
         }
 
         if (newWindow != null) {
