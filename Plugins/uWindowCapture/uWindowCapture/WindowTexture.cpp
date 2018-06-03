@@ -95,42 +95,42 @@ bool WindowTexture::Capture()
     auto hDc = ::GetDC(hWnd);
     ScopedReleaser hDcReleaser([&] { ::ReleaseDC(hWnd, hDc); });
 
+    BITMAP bmpHeader;
+    ZeroMemory(&bmpHeader, sizeof(BITMAP));
+    auto hBitmap = ::GetCurrentObject(hDc, OBJ_BITMAP);
+    GetObject(hBitmap, sizeof(BITMAP), &bmpHeader);
+    auto dcWidth = bmpHeader.bmWidth;
+    auto dcHeight = bmpHeader.bmHeight;
+
+    // If failed, use window size (for example, UWP uses this)
+    if (dcWidth == 0 || dcHeight == 0)
     {
-        BITMAP header;
-        ZeroMemory(&header, sizeof(BITMAP));
-        auto hBitmap = ::GetCurrentObject(hDc, OBJ_BITMAP);
-        GetObject(hBitmap, sizeof(BITMAP), &header);
-        auto width = header.bmWidth;
-        auto height = header.bmHeight;
-
-        // If failed, use window size (for example, UWP uses this)
-        if (width == 0 || height == 0)
-        {
-            width = window_->GetWidth();
-            height = window_->GetHeight();
-        }
-
-        if (width == 0 || height == 0)
-        {
-            return false;
-        }
-
-        if (captureMode_ == CaptureMode::BitBlt)
-        {
-            // Remove frame areas
-            const auto frameWidth = window_->GetWidth() - window_->GetClientWidth();
-            const auto frameHeight = window_->GetHeight() - window_->GetClientHeight();
-
-            // DPI
-            const auto dpiScaleX = ::GetDeviceCaps(hDc, LOGPIXELSX) / 96.f;
-            const auto dpiScaleY = ::GetDeviceCaps(hDc, LOGPIXELSY) / 96.f;
-
-            width -= static_cast<LONG>(ceil(frameWidth / dpiScaleX));
-            height -= static_cast<LONG>(ceil(frameHeight / dpiScaleY));
-        }
-
-        CreateBitmapIfNeeded(hDc, width, height);
+        dcWidth = window_->GetWidth();
+        dcHeight = window_->GetHeight();
     }
+
+    if (dcWidth == 0 || dcHeight == 0)
+    {
+        return false;
+    }
+
+    // DPI scale
+    float dpiScaleX = static_cast<float>(window_->GetWidth()) / dcWidth;
+    float dpiScaleY = static_cast<float>(window_->GetHeight()) / dcHeight;
+    if (dpiScaleX == 0) dpiScaleX = 1.f;
+    if (dpiScaleY == 0) dpiScaleY = 1.f;
+
+    if (captureMode_ == CaptureMode::BitBlt)
+    {
+        // Remove frame areas
+        const auto frameWidth = window_->GetWidth() - window_->GetClientWidth();
+        const auto frameHeight = window_->GetHeight() - window_->GetClientHeight();
+
+        dcWidth -= static_cast<LONG>(ceil(frameWidth / dpiScaleX));
+        dcHeight -= static_cast<LONG>(ceil(frameHeight / dpiScaleY));
+    }
+
+    CreateBitmapIfNeeded(hDc, dcWidth, dcHeight);
 
     auto hDcMem = ::CreateCompatibleDC(hDc);
     ScopedReleaser hDcMemRelaser([&] { ::DeleteDC(hDcMem); });
