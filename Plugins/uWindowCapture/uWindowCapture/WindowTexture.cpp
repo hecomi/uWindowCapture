@@ -1,3 +1,4 @@
+#include <dwmapi.h>
 #include "WindowTexture.h"
 #include "Window.h"
 #include "WindowManager.h"
@@ -50,13 +51,13 @@ CaptureMode WindowTexture::GetCaptureMode() const
 
 UINT WindowTexture::GetWidth() const
 {
-    return bufferWidth_;
+    return textureWidth_;
 }
 
 
 UINT WindowTexture::GetHeight() const
 {
-    return bufferHeight_;
+    return textureHeight_;
 }
 
 
@@ -115,10 +116,8 @@ bool WindowTexture::Capture()
     }
 
     // DPI scale
-    float dpiScaleX = static_cast<float>(window_->GetWidth()) / dcWidth;
-    float dpiScaleY = static_cast<float>(window_->GetHeight()) / dcHeight;
-    if (dpiScaleX == 0) dpiScaleX = 1.f;
-    if (dpiScaleY == 0) dpiScaleY = 1.f;
+    float dpiScaleX = std::fmax(static_cast<float>(window_->GetWidth()) / dcWidth, 1.f);
+    float dpiScaleY = std::fmax(static_cast<float>(window_->GetHeight()) / dcHeight, 1.f);
 
     if (captureMode_ == CaptureMode::BitBlt)
     {
@@ -137,6 +136,8 @@ bool WindowTexture::Capture()
 
     HGDIOBJ preObject = ::SelectObject(hDcMem, bitmap_);
     ScopedReleaser selectObject([&] { ::SelectObject(hDcMem, preObject); });
+
+    int offsetLeft = 0, offsetRight = 0, offsetTop = 0, offsetBottom = 0;
 
     switch (captureMode_)
     {
@@ -165,7 +166,7 @@ bool WindowTexture::Capture()
     }
 
     // Draw cursor
-    auto cursorWindow = WindowManager::Get().GetCursorWindow();
+    const auto cursorWindow = WindowManager::Get().GetCursorWindow();
     if (cursorWindow && cursorWindow->GetHandle() == window_->GetHandle())
     {
         CURSORINFO cursorInfo;
@@ -174,8 +175,8 @@ bool WindowTexture::Capture()
         {
             if (cursorInfo.flags == CURSOR_SHOWING)
             {
-                const auto windowLocalCursorX = (cursorInfo.ptScreenPos.x - window_->GetX()) / dpiScaleX;
-                const auto windowLocalCursorY = (cursorInfo.ptScreenPos.y - window_->GetY()) / dpiScaleY;
+                const auto windowLocalCursorX = static_cast<int>((cursorInfo.ptScreenPos.x - window_->GetX()) / dpiScaleX);
+                const auto windowLocalCursorY = static_cast<int>((cursorInfo.ptScreenPos.y - window_->GetY()) / dpiScaleY);
                 ::DrawIcon(hDcMem, windowLocalCursorX, windowLocalCursorY, cursorInfo.hCursor);
             }
         }
@@ -196,10 +197,33 @@ bool WindowTexture::Capture()
 
     {
         std::lock_guard<std::mutex> lock(bufferMutex_);
+
         if (!::GetDIBits(hDcMem, bitmap_, 0, bufferHeight_, buffer_.Get(), reinterpret_cast<BITMAPINFO*>(&bmi), DIB_RGB_COLORS))
         {
             OutputApiError(__FUNCTION__, "GetDIBits");
             return false;
+        }
+
+        // Remove dropshadow area
+        if (captureMode_ == CaptureMode::PrintWindow)
+        {
+            RECT dwmRect;
+            ::DwmGetWindowAttribute(hWnd, DWMWA_EXTENDED_FRAME_BOUNDS, &dwmRect, sizeof(RECT));
+
+            RECT windowRect;
+            ::GetWindowRect(hWnd, &windowRect);
+
+            offsetX_ = dwmRect.left - windowRect.left;
+            offsetY_ = dwmRect.top - windowRect.top;
+            textureWidth_ = dwmRect.right - dwmRect.left;
+            textureHeight_ = dwmRect.bottom - dwmRect.top;
+        }
+        else
+        {
+            offsetX_ = 0;
+            offsetY_ = 0;
+            textureWidth_ = bufferWidth_.load();
+            textureHeight_ = bufferHeight_.load();
         }
     }
 
@@ -218,7 +242,7 @@ bool WindowTexture::Upload()
     {
         D3D11_TEXTURE2D_DESC desc;
         unityTexture_.load()->GetDesc(&desc);
-        if (desc.Width != bufferWidth_ && desc.Height != bufferHeight_)
+        if (desc.Width != GetWidth() && desc.Height != GetHeight())
         {
             Debug::Error(__FUNCTION__, " => Texture size is wrong.");
             return false;
@@ -231,7 +255,7 @@ bool WindowTexture::Upload()
     {
         D3D11_TEXTURE2D_DESC desc;
         sharedTexture_->GetDesc(&desc);
-        if (desc.Width == bufferWidth_ && desc.Height == bufferHeight_)
+        if (desc.Width == GetWidth() && desc.Height == GetHeight())
         {
             shouldUpdateTexture = false;
         }
@@ -261,9 +285,13 @@ bool WindowTexture::Upload()
 
     {
         std::lock_guard<std::mutex> lock(bufferMutex_);
+
+        const UINT rawPitch = bufferWidth_ * 4;
+        const auto *start = &buffer_[offsetX_ * 4 + offsetY_ * rawPitch];
+
         ComPtr<ID3D11DeviceContext> context;
         uploader->GetDevice()->GetImmediateContext(&context);
-        context->UpdateSubresource(sharedTexture_.Get(), 0, nullptr, buffer_.Get(), bufferWidth_ * 4, 0);
+        context->UpdateSubresource(sharedTexture_.Get(), 0, nullptr, start, rawPitch, 0);
         context->Flush();
     }
 

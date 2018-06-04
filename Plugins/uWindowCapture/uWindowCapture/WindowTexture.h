@@ -55,5 +55,9 @@ private:
     HBITMAP bitmap_ = nullptr;
     std::atomic<UINT> bufferWidth_ = 0;
     std::atomic<UINT> bufferHeight_ = 0;
+    std::atomic<UINT> offsetX_ = 0;
+    std::atomic<UINT> offsetY_ = 0;
+    std::atomic<UINT> textureWidth_ = 0;
+    std::atomic<UINT> textureHeight_ = 0;
     std::mutex bufferMutex_;
 };

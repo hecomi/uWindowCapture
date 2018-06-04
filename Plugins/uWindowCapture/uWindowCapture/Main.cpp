@@ -16,6 +16,7 @@
 #include "WindowManager.h"
 
 #pragma comment(lib, "dxgi.lib")
+#pragma comment(lib, "Dwmapi.lib")
 
 
 // flag to check if this plugin has initialized.
