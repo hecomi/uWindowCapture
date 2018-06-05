@@ -5,61 +5,46 @@ namespace uWindowCapture
 
 public class UwcFindAndCaptureWindow : MonoBehaviour
 {
-    UwcWindow window = null;
+    UwcWindow window_ = null;
+    string target_;
 
-    [SerializeField] string target = "";
-    [SerializeField] CaptureMode mode;
-    [SerializeField] Renderer iconRenderer;
-
-    Material iconMaterial_;
-
-    void Start()
-    {
-        iconMaterial_ = iconRenderer.material;
-    }
+    [SerializeField] string target;
+    [SerializeField] CaptureMode mode = CaptureMode.PrintWindow;
+    [SerializeField] CapturePriority priority = CapturePriority.High;
 
     void Update()
     {
-        if (window == null || !window.isAlive) {
-            window = UwcManager.Find(target);
-            if (window != null) {
-                window.RequestCaptureIcon();
+        if (target_ != target) {
+            window_ = null;
+            target_ = target;
+        }
+
+        if (window_ == null || !window_.isAlive) {
+            window_ = UwcManager.Find(target);
+            if (window_ != null) {
+                window_.RequestCaptureIcon();
             }
         }
 
-        if (window != null) {
+        if (window_ != null) {
             UpdateScale();
             UpdateWindowTexture();
-            UpdateIconTexture();
         }
     }
 
     void UpdateScale()
     {
         var baseScale = 1000f;
-        var width = window.width / baseScale;
-        var height = window.height / baseScale;
+        var width = window_.width / baseScale;
+        var height = window_.height / baseScale;
         transform.localScale = new Vector3(width, height, 1f);
     }
 
     void UpdateWindowTexture()
     {
-        GetComponent<Renderer>().material.mainTexture = window.texture;
-        window.captureMode = mode;
-        window.RequestCapture(CapturePriority.High);
-    }
-
-    void UpdateIconTexture()
-    {
-        iconMaterial_.mainTexture = window.iconTexture;
-
-        var pos = transform.position;
-        var scale = transform.localScale; 
-        var iconScale = iconRenderer.transform.localScale;
-        scale.z = 0;
-        iconRenderer.transform.position = 
-            pos + 
-            new Vector3((-scale.x + iconScale.x) * 0.5f, (scale.y + iconScale.y) * 0.5f, 0f);
+        GetComponent<Renderer>().material.mainTexture = window_.texture;
+        window_.captureMode = mode;
+        window_.RequestCapture(CapturePriority.High);
     }
 }
 

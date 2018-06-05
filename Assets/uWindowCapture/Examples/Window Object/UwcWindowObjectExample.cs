@@ -36,10 +36,7 @@ public class UwcWindowObjectExample : MonoBehaviour
         }
 
         if (windowObject_.window == null) {
-            var window = UwcManager.Find(target);
-            if (window != null) {
-                windowObject_.window = window;
-            }
+            windowObject_.window = UwcManager.Find(target);
         }
     }
 
