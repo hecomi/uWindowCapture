@@ -74,8 +74,6 @@ void WindowTexture::CreateBitmapIfNeeded(HDC hDc, UINT width, UINT height)
 
     DeleteBitmap();
     bitmap_ = ::CreateCompatibleBitmap(hDc, width, height);
-
-    MessageManager::Get().Add({ MessageType::WindowSizeChanged, window_->GetId(), window_->GetHandle() });
 }
 
 
@@ -204,6 +202,9 @@ bool WindowTexture::Capture()
             return false;
         }
 
+        const UINT preTextureWidth = textureWidth_;
+        const UINT preTextureHeight = textureHeight_;
+
         // Remove dropshadow area
         if (captureMode_ == CaptureMode::PrintWindow)
         {
@@ -224,6 +225,11 @@ bool WindowTexture::Capture()
             offsetY_ = 0;
             textureWidth_ = bufferWidth_.load();
             textureHeight_ = bufferHeight_.load();
+        }
+
+        if (textureWidth_ != preTextureWidth || textureHeight_ != preTextureHeight)
+        {
+            MessageManager::Get().Add({ MessageType::WindowSizeChanged, window_->GetId(), window_->GetHandle() });
         }
     }
 
