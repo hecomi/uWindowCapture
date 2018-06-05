@@ -7,7 +7,6 @@ namespace uWindowCapture
 public class UwcWindowObjectExample : MonoBehaviour
 {
     UwcWindowObject windowObject_;
-
     string target_ = "";
 
     [SerializeField] 

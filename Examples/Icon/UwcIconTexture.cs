@@ -11,6 +11,7 @@ public class UwcIconTexture : MonoBehaviour
 
     Renderer renderer_;
     Material material_;
+    Vector3 scale_;
 
     void Start()
     {
@@ -20,20 +21,26 @@ public class UwcIconTexture : MonoBehaviour
 
     void Update()
     {
-        if (windowObject != null && windowObject.window != null) {
-            UpdateIconTexture();
-            UpdateTransform();
-        }
+        UpdateIconTexture();
+        UpdateTransform();
     }
 
     void UpdateIconTexture()
     {
-        windowObject.window.RequestCaptureIcon();
-        material_.mainTexture = windowObject.window.iconTexture;
+        if (windowObject != null && windowObject.window != null) {
+            windowObject.window.RequestCaptureIcon();
+            material_.mainTexture = windowObject.window.iconTexture;
+            renderer_.enabled = true;
+        } else {
+            material_.mainTexture = null;
+            renderer_.enabled = false;
+        }
     }
 
     void UpdateTransform()
     {
+        if (windowObject == null) return;
+
         var windowPos = windowObject.transform.position;
         var windowScale = windowObject.transform.localScale; 
         var iconScale = transform.localScale;
