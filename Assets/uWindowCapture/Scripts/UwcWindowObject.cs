@@ -21,6 +21,8 @@ public class UwcWindowObject : MonoBehaviour
         }
         set 
         {
+            renderer_.enabled = (value != null);
+
             if (window_ != null) {
                 window_.onCaptured.RemoveListener(OnCaptured);
             }
@@ -33,8 +35,6 @@ public class UwcWindowObject : MonoBehaviour
                 window_.RequestCapture(CapturePriority.High);
                 window_.onCaptured.AddListener(OnCaptured);
             }
-
-            // renderer_.enabled = false;
         }
     }
 
@@ -117,7 +117,10 @@ public class UwcWindowObject : MonoBehaviour
 
     void Update()
     {
-        if (window == null) return;
+        if (window == null) {
+            material_.mainTexture = null;
+            return;
+        }
 
         UpdateTexture();
         UpdateRenderer();
