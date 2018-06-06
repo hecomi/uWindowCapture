@@ -216,8 +216,8 @@ bool WindowTexture::Capture()
 
             offsetX_ = dwmRect.left - windowRect.left;
             offsetY_ = dwmRect.top - windowRect.top;
-            textureWidth_ = dwmRect.right - dwmRect.left;
-            textureHeight_ = dwmRect.bottom - dwmRect.top;
+            textureWidth_ = static_cast<UINT>((dwmRect.right - dwmRect.left) / dpiScaleX);
+            textureHeight_ = static_cast<UINT>((dwmRect.bottom - dwmRect.top) / dpiScaleY);
         }
         else
         {
