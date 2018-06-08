@@ -204,6 +204,18 @@ public class UwcManager : MonoBehaviour
         return null;
     }
 
+    static public UwcWindow Find(System.IntPtr handle)
+    {
+        var enumerator = windows.GetEnumerator();
+        while (enumerator.MoveNext()) {
+            var window = enumerator.Current.Value;
+            if (window.handle == handle) {
+                return window;
+            }
+        }
+        return null;
+    }
+
     static public List<UwcWindow> FindAll(string title)
     {
         var list = new List<UwcWindow>();
