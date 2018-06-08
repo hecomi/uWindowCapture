@@ -11,10 +11,8 @@
 #include "Thread.h"
 #include "CaptureManager.h"
 #include "UploadManager.h"
+#include "Window.h"
 #include "Cursor.h"
-
-
-class Window;
 
 
 class WindowManager
@@ -37,7 +35,7 @@ public:
 private:
     std::shared_ptr<Window> FindParentWindow(const std::shared_ptr<Window>& window) const;
     std::shared_ptr<Window> FindOrAddWindow(HWND hwnd);
-    std::shared_ptr<Window> FindOrAddDesktop(UINT displayId);
+    std::shared_ptr<Window> FindOrAddDesktop(HMONITOR hMonitor);
 
     void StartWindowHandleListThread();
     void StopWindowHandleListThread();
@@ -56,23 +54,7 @@ private:
 
     ThreadLoop windowHandleListThreadLoop_;
 
-    struct WindowInfo
-    {
-        HWND hWnd;
-        HWND hOwner;
-        HWND hParent;
-        HINSTANCE hInstance;
-        DWORD processId;
-        DWORD threadId;
-        RECT windowRect;
-        RECT clientRect;
-        RECT captureArea;
-        UINT zOrder;
-        std::wstring title;
-        bool isDesktop;
-        UINT displayId;
-    };
-    std::vector<WindowInfo> windowInfoList_[2];
+    std::vector<Window::Data> windowDataList_[2];
     mutable std::mutex windowsHandleListMutex_;
 };
 

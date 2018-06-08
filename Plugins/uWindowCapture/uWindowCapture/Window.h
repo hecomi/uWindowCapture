@@ -15,8 +15,27 @@ class Window
 {
 friend class WindowManager;
 public:
-    Window(HWND hwnd, int id);
+    struct Data
+    {
+        HWND hWnd;
+        RECT windowRect;
+        RECT clientRect;
+        UINT zOrder;
+        HWND hOwner;
+        HWND hParent;
+        HINSTANCE hInstance;
+        DWORD processId;
+        DWORD threadId;
+        std::wstring title;
+        HMONITOR hMonitor;
+        BOOL isAltTabWindow;
+        BOOL isDesktop;
+    };
+
+    explicit Window(int id);
     ~Window();
+
+    void SetData(Data&& data);
 
     int GetId() const;
     int GetParentId() const;
@@ -38,7 +57,6 @@ public:
     UINT GetBufferHeight() const;
     UINT GetIconWidth() const;
     UINT GetIconHeight() const;
-    const RECT & GetCaptureArea() const;
 
     UINT GetTitleLength() const;
     const std::wstring& GetTitle() const;
@@ -78,27 +96,14 @@ public:
 private:
     std::shared_ptr<class WindowTexture> windowTexture_ = std::make_shared<WindowTexture>(this);
     std::shared_ptr<class IconTexture> iconTexture_ = std::make_shared<IconTexture>(this);
+    Data data_;
 
     const int id_ = -1;
     int parentId_ = -1;
     int frameCount_ = 0;
 
-    const HWND hWnd_ = nullptr;
-    RECT windowRect_;
-    RECT clientRect_;
-    UINT zOrder_ = 0;
-    HWND hWndOwner_ = nullptr;
-    HWND hWndParent_ = nullptr;
-    HINSTANCE instance_ = nullptr;
-    DWORD processId_ = -1;
-    DWORD threadId_ = -1;
-    std::wstring title_ = L"";
-    UINT displayId_ = -1;
-    RECT captureArea_;
-
     std::atomic<bool> hasNewWindowTextureUploaded_ = false;
     std::atomic<bool> hasNewIconTextureUploaded_ = false;
     std::atomic<bool> isAlive_ = true;
-    std::atomic<bool> isDesktop_ = false;
     std::atomic<bool> isAltTabWindow_ = false;
 };

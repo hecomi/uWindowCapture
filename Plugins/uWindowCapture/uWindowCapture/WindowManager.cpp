@@ -1,6 +1,6 @@
 #include <algorithm>
 #include "WindowManager.h"
-#include "Window.h"
+#include "WindowTexture.h"
 #include "Message.h"
 #include "Util.h"
 #include "Debug.h"
@@ -209,7 +209,7 @@ std::shared_ptr<Window> WindowManager::FindOrAddWindow(HWND hWnd)
     }
 
     const auto id = lastWindowId_++;
-    auto window = std::make_shared<Window>(hWnd, id);
+    auto window = std::make_shared<Window>(id);
     windows_.emplace(id, window);
 
     MessageManager::Get().Add({ MessageType::WindowAdded, id, hWnd });
@@ -218,12 +218,16 @@ std::shared_ptr<Window> WindowManager::FindOrAddWindow(HWND hWnd)
 }
 
 
-std::shared_ptr<Window> WindowManager::FindOrAddDesktop(UINT displayId)
+std::shared_ptr<Window> WindowManager::FindOrAddDesktop(HMONITOR hMonitor)
 {
     const auto it = std::find_if(
         windows_.begin(),
         windows_.end(),
-        [displayId](const auto& pair) { return pair.second->displayId_ == displayId; });
+        [hMonitor](const auto& pair) 
+        { 
+            const auto &window = pair.second;
+            return window->IsDesktop() && window->data_.hMonitor == hMonitor; 
+        });
 
     if (it != windows_.end())
     {
@@ -231,10 +235,11 @@ std::shared_ptr<Window> WindowManager::FindOrAddDesktop(UINT displayId)
     }
 
     const auto id = lastWindowId_++;
-    auto window = std::make_shared<Window>(::GetDesktopWindow(), id);
+    auto window = std::make_shared<Window>(id);
+    window->SetCaptureMode(CaptureMode::BitBlt);
     windows_.emplace(id, window);
 
-    MessageManager::Get().Add({ MessageType::WindowAdded, id, window->hWnd_ });
+    MessageManager::Get().Add({ MessageType::WindowAdded, id, window->GetHandle() });
 
     return window;
 }
@@ -249,26 +254,15 @@ void WindowManager::UpdateWindows()
 
     {
         std::lock_guard<std::mutex> lock(windowsHandleListMutex_);
-        for (const auto& info : windowInfoList_[0])
+        for (auto&& data : windowDataList_[0])
         {
-            auto window = info.isDesktop ?
-                WindowManager::Get().FindOrAddDesktop(info.displayId) :
-                WindowManager::Get().FindOrAddWindow(info.hWnd);
+            auto window = data.isDesktop ?
+                WindowManager::Get().FindOrAddDesktop(data.hMonitor) :
+                WindowManager::Get().FindOrAddWindow(data.hWnd);
             if (window)
             {
+                window->SetData(std::move(data));
                 window->isAlive_ = true;
-                window->hWndOwner_ = info.hOwner;
-                window->hWndParent_ = info.hParent;
-                window->instance_ = info.hInstance;
-                window->processId_ = info.processId;
-                window->threadId_ = info.threadId;
-                window->windowRect_ = std::move(info.windowRect);
-                window->clientRect_ = std::move(info.clientRect);
-                window->zOrder_ = info.zOrder;
-                window->title_ = std::move(info.title); 
-                window->displayId_ = info.displayId;
-                window->captureArea_ = info.captureArea;
-
                 if (window->frameCount_ == 0)
                 {
                     if (auto parent = FindParentWindow(window))
@@ -276,7 +270,6 @@ void WindowManager::UpdateWindows()
                         window->parentId_ = parent->GetId();
                     }
                 }
-
                 window->frameCount_++;
             }
         }
@@ -309,24 +302,24 @@ void WindowManager::UpdateWindowHandleList()
             return TRUE;
         }
 
-        WindowInfo info;
-        info.hWnd = hWnd;
-        info.hOwner = ::GetWindow(hWnd, GW_OWNER);
-        info.hParent = ::GetParent(hWnd);
-        info.hInstance = reinterpret_cast<HINSTANCE>(::GetWindowLongPtr(hWnd, GWLP_HINSTANCE));
-        info.zOrder = ::GetWindowZOrder(hWnd);
-        ::GetWindowRect(hWnd, &info.windowRect);
-        ::GetClientRect(hWnd, &info.clientRect);
-        info.threadId = ::GetWindowThreadProcessId(hWnd, &info.processId);
-        info.isDesktop = false;
-        info.displayId = -1;
-        info.captureArea = { 0, 0, 0, 0 };
+        Window::Data data;
+        data.hWnd = hWnd;
+        ::GetWindowRect(hWnd, &data.windowRect);
+        ::GetClientRect(hWnd, &data.clientRect);
+        data.zOrder = ::GetWindowZOrder(hWnd);
+        data.hOwner = ::GetWindow(hWnd, GW_OWNER);
+        data.hParent = ::GetParent(hWnd);
+        data.hInstance = reinterpret_cast<HINSTANCE>(::GetWindowLongPtr(hWnd, GWLP_HINSTANCE));
+        data.threadId = ::GetWindowThreadProcessId(hWnd, &data.processId);
+        data.hMonitor = ::MonitorFromWindow(hWnd, MONITOR_DEFAULTTOPRIMARY);
+        data.isDesktop = false;
+        data.isAltTabWindow = IsAltTabWindow(hWnd);
 
         const UINT timeout = 16 /* milliseconds */;
-        GetWindowTitle(hWnd, info.title, timeout);
+        GetWindowTitle(hWnd, data.title, timeout);
 
         auto thiz = reinterpret_cast<WindowManager*>(lParam);
-        thiz->windowInfoList_[1].push_back(info);
+        thiz->windowDataList_[1].push_back(data);
 
         return TRUE;
     };
@@ -340,10 +333,8 @@ void WindowManager::UpdateWindowHandleList()
 
     struct DesktopTmpInfo
     {
-        std::vector<WindowInfo> windowList;
         LONG left = LONG_MAX;
         LONG top = LONG_MAX;
-        UINT id = 0;
     } desktopTmpInfo;
 
     static const auto _EnumDisplayMonitorsCallback = [](HMONITOR hMonitor, HDC hDc, LPRECT lpRect, LPARAM lParam) -> BOOL
@@ -351,48 +342,45 @@ void WindowManager::UpdateWindowHandleList()
         const auto hWnd = GetDesktopWindow();;
         auto tmp = reinterpret_cast<DesktopTmpInfo*>(lParam);
 
-        WindowInfo info;
-        info.hWnd = hWnd;
-        info.hOwner = ::GetWindow(hWnd, GW_OWNER);
-        info.hParent = ::GetParent(hWnd);
-        info.hInstance = reinterpret_cast<HINSTANCE>(::GetWindowLongPtr(hWnd, GWLP_HINSTANCE));
-        info.zOrder = ::GetWindowZOrder(hWnd);
-        info.windowRect = *lpRect;
-        info.clientRect = *lpRect;
-        info.threadId = ::GetWindowThreadProcessId(hWnd, &info.processId);
-        info.title = std::wstring(L"Desktop") + std::to_wstring(tmp->id);
-        info.isDesktop = true;
-        info.displayId = tmp->id;
+        Window::Data data;
+        data.hWnd = hWnd;
+        data.windowRect = *lpRect;
+        data.clientRect = *lpRect;
+        data.zOrder = ::GetWindowZOrder(hWnd);
+        data.hOwner = ::GetWindow(hWnd, GW_OWNER);
+        data.hParent = ::GetParent(hWnd);
+        data.hInstance = reinterpret_cast<HINSTANCE>(::GetWindowLongPtr(hWnd, GWLP_HINSTANCE));
+        data.threadId = ::GetWindowThreadProcessId(hWnd, &data.processId);
+        data.hMonitor = hMonitor;
+        data.isDesktop = true;
+        data.isAltTabWindow = false;
 
-        tmp->windowList.push_back(info);
-        tmp->left = min(tmp->left, lpRect->left);
-        tmp->top = min(tmp->top, lpRect->top);
-        tmp->id++;
+        MONITORINFOEX monitor;
+        monitor.cbSize = sizeof(MONITORINFOEX);
+        if (::GetMonitorInfo(hMonitor, &monitor))
+        {
+            WCHAR buf[_countof(monitor.szDevice)];
+            size_t len;
+            mbstowcs_s(&len, buf, _countof(monitor.szDevice), monitor.szDevice, _TRUNCATE);
+            data.title = buf;
+        }
+
+        auto thiz = reinterpret_cast<WindowManager*>(lParam);
+        thiz->windowDataList_[1].push_back(data);
 
         return TRUE;
     };
 
     using EnumDisplayMonitorsCallbackType = BOOL(CALLBACK *)(HMONITOR, HDC, LPRECT, LPARAM);
     static const auto EnumDisplayMonitorsCallback = static_cast<EnumDisplayMonitorsCallbackType>(_EnumDisplayMonitorsCallback);
-    if (!::EnumDisplayMonitors(NULL, NULL, EnumDisplayMonitorsCallback, reinterpret_cast<LPARAM>(&desktopTmpInfo)))
+    if (!::EnumDisplayMonitors(NULL, NULL, EnumDisplayMonitorsCallback, reinterpret_cast<LPARAM>(this)))
     {
         OutputApiError(__FUNCTION__, "EnumDisplayMonitors");
     }
 
-    for (auto &&window : desktopTmpInfo.windowList)
-    {
-        window.captureArea = window.windowRect;
-        window.captureArea.left -= desktopTmpInfo.left;
-        window.captureArea.right -= desktopTmpInfo.left;
-        window.captureArea.top -= desktopTmpInfo.top;
-        window.captureArea.bottom -= desktopTmpInfo.top;
-
-        windowInfoList_[1].push_back(window);
-    }
-
     std::sort(
-        windowInfoList_[1].begin(), 
-        windowInfoList_[1].end(), 
+        windowDataList_[1].begin(), 
+        windowDataList_[1].end(), 
         [](const auto& a, const auto& b) 
         {
             return 
@@ -402,9 +390,9 @@ void WindowManager::UpdateWindowHandleList()
 
     {
         std::lock_guard<std::mutex> lock(windowsHandleListMutex_);
-        std::swap(windowInfoList_[0], windowInfoList_[1]);
+        std::swap(windowDataList_[0], windowDataList_[1]);
     }
-    windowInfoList_[1].clear();
+    windowDataList_[1].clear();
 
     POINT cursorPos;
     if (::GetCursorPos(&cursorPos))

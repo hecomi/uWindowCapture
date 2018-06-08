@@ -7,27 +7,20 @@
 
 
 
-Window::Window(HWND hWnd, int id)
-    : hWnd_(hWnd)
-    , id_(id)
+Window::Window(int id)
+    : id_(id)
 {
-    if (hWnd == ::GetDesktopWindow())
-    {
-        isAltTabWindow_ = false;
-        isDesktop_ = true;
-        windowTexture_->SetCaptureMode(CaptureMode::BitBlt);
-    }
-    else
-    {
-        isAltTabWindow_ = ::IsAltTabWindow(hWnd);
-        const auto mode = (hWndOwner_ == NULL) ? CaptureMode::PrintWindow : CaptureMode::BitBlt;
-        windowTexture_->SetCaptureMode(mode);
-    }
 }
 
 
 Window::~Window()
 {
+}
+
+
+void Window::SetData(Data&& data)
+{
+    data_ = data;
 }
 
 
@@ -45,37 +38,37 @@ int Window::GetParentId() const
 
 HWND Window::GetHandle() const
 {
-    return hWnd_;
+    return data_.hWnd;
 }
 
 
 HWND Window::GetOwnerHandle() const
 {
-    return hWndOwner_;
+    return data_.hOwner;
 }
 
 
 HWND Window::GetParentHandle() const
 {
-    return hWndParent_;
+    return data_.hParent;
 }
 
 
 HINSTANCE Window::GetInstance() const
 {
-    return instance_;
+    return data_.hInstance;
 }
 
 
 DWORD Window::GetProcessId() const
 {
-    return processId_;
+    return data_.processId;
 }
 
 
 DWORD Window::GetThreadId() const
 {
-    return threadId_;
+    return data_.threadId;
 }
 
 
@@ -87,55 +80,55 @@ bool Window::IsAltTab() const
 
 bool Window::IsDesktop() const
 {
-    return isDesktop_;
+    return data_.isDesktop;
 }
 
 
 BOOL Window::IsWindow() const
 {
-    return ::IsWindow(hWnd_);
+    return ::IsWindow(GetHandle());
 }
 
 
 BOOL Window::IsVisible() const
 {
-    return ::IsWindowVisible(hWnd_);
+    return ::IsWindowVisible(GetHandle());
 }
 
 
 BOOL Window::IsEnabled() const
 {
-    return ::IsWindowEnabled(hWnd_);
+    return ::IsWindowEnabled(GetHandle());
 }
 
 
 BOOL Window::IsUnicode() const
 {
-    return ::IsWindowUnicode(hWnd_);
+    return ::IsWindowUnicode(GetHandle());
 }
 
 
 BOOL Window::IsZoomed() const
 {
-    return ::IsZoomed(hWnd_);
+    return ::IsZoomed(GetHandle());
 }
 
 
 BOOL Window::IsIconic() const
 {
-    return ::IsIconic(hWnd_);
+    return ::IsIconic(GetHandle());
 }
 
 
 BOOL Window::IsHungUp() const
 {
-    return ::IsHungAppWindow(hWnd_);
+    return ::IsHungAppWindow(GetHandle());
 }
 
 
 BOOL Window::IsTouchable() const
 {
-    return ::IsTouchWindow(hWnd_, NULL);
+    return ::IsTouchWindow(GetHandle(), NULL);
 }
 
 
@@ -154,49 +147,49 @@ BOOL Window::ScaleWindow(int width, int height)
 BOOL Window::MoveAndScaleWindow(int x, int y, int width, int height)
 {
     bool repaint = (width != GetWidth() || height != GetHeight());
-    return ::MoveWindow(hWnd_, x, y, width, height, repaint);
+    return ::MoveWindow(GetHandle(), x, y, width, height, repaint);
 }
 
 
 UINT Window::GetX() const
 {
-    return windowRect_.left;
+    return data_.windowRect.left;
 }
 
 
 UINT Window::GetY() const
 {
-    return windowRect_.top;
+    return data_.windowRect.top;
 }
 
 
 UINT Window::GetWidth() const
 {
-    return windowRect_.right - windowRect_.left;
+    return data_.windowRect.right - data_.windowRect.left;
 }
 
 
 UINT Window::GetHeight() const
 {
-    return windowRect_.bottom - windowRect_.top;
+    return data_.windowRect.bottom - data_.windowRect.top;
 }
 
 
 UINT Window::GetClientWidth() const
 {
-    return clientRect_.right - clientRect_.left;
+    return data_.clientRect.right - data_.clientRect.left;
 }
 
 
 UINT Window::GetClientHeight() const
 {
-    return clientRect_.bottom - clientRect_.top;
+    return data_.clientRect.bottom - data_.clientRect.top;
 }
 
 
 UINT Window::GetZOrder() const
 {
-    return zOrder_;
+    return data_.zOrder;
 }
 
 
@@ -224,21 +217,15 @@ UINT Window::GetIconHeight() const
 }
 
 
-const RECT & Window::GetCaptureArea() const
-{
-    return captureArea_;
-}
-
-
 UINT Window::GetTitleLength() const
 {
-    return static_cast<UINT>(title_.length());
+    return static_cast<UINT>(data_.title.length());
 }
 
 
 const std::wstring& Window::GetTitle() const
 {
-    return title_;
+    return data_.title;
 }
 
 
