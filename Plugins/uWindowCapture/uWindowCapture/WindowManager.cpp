@@ -218,6 +218,28 @@ std::shared_ptr<Window> WindowManager::FindOrAddWindow(HWND hWnd)
 }
 
 
+std::shared_ptr<Window> WindowManager::FindOrAddDesktop(UINT displayId)
+{
+    const auto it = std::find_if(
+        windows_.begin(),
+        windows_.end(),
+        [displayId](const auto& pair) { return pair.second->displayId_ == displayId; });
+
+    if (it != windows_.end())
+    {
+        return it->second;
+    }
+
+    const auto id = lastWindowId_++;
+    auto window = std::make_shared<Window>(::GetDesktopWindow(), id);
+    windows_.emplace(id, window);
+
+    MessageManager::Get().Add({ MessageType::WindowAdded, id, window->hWnd_ });
+
+    return window;
+}
+
+
 void WindowManager::UpdateWindows()
 {
     for (const auto& pair : windows_)
@@ -229,7 +251,10 @@ void WindowManager::UpdateWindows()
         std::lock_guard<std::mutex> lock(windowsHandleListMutex_);
         for (const auto& info : windowInfoList_[0])
         {
-            if (auto window = WindowManager::Get().FindOrAddWindow(info.hWnd))
+            auto window = info.isDesktop ?
+                WindowManager::Get().FindOrAddDesktop(info.displayId) :
+                WindowManager::Get().FindOrAddWindow(info.hWnd);
+            if (window)
             {
                 window->isAlive_ = true;
                 window->hWndOwner_ = info.hOwner;
@@ -241,6 +266,8 @@ void WindowManager::UpdateWindows()
                 window->clientRect_ = std::move(info.clientRect);
                 window->zOrder_ = info.zOrder;
                 window->title_ = std::move(info.title); 
+                window->displayId_ = info.displayId;
+                window->captureArea_ = info.captureArea;
 
                 if (window->frameCount_ == 0)
                 {
@@ -291,8 +318,11 @@ void WindowManager::UpdateWindowHandleList()
         ::GetWindowRect(hWnd, &info.windowRect);
         ::GetClientRect(hWnd, &info.clientRect);
         info.threadId = ::GetWindowThreadProcessId(hWnd, &info.processId);
+        info.isDesktop = false;
+        info.displayId = -1;
+        info.captureArea = { 0, 0, 0, 0 };
 
-        const UINT timeout = 200 /* milliseconds */;
+        const UINT timeout = 16 /* milliseconds */;
         GetWindowTitle(hWnd, info.title, timeout);
 
         auto thiz = reinterpret_cast<WindowManager*>(lParam);
@@ -306,6 +336,58 @@ void WindowManager::UpdateWindowHandleList()
     if (!::EnumWindows(EnumWindowsCallback, reinterpret_cast<LPARAM>(this)))
     {
         OutputApiError(__FUNCTION__, "EnumWindows");
+    }
+
+    struct DesktopTmpInfo
+    {
+        std::vector<WindowInfo> windowList;
+        LONG left = LONG_MAX;
+        LONG top = LONG_MAX;
+        UINT id = 0;
+    } desktopTmpInfo;
+
+    static const auto _EnumDisplayMonitorsCallback = [](HMONITOR hMonitor, HDC hDc, LPRECT lpRect, LPARAM lParam) -> BOOL
+    {
+        const auto hWnd = GetDesktopWindow();;
+        auto tmp = reinterpret_cast<DesktopTmpInfo*>(lParam);
+
+        WindowInfo info;
+        info.hWnd = hWnd;
+        info.hOwner = ::GetWindow(hWnd, GW_OWNER);
+        info.hParent = ::GetParent(hWnd);
+        info.hInstance = reinterpret_cast<HINSTANCE>(::GetWindowLongPtr(hWnd, GWLP_HINSTANCE));
+        info.zOrder = ::GetWindowZOrder(hWnd);
+        info.windowRect = *lpRect;
+        info.clientRect = *lpRect;
+        info.threadId = ::GetWindowThreadProcessId(hWnd, &info.processId);
+        info.title = std::wstring(L"Desktop") + std::to_wstring(tmp->id);
+        info.isDesktop = true;
+        info.displayId = tmp->id;
+
+        tmp->windowList.push_back(info);
+        tmp->left = min(tmp->left, lpRect->left);
+        tmp->top = min(tmp->top, lpRect->top);
+        tmp->id++;
+
+        return TRUE;
+    };
+
+    using EnumDisplayMonitorsCallbackType = BOOL(CALLBACK *)(HMONITOR, HDC, LPRECT, LPARAM);
+    static const auto EnumDisplayMonitorsCallback = static_cast<EnumDisplayMonitorsCallbackType>(_EnumDisplayMonitorsCallback);
+    if (!::EnumDisplayMonitors(NULL, NULL, EnumDisplayMonitorsCallback, reinterpret_cast<LPARAM>(&desktopTmpInfo)))
+    {
+        OutputApiError(__FUNCTION__, "EnumDisplayMonitors");
+    }
+
+    for (auto &&window : desktopTmpInfo.windowList)
+    {
+        window.captureArea = window.windowRect;
+        window.captureArea.left -= desktopTmpInfo.left;
+        window.captureArea.right -= desktopTmpInfo.left;
+        window.captureArea.top -= desktopTmpInfo.top;
+        window.captureArea.bottom -= desktopTmpInfo.top;
+
+        windowInfoList_[1].push_back(window);
     }
 
     std::sort(

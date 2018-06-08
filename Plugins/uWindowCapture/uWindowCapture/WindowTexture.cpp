@@ -102,7 +102,7 @@ bool WindowTexture::Capture()
     auto dcHeight = bmpHeader.bmHeight;
 
     // If failed, use window size (for example, UWP uses this)
-    if (dcWidth == 0 || dcHeight == 0)
+    if (dcWidth == 0 || dcHeight == 0 || window_->IsDesktop())
     {
         dcWidth = window_->GetWidth();
         dcHeight = window_->GetHeight();
@@ -117,12 +117,11 @@ bool WindowTexture::Capture()
     float dpiScaleX = std::fmax(static_cast<float>(window_->GetWidth()) / dcWidth, 1.f);
     float dpiScaleY = std::fmax(static_cast<float>(window_->GetHeight()) / dcHeight, 1.f);
 
-    if (captureMode_ == CaptureMode::BitBlt)
+    if (captureMode_ == CaptureMode::BitBlt && !window_->IsDesktop())
     {
         // Remove frame areas
         const auto frameWidth = window_->GetWidth() - window_->GetClientWidth();
         const auto frameHeight = window_->GetHeight() - window_->GetClientHeight();
-
         dcWidth -= static_cast<LONG>(ceil(frameWidth / dpiScaleX));
         dcHeight -= static_cast<LONG>(ceil(frameHeight / dpiScaleY));
     }
@@ -150,10 +149,23 @@ bool WindowTexture::Capture()
         }
         case CaptureMode::BitBlt:
         {
-            if (!::BitBlt(hDcMem, 0, 0, bufferWidth_, bufferHeight_, hDc, 0, 0, SRCCOPY | CAPTUREBLT)) 
+            if (window_->IsDesktop())
             {
-                OutputApiError(__FUNCTION__, "BitBlt");
-                return false;
+                const auto x = window_->GetX();
+                const auto y = window_->GetY();
+                if (!::BitBlt(hDcMem, 0, 0, bufferWidth_, bufferHeight_, hDc, x, y, SRCCOPY | CAPTUREBLT))
+                {
+                    OutputApiError(__FUNCTION__, "BitBlt");
+                    return false;
+                }
+            }
+            else
+            {
+                if (!::BitBlt(hDcMem, 0, 0, bufferWidth_, bufferHeight_, hDc, 0, 0, SRCCOPY | CAPTUREBLT))
+                {
+                    OutputApiError(__FUNCTION__, "BitBlt");
+                    return false;
+                }
             }
             break;
         }
@@ -165,7 +177,8 @@ bool WindowTexture::Capture()
 
     // Draw cursor
     const auto cursorWindow = WindowManager::Get().GetCursorWindow();
-    if (cursorWindow && cursorWindow->GetHandle() == window_->GetHandle())
+    const bool isCursorWindow = cursorWindow && cursorWindow->GetHandle() == window_->GetHandle();
+    if (isCursorWindow || window_->IsDesktop())
     {
         CURSORINFO cursorInfo;
         cursorInfo.cbSize = sizeof(CURSORINFO);

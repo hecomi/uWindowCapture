@@ -13,7 +13,7 @@ Window::Window(HWND hWnd, int id)
 {
     if (hWnd == ::GetDesktopWindow())
     {
-        title_ = L"Desktop";
+        isAltTabWindow_ = false;
         isDesktop_ = true;
         windowTexture_->SetCaptureMode(CaptureMode::BitBlt);
     }
@@ -221,6 +221,12 @@ UINT Window::GetIconWidth() const
 UINT Window::GetIconHeight() const
 {
     return iconTexture_->GetHeight();
+}
+
+
+const RECT & Window::GetCaptureArea() const
+{
+    return captureArea_;
 }
 
 

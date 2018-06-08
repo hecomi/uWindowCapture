@@ -38,6 +38,7 @@ public:
     UINT GetBufferHeight() const;
     UINT GetIconWidth() const;
     UINT GetIconHeight() const;
+    const RECT & GetCaptureArea() const;
 
     UINT GetTitleLength() const;
     const std::wstring& GetTitle() const;
@@ -92,6 +93,8 @@ private:
     DWORD processId_ = -1;
     DWORD threadId_ = -1;
     std::wstring title_ = L"";
+    UINT displayId_ = -1;
+    RECT captureArea_;
 
     std::atomic<bool> hasNewWindowTextureUploaded_ = false;
     std::atomic<bool> hasNewIconTextureUploaded_ = false;

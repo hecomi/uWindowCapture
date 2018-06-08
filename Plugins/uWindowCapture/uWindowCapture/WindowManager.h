@@ -37,6 +37,7 @@ public:
 private:
     std::shared_ptr<Window> FindParentWindow(const std::shared_ptr<Window>& window) const;
     std::shared_ptr<Window> FindOrAddWindow(HWND hwnd);
+    std::shared_ptr<Window> FindOrAddDesktop(UINT displayId);
 
     void StartWindowHandleListThread();
     void StopWindowHandleListThread();
@@ -65,8 +66,11 @@ private:
         DWORD threadId;
         RECT windowRect;
         RECT clientRect;
+        RECT captureArea;
         UINT zOrder;
         std::wstring title;
+        bool isDesktop;
+        UINT displayId;
     };
     std::vector<WindowInfo> windowInfoList_[2];
     mutable std::mutex windowsHandleListMutex_;
