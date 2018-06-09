@@ -30,6 +30,7 @@
     <ClInclude Include="WindowTexture.h" />
     <ClInclude Include="IconTexture.h" />
     <ClInclude Include="Cursor.h" />
+    <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp" />
