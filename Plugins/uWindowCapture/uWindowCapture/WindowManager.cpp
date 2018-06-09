@@ -315,7 +315,7 @@ void WindowManager::UpdateWindowHandleList()
         data.isDesktop = false;
         data.isAltTabWindow = IsAltTabWindow(hWnd);
 
-        const UINT timeout = 16 /* milliseconds */;
+        const UINT timeout = 100 /* milliseconds */;
         GetWindowTitle(hWnd, data.title, timeout);
 
         auto thiz = reinterpret_cast<WindowManager*>(lParam);

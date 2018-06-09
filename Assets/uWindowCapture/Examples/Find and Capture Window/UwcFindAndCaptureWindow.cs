@@ -44,7 +44,7 @@ public class UwcFindAndCaptureWindow : MonoBehaviour
     {
         GetComponent<Renderer>().material.mainTexture = window_.texture;
         window_.captureMode = mode;
-        window_.RequestCapture(CapturePriority.High);
+        window_.RequestCapture(priority);
     }
 }
 
