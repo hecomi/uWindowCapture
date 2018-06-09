@@ -17,12 +17,9 @@ public class UwcAltTabWindowObjectManager : UwcWindowObjectManager
 
     void OnWindowAdded(UwcWindow window)
     {
-        if (window.isDesktop) return;
         if (window.parentWindow != null) return; // handled by UwcWindowObject
         if (!window.isVisible) return;
-
         if (!window.isAltTabWindow) return;
-        // if (string.IsNullOrEmpty(window.title)) return;
 
         AddWindowObject(window);
     }

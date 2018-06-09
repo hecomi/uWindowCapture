@@ -47,9 +47,8 @@ public class UwcWindowObjectChildrenManager : MonoBehaviour
             oldWindow.onChildAdded.RemoveListener(OnChildAdded);
             oldWindow.onChildRemoved.RemoveListener(OnChildRemoved);
 
-            var enumerator = children.GetEnumerator();
-            while (enumerator.MoveNext()) {
-                var windowObject = enumerator.Current.Value;
+            foreach (var kv in children) {
+                var windowObject = kv.Value;
                 Destroy(windowObject.gameObject);
             }
 
@@ -120,9 +119,8 @@ public class UwcWindowObjectChildrenManager : MonoBehaviour
 
     void UpdateChildren()
     {
-        var enumerator = children.GetEnumerator();
-        while (enumerator.MoveNext()) {
-            var windowObject = enumerator.Current.Value;
+        foreach (var kv in children) {
+            var windowObject = kv.Value;
             MoveAndScaleChildWindow(windowObject);
         }
     }
