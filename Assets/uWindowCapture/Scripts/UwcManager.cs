@@ -194,9 +194,8 @@ public class UwcManager : MonoBehaviour
 
     static public UwcWindow Find(string title)
     {
-        var enumerator = windows.GetEnumerator();
-        while (enumerator.MoveNext()) {
-            var window = enumerator.Current.Value;
+        foreach (var kv in windows) {
+            var window = kv.Value;
             if (window.title.IndexOf(title) != -1) {
                 return window;
             }
@@ -206,9 +205,8 @@ public class UwcManager : MonoBehaviour
 
     static public UwcWindow Find(System.IntPtr handle)
     {
-        var enumerator = windows.GetEnumerator();
-        while (enumerator.MoveNext()) {
-            var window = enumerator.Current.Value;
+        foreach (var kv in windows) {
+            var window = kv.Value;
             if (window.handle == handle) {
                 return window;
             }
@@ -219,9 +217,8 @@ public class UwcManager : MonoBehaviour
     static public List<UwcWindow> FindAll(string title)
     {
         var list = new List<UwcWindow>();
-        var enumerator = windows.GetEnumerator();
-        while (enumerator.MoveNext()) {
-            var window = enumerator.Current.Value;
+        foreach (var kv in windows) {
+            var window = kv.Value;
             if (window.title.IndexOf(title) != -1) {
                 list.Add(window);
             }

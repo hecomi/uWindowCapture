@@ -56,11 +56,8 @@ public class UwcCursorObject : MonoBehaviour
         cursor.CreateTexture();
 
         var cursorWindow = UwcManager.cursorWindow;
-        if (windowObjectManager && cursorWindow != null)
-        {
-            var enumerator = UwcWindowObject.list.GetEnumerator();
-            while (enumerator.MoveNext()) {
-                var windowObject = enumerator.Current;
+        if (windowObjectManager && cursorWindow != null) {
+            foreach (var windowObject in UwcWindowObject.list) {
                 if (windowObject.window.id == cursorWindow.id) {
                     MoveAndScale(windowObject);
                     break;

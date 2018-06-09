@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections.Generic;
 
 namespace uWindowCapture
 {
@@ -58,9 +57,8 @@ public class UwcDesktopLayouter : MonoBehaviour
 
     void Update()
     {
-        var enumerator = manager_.windows.GetEnumerator();
-        while (enumerator.MoveNext()) {
-            var windowObject = enumerator.Current.Value;
+        foreach (var kv in manager_.windows) {
+            var windowObject = kv.Value;
             CheckWindow(windowObject);
             MoveWindow(windowObject, usePositionFilter);
             ScaleWindow(windowObject, useScaleFilter);

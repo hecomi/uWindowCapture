@@ -331,16 +331,9 @@ void WindowManager::UpdateWindowHandleList()
         OutputApiError(__FUNCTION__, "EnumWindows");
     }
 
-    struct DesktopTmpInfo
-    {
-        LONG left = LONG_MAX;
-        LONG top = LONG_MAX;
-    } desktopTmpInfo;
-
     static const auto _EnumDisplayMonitorsCallback = [](HMONITOR hMonitor, HDC hDc, LPRECT lpRect, LPARAM lParam) -> BOOL
     {
         const auto hWnd = GetDesktopWindow();;
-        auto tmp = reinterpret_cast<DesktopTmpInfo*>(lParam);
 
         Window::Data data;
         data.hWnd = hWnd;

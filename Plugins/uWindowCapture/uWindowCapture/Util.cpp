@@ -13,7 +13,8 @@ bool IsAltTabWindow(HWND hWnd)
     // Ref: https://blogs.msdn.microsoft.com/oldnewthing/20071008-00/?p=24863/
     HWND hWndWalk = ::GetAncestor(hWnd, GA_ROOTOWNER);
     HWND hWndTry;
-    while ((hWndTry = ::GetLastActivePopup(hWndWalk)) != hWndTry) {
+    while ((hWndTry = ::GetLastActivePopup(hWndWalk)) != hWndTry) 
+    {
         if (::IsWindowVisible(hWndTry)) break;
         hWndWalk = hWndTry;
     }

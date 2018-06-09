@@ -105,5 +105,4 @@ private:
     std::atomic<bool> hasNewWindowTextureUploaded_ = false;
     std::atomic<bool> hasNewIconTextureUploaded_ = false;
     std::atomic<bool> isAlive_ = true;
-    std::atomic<bool> isAltTabWindow_ = false;
 };

@@ -28,9 +28,8 @@ public class UwcHorizontalLayouter : MonoBehaviour
         var pos = Vector3.zero;
         var preWidth = 0f;
 
-        var enumerator = manager_.windows.GetEnumerator();
-        while (enumerator.MoveNext()) {
-            var windowObject = enumerator.Current.Value;
+        foreach (var kv in manager_.windows) {
+            var windowObject = kv.Value;
             var window = windowObject.window;
 
             windowObject.scale = scale;

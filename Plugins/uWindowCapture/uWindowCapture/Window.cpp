@@ -74,7 +74,7 @@ DWORD Window::GetThreadId() const
 
 bool Window::IsAltTab() const
 {
-    return isAltTabWindow_;
+    return data_.isAltTabWindow;
 }
 
 
