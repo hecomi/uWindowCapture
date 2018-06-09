@@ -21,8 +21,6 @@ public class UwcWindowObject : MonoBehaviour
         }
         set 
         {
-            renderer_.enabled = (value != null);
-
             if (window_ != null) {
                 window_.onCaptured.RemoveListener(OnCaptured);
             }
@@ -78,6 +76,14 @@ public class UwcWindowObject : MonoBehaviour
         }
     }
 
+    bool isValid
+    {
+        get
+        {
+            return window != null;
+        }
+    }
+
     [Tooltip("CaptureMethod\n" +
         "- PrintWindow: can capture almost all windows.\n" +
         "- BitBlt: faster but cannot capture some windows.\n")]
@@ -90,10 +96,11 @@ public class UwcWindowObject : MonoBehaviour
         "- Low: capture only when no window capture requested.")]
     public CapturePriority capturePriority = CapturePriority.Auto;
 
+    public bool isUpdateTitleEveryFrame = true;
+
     public int frameRate = 10;
     float captureTimer_ = 0f;
     bool hasBeenCaptured_ = false;
-    bool isValid_ = true;
 
     Material material_;
     Renderer renderer_;
@@ -127,8 +134,8 @@ public class UwcWindowObject : MonoBehaviour
 
         captureTimer_ += Time.deltaTime;
 
-        if (renderer_) renderer_.enabled = isValid_;
-        if (collider_) collider_.enabled = isValid_;
+        if (renderer_) renderer_.enabled = isValid;
+        if (collider_) collider_.enabled = isValid;
     }
 
     void UpdateTexture()
@@ -177,9 +184,8 @@ public class UwcWindowObject : MonoBehaviour
     {
         hasBeenCaptured_ = true;
 
-        name = window.title;
-        if (window.isAltTabWindow) {
-            isValid_ = !string.IsNullOrEmpty(name);
+        if (isUpdateTitleEveryFrame) {
+            name = window.title;
         }
     }
 }

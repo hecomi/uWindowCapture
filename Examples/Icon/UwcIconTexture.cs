@@ -7,7 +7,6 @@ namespace uWindowCapture
 public class UwcIconTexture : MonoBehaviour
 {
     [SerializeField] UwcWindowObject windowObject;
-    [SerializeField] bool followWindow = true;
 
     Renderer renderer_;
     Material material_;
