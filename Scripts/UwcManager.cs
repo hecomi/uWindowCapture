@@ -70,6 +70,12 @@ public class UwcManager : MonoBehaviour
         get { return instance.cursor_; }
     }
 
+    List<int> desktops_ = new List<int>();
+    static public int desktopCount
+    {
+        get { return instance.desktops_.Count; }
+    }
+
     void Awake()
     {
         Lib.SetDebugMode(debugMode);
@@ -138,6 +144,9 @@ public class UwcManager : MonoBehaviour
             switch (message.type) {
                 case MessageType.WindowAdded: {
                     var window = AddWindow(id);
+                    if (window.isDesktop) {
+                        desktops_.Add(id);
+                    }
                     onWindowAdded.Invoke(window);
                     break;
                 }
@@ -147,6 +156,9 @@ public class UwcManager : MonoBehaviour
                         window.isAlive = false;
                         if (window.parentWindow != null) {
                             window.parentWindow.onChildRemoved.Invoke(window);
+                        }
+                        if (window.isDesktop) {
+                            desktops_.Remove(id);
                         }
                         onWindowRemoved.Invoke(window);
                         windows.Remove(id);
@@ -234,6 +246,13 @@ public class UwcManager : MonoBehaviour
         UwcWindow parent;
         windows.TryGetValue(parentId, out parent);
         return parent;
+    }
+
+    static public UwcWindow FindDesktop(int index)
+    {
+        if (index < 0 || index >= desktopCount) return null;
+        var id = instance.desktops_[index];
+        return Find(id);
     }
 }
 

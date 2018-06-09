@@ -8,6 +8,9 @@ public class UwcFindAndCaptureWindow : MonoBehaviour
     UwcWindow window_ = null;
     string target_;
 
+    [SerializeField, Tooltip("Window scale (meter per 1000 pixel)")]
+    float baseScale = 1f;
+
     [SerializeField] string target;
     [SerializeField] CaptureMode mode = CaptureMode.PrintWindow;
     [SerializeField] CapturePriority priority = CapturePriority.High;
@@ -34,9 +37,9 @@ public class UwcFindAndCaptureWindow : MonoBehaviour
 
     void UpdateScale()
     {
-        var baseScale = 1000f;
-        var width = window_.width / baseScale;
-        var height = window_.height / baseScale;
+        var scale = baseScale / 1000f;
+        var width = window_.width * scale;
+        var height = window_.height * scale;
         transform.localScale = new Vector3(width, height, 1f);
     }
 
