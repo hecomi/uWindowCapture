@@ -11,7 +11,7 @@ using namespace Microsoft::WRL;
 
 Cursor::Cursor()
 {
-    // StartCapture();
+    StartCapture();
 }
 
 
