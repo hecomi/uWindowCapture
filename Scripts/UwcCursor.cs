@@ -52,7 +52,7 @@ public class UwcCursor
     {
     }
 
-    public void CreateTexture()
+    public void CreateTextureIfNeeded()
     {
         var w = width;
         var h = height;
