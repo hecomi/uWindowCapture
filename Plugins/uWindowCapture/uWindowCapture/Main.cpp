@@ -308,7 +308,7 @@ extern "C"
     {
         if (auto window = GetWindow(id))
         {
-            return window->GetTitleLength();
+            return static_cast<UINT>(window->GetTitle().length());
         }
         return 0;
     }
@@ -318,6 +318,24 @@ extern "C"
         if (auto window = GetWindow(id))
         {
             return window->GetTitle().c_str();
+        }
+        return nullptr;
+    }
+
+    UNITY_INTERFACE_EXPORT UINT UNITY_INTERFACE_API UwcGetWindowClassNameLength(int id)
+    {
+        if (auto window = GetWindow(id))
+        {
+            return static_cast<UINT>(window->GetClass().length());
+        }
+        return 0;
+    }
+
+    UNITY_INTERFACE_EXPORT const CHAR* UNITY_INTERFACE_API UwcGetWindowClassName(int id)
+    {
+        if (auto window = GetWindow(id))
+        {
+            return window->GetClass().c_str();
         }
         return nullptr;
     }
@@ -459,6 +477,24 @@ extern "C"
         if (auto window = GetWindow(id))
         {
             return window->IsTouchable() > 0;
+        }
+        return false;
+    }
+
+    UNITY_INTERFACE_EXPORT bool UNITY_INTERFACE_API UwcIsWindowStoreApp(int id)
+    {
+        if (auto window = GetWindow(id))
+        {
+            return window->IsStoreApp() > 0;
+        }
+        return false;
+    }
+
+    UNITY_INTERFACE_EXPORT bool UNITY_INTERFACE_API UwcIsWindowBackground(int id)
+    {
+        if (auto window = GetWindow(id))
+        {
+            return window->IsBackground() > 0;
         }
         return false;
     }

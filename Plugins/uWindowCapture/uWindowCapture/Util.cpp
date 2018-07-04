@@ -94,6 +94,21 @@ bool GetWindowTitle(HWND hWnd, std::wstring& outTitle, int timeout)
 }
 
 
+bool GetWindowClassName(HWND hWnd, std::string& outClassName)
+{
+    constexpr size_t maxLength = 128;
+
+    char buf[maxLength];
+    if (::GetClassName(hWnd, buf, maxLength))
+    {
+        outClassName = buf;
+        return true;
+    }
+
+    return false;
+}
+
+
 ScopedTimer::ScopedTimer(TimerFuncType&& func)
     : func_(func)
     , start_(std::chrono::high_resolution_clock::now())

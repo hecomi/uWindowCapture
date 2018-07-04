@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <dwmapi.h>
 #include "WindowManager.h"
 #include "WindowTexture.h"
 #include "Message.h"
@@ -317,6 +318,19 @@ void WindowManager::UpdateWindowHandleList()
 
         const UINT timeout = 100 /* milliseconds */;
         GetWindowTitle(hWnd, data.title, timeout);
+        GetWindowClassName(hWnd, data.className);
+
+        data.isStoreApp = (data.className == "ApplicationFrameWindow");
+        if (data.isStoreApp)
+        {
+            int attr = 0;
+            ::DwmGetWindowAttribute(hWnd, DWMWA_CLOAKED, &attr, sizeof(attr));
+            data.isBackground = attr;
+        }
+        else
+        {
+            data.isBackground = false;
+        }
 
         auto thiz = reinterpret_cast<WindowManager*>(lParam);
         thiz->windowDataList_[1].push_back(data);
@@ -347,6 +361,8 @@ void WindowManager::UpdateWindowHandleList()
         data.hMonitor = hMonitor;
         data.isDesktop = true;
         data.isAltTabWindow = false;
+        data.isStoreApp = false;
+        data.isBackground = false;
 
         MONITORINFOEX monitor;
         monitor.cbSize = sizeof(MONITORINFOEX);

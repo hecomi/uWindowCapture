@@ -27,9 +27,12 @@ public:
         DWORD processId;
         DWORD threadId;
         std::wstring title;
+        std::string className;
         HMONITOR hMonitor;
         BOOL isAltTabWindow;
+        BOOL isStoreApp;
         BOOL isDesktop;
+        BOOL isBackground;
     };
 
     explicit Window(int id);
@@ -58,8 +61,8 @@ public:
     UINT GetIconWidth() const;
     UINT GetIconHeight() const;
 
-    UINT GetTitleLength() const;
     const std::wstring& GetTitle() const;
+    const std::string& GetClass() const;
 
     void SetWindowTexture(ID3D11Texture2D* ptr);
     ID3D11Texture2D* GetWindowTexture() const;
@@ -88,6 +91,8 @@ public:
     BOOL IsIconic() const;
     BOOL IsHungUp() const;
     BOOL IsTouchable() const;
+    BOOL IsStoreApp() const;
+    BOOL IsBackground() const;
 
     BOOL MoveWindow(int x, int y);
     BOOL ScaleWindow(int width, int height);

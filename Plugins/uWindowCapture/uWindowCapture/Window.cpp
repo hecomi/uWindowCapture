@@ -132,6 +132,18 @@ BOOL Window::IsTouchable() const
 }
 
 
+BOOL Window::IsStoreApp() const
+{
+    return data_.isStoreApp;
+}
+
+
+BOOL Window::IsBackground() const
+{
+    return data_.isBackground;
+}
+
+
 BOOL Window::MoveWindow(int x, int y)
 {
     return MoveAndScaleWindow(x, y, GetWidth(), GetHeight());
@@ -217,15 +229,15 @@ UINT Window::GetIconHeight() const
 }
 
 
-UINT Window::GetTitleLength() const
-{
-    return static_cast<UINT>(data_.title.length());
-}
-
-
 const std::wstring& Window::GetTitle() const
 {
     return data_.title;
+}
+
+
+const std::string& Window::GetClass() const
+{
+    return data_.className;
 }
 
 
