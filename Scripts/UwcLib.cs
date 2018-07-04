@@ -128,6 +128,10 @@ public static class Lib
     private static extern int GetWindowTitleLength(int id);
     [DllImport(name, EntryPoint = "UwcGetWindowTitle", CharSet = CharSet.Unicode)]
     private static extern IntPtr GetWindowTitle_Internal(int id);
+    [DllImport(name, EntryPoint = "UwcGetWindowClassNameLength")]
+    private static extern int GetWindowClassNameLength(int id);
+    [DllImport(name, EntryPoint = "UwcGetWindowClassName", CharSet = CharSet.Ansi)]
+    private static extern IntPtr GetWindowClassName_Internal(int id);
     [DllImport(name, EntryPoint = "UwcGetWindowTexturePtr")]
     public static extern IntPtr GetWindowTexturePtr(int id);
     [DllImport(name, EntryPoint = "UwcSetWindowTexturePtr")]
@@ -160,6 +164,10 @@ public static class Lib
     public static extern bool IsWindowHungUp(int id);
     [DllImport(name, EntryPoint = "UwcIsWindowTouchable")]
     public static extern bool IsWindowTouchable(int id);
+    [DllImport(name, EntryPoint = "UwcIsWindowStoreApp")]
+    public static extern bool IsWindowStoreApp(int id);
+    [DllImport(name, EntryPoint = "UwcIsWindowBackground")]
+    public static extern bool IsWindowBackground(int id);
     [DllImport(name, EntryPoint = "UwcMoveWindow")]
     public static extern bool MoveWindow(int id, int x, int y);
     [DllImport(name, EntryPoint = "UwcScaleWindow")]
@@ -213,6 +221,17 @@ public static class Lib
         var ptr = GetWindowTitle_Internal(id);
         if (ptr != IntPtr.Zero) {
             return Marshal.PtrToStringUni(ptr, len);
+        } else {
+            return "";
+        }
+    }
+
+    public static string GetWindowClassName(int id)
+    {
+        var len = GetWindowClassNameLength(id);
+        var ptr = GetWindowClassName_Internal(id);
+        if (ptr != IntPtr.Zero) {
+            return Marshal.PtrToStringAnsi(ptr, len);
         } else {
             return "";
         }

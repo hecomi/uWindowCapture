@@ -136,9 +136,24 @@ public class UwcWindow
         get { return Lib.IsWindowTouchable(id); }
     }
 
+    public bool isStoreApp
+    {
+        get { return Lib.IsWindowStoreApp(id); }
+    }
+
+    public bool isBackground
+    {
+        get { return Lib.IsWindowBackground(id); }
+    }
+
     public string title
     {
         get { return Lib.GetWindowTitle(id); } 
+    }
+
+    public string className
+    {
+        get { return Lib.GetWindowClassName(id); } 
     }
 
     public int x
