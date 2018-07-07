@@ -116,12 +116,17 @@ bool Cursor::Capture()
         OutputApiError(__FUNCTION__, "GetIconInfo");
         return false;
     }
+    ScopedReleaser iconReleaser([&] 
+    { 
+        ::DeleteObject(iconInfo.hbmColor); 
+        ::DeleteObject(iconInfo.hbmMask); 
+    });
 
     BITMAP bmpColor;
     ::ZeroMemory(&bmpColor, sizeof(BITMAP));
     if (!::GetObject(iconInfo.hbmColor, sizeof(BITMAP), &bmpColor))
     {
-        OutputApiError(__FUNCTION__, "GetIconInfo");
+        OutputApiError(__FUNCTION__, "GetObject");
         return false;
     }
     ScopedReleaser hbmColorReleaser([&] { ::DeleteObject(iconInfo.hbmColor); });

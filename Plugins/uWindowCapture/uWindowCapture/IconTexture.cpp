@@ -78,6 +78,11 @@ bool IconTexture::CaptureOnce()
         OutputApiError(__FUNCTION__, "GetIconInfo");
         return false;
     }
+    ScopedReleaser iconReleaser([&] 
+    { 
+        ::DeleteObject(info.hbmColor); 
+        ::DeleteObject(info.hbmMask); 
+    });
 
     auto hDcMem = ::CreateCompatibleDC(NULL);
     ScopedReleaser hDcReleaser([&] { ::DeleteDC(hDcMem); });
