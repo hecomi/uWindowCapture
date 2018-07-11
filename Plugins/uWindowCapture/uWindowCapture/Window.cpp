@@ -72,6 +72,18 @@ DWORD Window::GetThreadId() const
 }
 
 
+const RECT & Window::GetWindowRect() const
+{
+    return data_.windowRect;
+}
+
+
+const RECT & Window::GetClientRect() const
+{
+    return data_.clientRect;
+}
+
+
 bool Window::IsAltTab() const
 {
     return data_.isAltTabWindow;
@@ -281,6 +293,12 @@ void Window::Capture()
 {
     // Run this scope in the thread loop managed by CaptureManager.
 
+    if (hasNewWindowTextureCaptured_)
+    {
+        // If it is called before Upload(), skip this frame.
+        return;
+    }
+
     if (!IsWindow() || !IsVisible())
     {
         return;
@@ -292,6 +310,7 @@ void Window::Capture()
     {
         if (auto& uploader = WindowManager::GetUploadManager())
         {
+            hasNewIconTextureUploaded_ = true;
             uploader->RequestUploadWindow(id_);
         }
     }
@@ -351,6 +370,7 @@ void Window::Render()
     {
         hasNewWindowTextureUploaded_ = false;
         windowTexture_->Render();
+        hasNewWindowTextureCaptured_ = false;
     }
 
     if (hasNewIconTextureUploaded_)

@@ -74,6 +74,8 @@ void WindowTexture::CreateBitmapIfNeeded(HDC hDc, UINT width, UINT height)
 
     DeleteBitmap();
     bitmap_ = ::CreateCompatibleBitmap(hDc, width, height);
+
+    SetUnityTexturePtr(nullptr);
 }
 
 
@@ -128,6 +130,40 @@ bool WindowTexture::Capture()
 
     CreateBitmapIfNeeded(hDc, dcWidth, dcHeight);
 
+    {
+        UWC_SCOPE_TIMER(DwmGetWindowAttribute)
+
+        const UINT preTextureWidth = textureWidth_;
+        const UINT preTextureHeight = textureHeight_;
+
+        // Remove dropshadow area
+        if (captureMode_ == CaptureMode::PrintWindow)
+        {
+            RECT dwmRect;
+            ::DwmGetWindowAttribute(hWnd, DWMWA_EXTENDED_FRAME_BOUNDS, &dwmRect, sizeof(RECT));
+
+            RECT windowRect;
+            ::GetWindowRect(hWnd, &windowRect);
+
+            offsetX_ = dwmRect.left - windowRect.left;
+            offsetY_ = dwmRect.top - windowRect.top;
+            textureWidth_ = static_cast<UINT>((dwmRect.right - dwmRect.left) / dpiScaleX);
+            textureHeight_ = static_cast<UINT>((dwmRect.bottom - dwmRect.top) / dpiScaleY);
+        }
+        else
+        {
+            offsetX_ = 0;
+            offsetY_ = 0;
+            textureWidth_ = bufferWidth_.load();
+            textureHeight_ = bufferHeight_.load();
+        }
+
+        if (textureWidth_ != preTextureWidth || textureHeight_ != preTextureHeight)
+        {
+            MessageManager::Get().Add({ MessageType::WindowSizeChanged, window_->GetId(), window_->GetHandle() });
+        }
+    }
+
     auto hDcMem = ::CreateCompatibleDC(hDc);
     ScopedReleaser hDcMemRelaser([&] { ::DeleteDC(hDcMem); });
 
@@ -140,6 +176,7 @@ bool WindowTexture::Capture()
     {
         case CaptureMode::PrintWindow:
         {
+            UWC_SCOPE_TIMER(PrintWindow)
             if (!::PrintWindow(hWnd, hDcMem, PW_RENDERFULLCONTENT)) 
             {
                 OutputApiError(__FUNCTION__, "PrintWindow");
@@ -149,6 +186,7 @@ bool WindowTexture::Capture()
         }
         case CaptureMode::BitBlt:
         {
+            UWC_SCOPE_TIMER(BitBlt)
             if (window_->IsDesktop())
             {
                 const auto x = window_->GetX();
@@ -171,7 +209,7 @@ bool WindowTexture::Capture()
         }
         default:
         {
-            return true;
+            return false;
         }
     }
 
@@ -213,36 +251,6 @@ bool WindowTexture::Capture()
         {
             OutputApiError(__FUNCTION__, "GetDIBits");
             return false;
-        }
-
-        const UINT preTextureWidth = textureWidth_;
-        const UINT preTextureHeight = textureHeight_;
-
-        // Remove dropshadow area
-        if (captureMode_ == CaptureMode::PrintWindow)
-        {
-            RECT dwmRect;
-            ::DwmGetWindowAttribute(hWnd, DWMWA_EXTENDED_FRAME_BOUNDS, &dwmRect, sizeof(RECT));
-
-            RECT windowRect;
-            ::GetWindowRect(hWnd, &windowRect);
-
-            offsetX_ = dwmRect.left - windowRect.left;
-            offsetY_ = dwmRect.top - windowRect.top;
-            textureWidth_ = static_cast<UINT>((dwmRect.right - dwmRect.left) / dpiScaleX);
-            textureHeight_ = static_cast<UINT>((dwmRect.bottom - dwmRect.top) / dpiScaleY);
-        }
-        else
-        {
-            offsetX_ = 0;
-            offsetY_ = 0;
-            textureWidth_ = bufferWidth_.load();
-            textureHeight_ = bufferHeight_.load();
-        }
-
-        if (textureWidth_ != preTextureWidth || textureHeight_ != preTextureHeight)
-        {
-            MessageManager::Get().Add({ MessageType::WindowSizeChanged, window_->GetId(), window_->GetHandle() });
         }
     }
 
@@ -306,7 +314,7 @@ bool WindowTexture::Upload()
         std::lock_guard<std::mutex> lock(bufferMutex_);
 
         const UINT rawPitch = bufferWidth_ * 4;
-        const auto *start = &buffer_[offsetX_ * 4 + offsetY_ * rawPitch];
+        const auto* start = &buffer_[offsetX_ * 4 + offsetY_ * rawPitch];
 
         ComPtr<ID3D11DeviceContext> context;
         uploader->GetDevice()->GetImmediateContext(&context);

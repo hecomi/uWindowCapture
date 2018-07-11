@@ -49,6 +49,9 @@ public:
     DWORD GetProcessId() const;
     DWORD GetThreadId() const;
 
+    const RECT & GetWindowRect() const;
+    const RECT & GetClientRect() const;
+
     UINT GetX() const;
     UINT GetY() const;
     UINT GetWidth() const;
@@ -107,6 +110,7 @@ private:
     int parentId_ = -1;
     int frameCount_ = 0;
 
+    std::atomic<bool> hasNewWindowTextureCaptured_ = false;
     std::atomic<bool> hasNewWindowTextureUploaded_ = false;
     std::atomic<bool> hasNewIconTextureUploaded_ = false;
     std::atomic<bool> isAlive_ = true;
