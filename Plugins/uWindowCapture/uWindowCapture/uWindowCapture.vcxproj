@@ -167,7 +167,6 @@
     <ClInclude Include="CaptureManager.h" />
     <ClInclude Include="Cursor.h" />
     <ClInclude Include="IconTexture.h" />
-    <ClInclude Include="resource.h" />
     <ClInclude Include="Unity.h" />
     <ClInclude Include="Debug.h" />
     <ClInclude Include="UploadManager.h" />
