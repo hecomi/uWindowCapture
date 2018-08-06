@@ -96,8 +96,6 @@ public class UwcWindowObject : MonoBehaviour
         "- Low: capture only when no window capture requested.")]
     public CapturePriority capturePriority = CapturePriority.Auto;
 
-    public bool isUpdateTitleEveryFrame = true;
-
     public int frameRate = 10;
     float captureTimer_ = 0f;
     bool hasBeenCaptured_ = false;
@@ -183,10 +181,6 @@ public class UwcWindowObject : MonoBehaviour
     void OnCaptured()
     {
         hasBeenCaptured_ = true;
-
-        if (isUpdateTitleEveryFrame) {
-            name = window.title;
-        }
     }
 }
 
