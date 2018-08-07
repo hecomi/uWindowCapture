@@ -13,7 +13,7 @@ public class UwcWindowListItem : MonoBehaviour
 
     public UwcWindow window { get; set; }
     public UwcWindowList list { get; set; }
-    public UwcWindowObject windowObject { get; set; }
+    public UwcWindowTexture windowTexture { get; set; }
     
     [SerializeField] RawImage icon;
     [SerializeField] Text title;
@@ -58,13 +58,13 @@ public class UwcWindowListItem : MonoBehaviour
 
     public void OnClick()
     {
-        var manager = list.windowObjectManager;
-        if (windowObject == null) {
-            windowObject = manager.AddWindowObject(window);
+        var manager = list.windowTextureManager;
+        if (windowTexture == null) {
+            windowTexture = manager.AddWindowTexture(window);
             image_.color = selected;
         } else {
-            manager.RemoveWindowObject(window);
-            windowObject = null;
+            manager.RemoveWindowTexture(window);
+            windowTexture = null;
             image_.color = notSelected;
         }
     }

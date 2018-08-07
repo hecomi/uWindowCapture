@@ -4,7 +4,7 @@ namespace uWindowCapture
 {
 
 [RequireComponent(typeof(Renderer))]
-public class UwcCursorObject : MonoBehaviour 
+public class UwcCursorTexture : MonoBehaviour 
 {
     Renderer renderer_;
     Material material_;

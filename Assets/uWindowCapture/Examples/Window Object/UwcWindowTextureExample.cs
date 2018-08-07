@@ -3,10 +3,10 @@
 namespace uWindowCapture
 {
 
-[RequireComponent(typeof(UwcWindowObject))]
-public class UwcWindowObjectExample : MonoBehaviour
+[RequireComponent(typeof(UwcWindowTexture))]
+public class UwcWindowTextureExample : MonoBehaviour
 {
-    UwcWindowObject windowObject_;
+    UwcWindowTexture windowTexture_;
     string target_ = "";
 
     [SerializeField] 
@@ -18,7 +18,7 @@ public class UwcWindowObjectExample : MonoBehaviour
 
     void Start()
     {
-        windowObject_ = GetComponent<UwcWindowObject>();
+        windowTexture_ = GetComponent<UwcWindowTexture>();
     }
 
     void Update()
@@ -31,21 +31,21 @@ public class UwcWindowObjectExample : MonoBehaviour
     {
         if (target_ != target) {
             target_ = target;
-            windowObject_.window = null;
+            windowTexture_.window = null;
         }
 
-        if (windowObject_.window == null) {
-            windowObject_.window = UwcManager.Find(target);
+        if (windowTexture_.window == null) {
+            windowTexture_.window = UwcManager.Find(target);
         }
     }
 
     void UpdateWindow()
     {
-        if (windowObject_.window == null) return;
+        if (windowTexture_.window == null) return;
 
         var scalePerPixel = scale / UwcSetting.BasePixel;
-        var width = windowObject_.window.width * scalePerPixel;
-        var height = windowObject_.window.height * scalePerPixel;
+        var width = windowTexture_.window.width * scalePerPixel;
+        var height = windowTexture_.window.height * scalePerPixel;
         transform.localScale = new Vector3(width, height, 1f);
     }
 }

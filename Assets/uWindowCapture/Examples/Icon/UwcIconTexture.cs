@@ -6,7 +6,7 @@ namespace uWindowCapture
 [RequireComponent(typeof(Renderer))]
 public class UwcIconTexture : MonoBehaviour
 {
-    [SerializeField] UwcWindowObject windowObject;
+    [SerializeField] UwcWindowTexture windowTexture;
 
     Renderer renderer_;
     Material material_;
@@ -26,9 +26,9 @@ public class UwcIconTexture : MonoBehaviour
 
     void UpdateIconTexture()
     {
-        if (windowObject != null && windowObject.window != null) {
-            windowObject.window.RequestCaptureIcon();
-            material_.mainTexture = windowObject.window.iconTexture;
+        if (windowTexture != null && windowTexture.window != null) {
+            windowTexture.window.RequestCaptureIcon();
+            material_.mainTexture = windowTexture.window.iconTexture;
             renderer_.enabled = true;
         } else {
             material_.mainTexture = null;
@@ -38,10 +38,10 @@ public class UwcIconTexture : MonoBehaviour
 
     void UpdateTransform()
     {
-        if (windowObject == null) return;
+        if (windowTexture == null) return;
 
-        var windowPos = windowObject.transform.position;
-        var windowScale = windowObject.transform.localScale; 
+        var windowPos = windowTexture.transform.position;
+        var windowScale = windowTexture.transform.localScale; 
         var iconScale = transform.localScale;
         windowScale.z = 0;
         transform.position = 

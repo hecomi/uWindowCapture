@@ -3,7 +3,7 @@
 namespace uWindowCapture
 {
 
-public class UwcAltTabWindowObjectManager : UwcWindowObjectManager
+public class UwcAltTabWindowTextureManager : UwcWindowTextureManager
 {
     void Start()
     {
@@ -17,16 +17,16 @@ public class UwcAltTabWindowObjectManager : UwcWindowObjectManager
 
     void OnWindowAdded(UwcWindow window)
     {
-        if (window.parentWindow != null) return; // handled by UwcWindowObject
+        if (window.parentWindow != null) return; // handled by UwcWindowTexture
         if (!window.isVisible) return;
         if (!window.isAltTabWindow) return;
 
-        AddWindowObject(window);
+        AddWindowTexture(window);
     }
 
     void OnWindowRemoved(UwcWindow window)
     {
-        RemoveWindowObject(window);
+        RemoveWindowTexture(window);
     }
 }
 

@@ -16,7 +16,7 @@ public class UwcWindowChangeEvent : UnityEvent<UwcWindow, UwcWindow>
 {
 }
 
-public class UwcWindowObjectEvent : UnityEvent<UwcWindowObject>
+public class UwcWindowTextureEvent : UnityEvent<UwcWindowTexture>
 {
 }
 

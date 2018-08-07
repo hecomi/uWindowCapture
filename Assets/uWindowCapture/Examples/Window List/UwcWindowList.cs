@@ -9,7 +9,7 @@ public class UwcWindowList : MonoBehaviour
     [SerializeField] GameObject windowListItem;
     [SerializeField] Transform listRoot;
 
-    public UwcWindowObjectManager windowObjectManager;
+    public UwcWindowTextureManager windowTextureManager;
 
     Dictionary<int, UwcWindowListItem> items_ = new Dictionary<int, UwcWindowListItem>();
 
