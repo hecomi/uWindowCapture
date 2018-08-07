@@ -118,9 +118,14 @@ bool Cursor::Capture()
     }
     ScopedReleaser iconReleaser([&] 
     { 
-        ::DeleteObject(iconInfo.hbmColor); 
-        ::DeleteObject(iconInfo.hbmMask); 
+        if (iconInfo.hbmColor) ::DeleteObject(iconInfo.hbmColor); 
+        if (iconInfo.hbmMask) ::DeleteObject(iconInfo.hbmMask); 
     });
+
+    if (!iconInfo.hbmColor || !iconInfo.hbmMask)
+    {
+        return false;
+    }
 
     BITMAP bmpColor;
     ::ZeroMemory(&bmpColor, sizeof(BITMAP));
