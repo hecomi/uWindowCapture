@@ -232,6 +232,12 @@ public class UwcWindow
         set { Lib.SetWindowCaptureMode(id, value); }
     }
 
+    public bool cursorDraw
+    {
+        get { return Lib.GetWindowCursorDraw(id); }
+        set { Lib.SetWindowCursorDraw(id, value); }
+    }
+
     private UnityEvent onCaptured_ = new UnityEvent();
     public UnityEvent onCaptured 
     { 

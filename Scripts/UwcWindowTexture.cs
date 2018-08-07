@@ -84,19 +84,26 @@ public class UwcWindowTexture : MonoBehaviour
         }
     }
 
+    [SerializeField]
     [Tooltip("CaptureMethod\n" +
         "- PrintWindow: can capture almost all windows.\n" +
         "- BitBlt: faster but cannot capture some windows.\n")]
-    public CaptureMode captureMode = CaptureMode.PrintWindow;
+    CaptureMode captureMode = CaptureMode.PrintWindow;
 
+    [SerializeField]
     [Tooltip("CapturePriority\n" +
         "- Auto (default): control priority automatically.\n" +
         "- High: capture next frame.\n" +
         "- Middle: add to queue.\n" + 
         "- Low: capture only when no window capture requested.")]
-    public CapturePriority capturePriority = CapturePriority.Auto;
+    CapturePriority capturePriority = CapturePriority.Auto;
 
-    public int frameRate = 10;
+    [SerializeField]
+    int frameRate = 10;
+
+    [SerializeField]
+    bool drawCursor = true;
+
     float captureTimer_ = 0f;
     bool hasBeenCaptured_ = false;
 
@@ -139,6 +146,8 @@ public class UwcWindowTexture : MonoBehaviour
     void UpdateTexture()
     {
         if (window == null) return;
+
+        window.cursorDraw = drawCursor;
 
         if (material_.mainTexture != window.texture) {
             material_.mainTexture = window.texture;
