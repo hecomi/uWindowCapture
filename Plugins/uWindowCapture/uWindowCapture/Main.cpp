@@ -391,6 +391,23 @@ extern "C"
         }
     }
 
+    UNITY_INTERFACE_EXPORT bool UNITY_INTERFACE_API UwcGetWindowCursorDraw(int id)
+    {
+        if (auto window = GetWindow(id))
+        {
+            return window->GetCursorDraw();
+        }
+        return false;
+    }
+
+    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcSetWindowCursorDraw(int id, bool draw)
+    {
+        if (auto window = GetWindow(id))
+        {
+            return window->SetCursorDraw(draw);
+        }
+    }
+
     UNITY_INTERFACE_EXPORT bool UNITY_INTERFACE_API UwcIsWindow(int id)
     {
         if (auto window = GetWindow(id))

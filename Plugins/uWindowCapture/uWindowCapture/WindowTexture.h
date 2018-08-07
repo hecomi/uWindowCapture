@@ -32,6 +32,9 @@ public:
     void SetCaptureMode(CaptureMode mode);
     CaptureMode GetCaptureMode() const;
 
+    void SetCursorDraw(bool draw);
+    bool GetCursorDraw() const;
+
     UINT GetWidth() const;
     UINT GetHeight() const;
 
@@ -59,5 +62,6 @@ private:
     std::atomic<UINT> offsetY_ = 0;
     std::atomic<UINT> textureWidth_ = 0;
     std::atomic<UINT> textureHeight_ = 0;
+    std::atomic<bool> drawCursor_ = true;
     std::mutex bufferMutex_;
 };

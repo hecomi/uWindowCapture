@@ -144,6 +144,10 @@ public static class Lib
     public static extern CaptureMode GetWindowCaptureMode(int id);
     [DllImport(name, EntryPoint = "UwcSetWindowCaptureMode")]
     public static extern void SetWindowCaptureMode(int id, CaptureMode mode);
+    [DllImport(name, EntryPoint = "UwcGetWindowCursorDraw")]
+    public static extern bool GetWindowCursorDraw(int id);
+    [DllImport(name, EntryPoint = "UwcSetWindowCursorDraw")]
+    public static extern void SetWindowCursorDraw(int id, bool draw);
     [DllImport(name, EntryPoint = "UwcIsWindow")]
     public static extern bool IsWindow(int id);
     [DllImport(name, EntryPoint = "UwcIsWindowVisible")]

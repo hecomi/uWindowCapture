@@ -283,6 +283,18 @@ void Window::SetCaptureMode(CaptureMode mode)
 }
 
 
+void Window::SetCursorDraw(bool draw)
+{
+    windowTexture_->SetCursorDraw(draw);
+}
+
+
+bool Window::GetCursorDraw() const
+{
+    return windowTexture_->GetCursorDraw();
+}
+
+
 CaptureMode Window::GetCaptureMode() const
 {
     return windowTexture_->GetCaptureMode();

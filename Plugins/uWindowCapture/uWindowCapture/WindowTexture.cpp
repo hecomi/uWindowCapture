@@ -49,6 +49,18 @@ CaptureMode WindowTexture::GetCaptureMode() const
 }
 
 
+void WindowTexture::SetCursorDraw(bool draw)
+{
+    drawCursor_ = draw;
+}
+
+
+bool WindowTexture::GetCursorDraw() const
+{
+    return drawCursor_;
+}
+
+
 UINT WindowTexture::GetWidth() const
 {
     return textureWidth_;
@@ -214,24 +226,27 @@ bool WindowTexture::Capture()
     }
 
     // Draw cursor
-    const auto cursorWindow = WindowManager::Get().GetCursorWindow();
-    const bool isCursorWindow = cursorWindow && cursorWindow->GetHandle() == window_->GetHandle();
-    if (isCursorWindow || window_->IsDesktop())
+    if (drawCursor_)
     {
-        CURSORINFO cursorInfo;
-        cursorInfo.cbSize = sizeof(CURSORINFO);
-        if (::GetCursorInfo(&cursorInfo))
+        const auto cursorWindow = WindowManager::Get().GetCursorWindow();
+        const bool isCursorWindow = cursorWindow && cursorWindow->GetHandle() == window_->GetHandle();
+        if (isCursorWindow || window_->IsDesktop())
         {
-            if (cursorInfo.flags == CURSOR_SHOWING)
+            CURSORINFO cursorInfo;
+            cursorInfo.cbSize = sizeof(CURSORINFO);
+            if (::GetCursorInfo(&cursorInfo))
             {
-                const auto windowLocalCursorX = static_cast<int>((cursorInfo.ptScreenPos.x - window_->GetX()) / dpiScaleX);
-                const auto windowLocalCursorY = static_cast<int>((cursorInfo.ptScreenPos.y - window_->GetY()) / dpiScaleY);
-                ::DrawIcon(hDcMem, windowLocalCursorX, windowLocalCursorY, cursorInfo.hCursor);
+                if (cursorInfo.flags == CURSOR_SHOWING)
+                {
+                    const auto windowLocalCursorX = static_cast<int>((cursorInfo.ptScreenPos.x - window_->GetX()) / dpiScaleX);
+                    const auto windowLocalCursorY = static_cast<int>((cursorInfo.ptScreenPos.y - window_->GetY()) / dpiScaleY);
+                    ::DrawIcon(hDcMem, windowLocalCursorX, windowLocalCursorY, cursorInfo.hCursor);
+                }
             }
-        }
-        else
-        {
-            OutputApiError(__FUNCTION__, "GetCursorInfo");
+            else
+            {
+                OutputApiError(__FUNCTION__, "GetCursorInfo");
+            }
         }
     }
 

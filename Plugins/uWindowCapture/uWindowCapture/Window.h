@@ -76,6 +76,9 @@ public:
     void SetCaptureMode(CaptureMode mode);
     CaptureMode GetCaptureMode() const;
 
+    void SetCursorDraw(bool draw);
+    bool GetCursorDraw() const;
+
     void Capture();
     void Upload();
     void Render();
