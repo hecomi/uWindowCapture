@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace uWindowCapture
 {
 
-[RequireComponent(typeof(UwcWindowObjectManager))]
+[RequireComponent(typeof(UwcWindowTextureManager))]
 public class UwcHorizontalLayouter : MonoBehaviour
 {
     [SerializeField] 
@@ -16,11 +16,11 @@ public class UwcHorizontalLayouter : MonoBehaviour
         get { return 1000f / scale; }
     }
 
-    UwcWindowObjectManager manager_;
+    UwcWindowTextureManager manager_;
 
     void Awake()
     {
-        manager_ = GetComponent<UwcWindowObjectManager>();
+        manager_ = GetComponent<UwcWindowTextureManager>();
     }
 
     void Update()
@@ -29,16 +29,16 @@ public class UwcHorizontalLayouter : MonoBehaviour
         var preWidth = 0f;
 
         foreach (var kv in manager_.windows) {
-            var windowObject = kv.Value;
-            var window = windowObject.window;
+            var windowTexture = kv.Value;
+            var window = windowTexture.window;
 
-            windowObject.scale = scale;
-            var width = windowObject.width;
-            var height = windowObject.height;
+            windowTexture.scale = scale;
+            var width = windowTexture.width;
+            var height = windowTexture.height;
 
-            windowObject.transform.localScale = new Vector3(width, height, 1f);
+            windowTexture.transform.localScale = new Vector3(width, height, 1f);
             pos += new Vector3((preWidth + width) / 2, 0f, 0f);
-            windowObject.transform.localPosition = pos;
+            windowTexture.transform.localPosition = pos;
 
             preWidth = width;
         }

@@ -3,7 +3,7 @@
 namespace uWindowCapture
 {
 
-[RequireComponent(typeof(UwcWindowObjectManager))]
+[RequireComponent(typeof(UwcWindowTextureManager))]
 public class UwcDesktopLayouter : MonoBehaviour
 {
     [SerializeField] 
@@ -36,64 +36,64 @@ public class UwcDesktopLayouter : MonoBehaviour
         get { return new Vector3(-Lib.GetScreenWidth() / (2 * basePixel), 0f, 0f); }
     }
 
-    UwcWindowObjectManager manager_;
+    UwcWindowTextureManager manager_;
 
     void Awake()
     {
-        manager_ = GetComponent<UwcWindowObjectManager>();
-        manager_.onWindowObjectAdded.AddListener(InitWindow);
+        manager_ = GetComponent<UwcWindowTextureManager>();
+        manager_.onWindowTextureAdded.AddListener(InitWindow);
     }
 
-    void InitWindow(UwcWindowObject windowObject)
+    void InitWindow(UwcWindowTexture windowTexture)
     {
-        MoveWindow(windowObject, false);
+        MoveWindow(windowTexture, false);
 
         if (useScaleFilter) {
-            windowObject.transform.localScale = Vector3.zero;
+            windowTexture.transform.localScale = Vector3.zero;
         } else {
-            ScaleWindow(windowObject, false);
+            ScaleWindow(windowTexture, false);
         }
     }
 
     void Update()
     {
         foreach (var kv in manager_.windows) {
-            var windowObject = kv.Value;
-            CheckWindow(windowObject);
-            MoveWindow(windowObject, usePositionFilter);
-            ScaleWindow(windowObject, useScaleFilter);
+            var windowTexture = kv.Value;
+            CheckWindow(windowTexture);
+            MoveWindow(windowTexture, usePositionFilter);
+            ScaleWindow(windowTexture, useScaleFilter);
         }
     }
 
-    void CheckWindow(UwcWindowObject windowObject)
+    void CheckWindow(UwcWindowTexture windowTexture)
     {
-        windowObject.enabled = !windowObject.window.isIconic;
+        windowTexture.enabled = !windowTexture.window.isIconic;
     }
 
-    void MoveWindow(UwcWindowObject windowObject, bool useFilter)
+    void MoveWindow(UwcWindowTexture windowTexture, bool useFilter)
     {
-        var window = windowObject.window;
+        var window = windowTexture.window;
         var pos = UwcWindowUtil.ConvertDesktopCoordToUnityPosition(window, basePixel);
         pos.z = window.zOrder * zMargin;
         var targetPos = transform.localToWorldMatrix.MultiplyPoint3x4(offset + pos);
-        windowObject.transform.position = (useFilter ? 
-            Vector3.Slerp(windowObject.transform.position, targetPos, filter) :
+        windowTexture.transform.position = (useFilter ? 
+            Vector3.Slerp(windowTexture.transform.position, targetPos, filter) :
             targetPos);
     }
 
-    void ScaleWindow(UwcWindowObject windowObject, bool useFilter)
+    void ScaleWindow(UwcWindowTexture windowTexture, bool useFilter)
     {
-        var window = windowObject.window;
+        var window = windowTexture.window;
 
         var w = window.width / basePixel;
         var h = window.height / basePixel;
 
-        var parent = windowObject.transform.parent;
+        var parent = windowTexture.transform.parent;
         var targetWorldScale = new Vector3(w, h, 1f);
         var targetLocalScale = (parent.worldToLocalMatrix * transform.localToWorldMatrix).MultiplyVector(targetWorldScale);
 
-        windowObject.transform.localScale = (useFilter ?
-            Vector3.Slerp(windowObject.transform.localScale, targetLocalScale, filter) :
+        windowTexture.transform.localScale = (useFilter ?
+            Vector3.Slerp(windowTexture.transform.localScale, targetLocalScale, filter) :
             targetLocalScale);
     }
 }

@@ -4,22 +4,22 @@ using System.Collections.Generic;
 namespace uWindowCapture
 {
 
-[RequireComponent(typeof(UwcWindowObject))]
-public class UwcWindowObjectChildrenManager : MonoBehaviour 
+[RequireComponent(typeof(UwcWindowTexture))]
+public class UwcWindowTextureChildrenManager : MonoBehaviour 
 {
     public GameObject childPrefab;
 
     [Tooltip("Distance per z-order")]
     public float zDistance = 0.02f;
 
-    UwcWindowObject windowObject_;
-    Dictionary<int, UwcWindowObject> children = new Dictionary<int, UwcWindowObject>();
+    UwcWindowTexture windowTexture_;
+    Dictionary<int, UwcWindowTexture> children = new Dictionary<int, UwcWindowTexture>();
 
     void Awake()
     {
-        windowObject_ = GetComponent<UwcWindowObject>();
-        windowObject_.onWindowChanged.AddListener(OnWindowChanged);
-        OnWindowChanged(windowObject_.window, null);
+        windowTexture_ = GetComponent<UwcWindowTexture>();
+        windowTexture_.onWindowChanged.AddListener(OnWindowChanged);
+        OnWindowChanged(windowTexture_.window, null);
     }
 
     void Update()
@@ -27,16 +27,16 @@ public class UwcWindowObjectChildrenManager : MonoBehaviour
         UpdateChildren();
     }
 
-    UwcWindowObject InstantiateChild()
+    UwcWindowTexture InstantiateChild()
     {
-        var prefabChildrenManager = childPrefab.GetComponent<UwcWindowObjectChildrenManager>();
-        var childObject = Instantiate(childPrefab, transform);
-        var childWindowObject = childObject.GetComponent<UwcWindowObject>();
-        var childrenManager = childObject.GetComponent<UwcWindowObjectChildrenManager>();
+        var prefabChildrenManager = childPrefab.GetComponent<UwcWindowTextureChildrenManager>();
+        var childTexture = Instantiate(childPrefab, transform);
+        var childWindowTexture = childTexture.GetComponent<UwcWindowTexture>();
+        var childrenManager = childTexture.GetComponent<UwcWindowTextureChildrenManager>();
         if (prefabChildrenManager && childrenManager) {
             childrenManager.childPrefab = prefabChildrenManager.childPrefab;
         }
-        return childWindowObject;
+        return childWindowTexture;
     }
 
     void OnWindowChanged(UwcWindow newWindow, UwcWindow oldWindow)
@@ -48,8 +48,8 @@ public class UwcWindowObjectChildrenManager : MonoBehaviour
             oldWindow.onChildRemoved.RemoveListener(OnChildRemoved);
 
             foreach (var kv in children) {
-                var windowObject = kv.Value;
-                Destroy(windowObject.gameObject);
+                var windowTexture = kv.Value;
+                Destroy(windowTexture.gameObject);
             }
 
             children.Clear();
@@ -78,18 +78,18 @@ public class UwcWindowObjectChildrenManager : MonoBehaviour
             return;
         }
 
-        var childWindowObject = InstantiateChild();
-        childWindowObject.window = window;
-        childWindowObject.parent = windowObject_;
-        childWindowObject.manager = windowObject_.manager;
-        childWindowObject.scale = windowObject_.scale;
+        var childWindowTexture = InstantiateChild();
+        childWindowTexture.window = window;
+        childWindowTexture.parent = windowTexture_;
+        childWindowTexture.manager = windowTexture_.manager;
+        childWindowTexture.scale = windowTexture_.scale;
 
-        children.Add(window.id, childWindowObject);
+        children.Add(window.id, childWindowTexture);
     }
 
     void OnChildRemoved(UwcWindow window)
     {
-        UwcWindowObject child;
+        UwcWindowTexture child;
         children.TryGetValue(window.id, out child);
         if (child) {
             Destroy(child.gameObject);
@@ -97,7 +97,7 @@ public class UwcWindowObjectChildrenManager : MonoBehaviour
         }
     }
 
-    void MoveAndScaleChildWindow(UwcWindowObject child)
+    void MoveAndScaleChildWindow(UwcWindowTexture child)
     {
         var window = child.window;
         var basePixel = child.basePixel;
@@ -105,14 +105,14 @@ public class UwcWindowObjectChildrenManager : MonoBehaviour
         var parentDesktopPos = UwcWindowUtil.ConvertDesktopCoordToUnityPosition(window.parentWindow, basePixel);
         var childDesktopPos = UwcWindowUtil.ConvertDesktopCoordToUnityPosition(window, basePixel);
         var localPos = childDesktopPos - parentDesktopPos;
-        localPos.x /= windowObject_.width;
-        localPos.y /= windowObject_.height;
+        localPos.x /= windowTexture_.width;
+        localPos.y /= windowTexture_.height;
         localPos.z = zDistance * (window.zOrder - window.parentWindow.zOrder) / transform.localScale.z;
         child.transform.localPosition = localPos;
 
         var worldScale = new Vector3(
-            child.width / windowObject_.width, 
-            child.height / windowObject_.height,
+            child.width / windowTexture_.width, 
+            child.height / windowTexture_.height,
             1f / transform.localScale.z);
         child.transform.localScale = worldScale;
     }
@@ -120,8 +120,8 @@ public class UwcWindowObjectChildrenManager : MonoBehaviour
     void UpdateChildren()
     {
         foreach (var kv in children) {
-            var windowObject = kv.Value;
-            MoveAndScaleChildWindow(windowObject);
+            var windowTexture = kv.Value;
+            MoveAndScaleChildWindow(windowTexture);
         }
     }
 }

@@ -4,10 +4,10 @@ using System.Collections.Generic;
 namespace uWindowCapture
 {
 
-public class UwcWindowObject : MonoBehaviour
+public class UwcWindowTexture : MonoBehaviour
 {
-    private static HashSet<UwcWindowObject> list_ = new HashSet<UwcWindowObject>();
-    public static HashSet<UwcWindowObject> list
+    private static HashSet<UwcWindowTexture> list_ = new HashSet<UwcWindowTexture>();
+    public static HashSet<UwcWindowTexture> list
     {
         get { return list_; }
     }
@@ -36,8 +36,8 @@ public class UwcWindowObject : MonoBehaviour
         }
     }
 
-    public UwcWindowObjectManager manager { get; set; }
-    public UwcWindowObject parent { get; set; }
+    public UwcWindowTextureManager manager { get; set; }
+    public UwcWindowTexture parent { get; set; }
 
     UwcWindowChangeEvent onWindowChanged_ = new UwcWindowChangeEvent();
     public UwcWindowChangeEvent onWindowChanged
