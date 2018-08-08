@@ -45,7 +45,7 @@ CaptureManager::CaptureManager()
         }
 
         // update if needed.
-        if (id >= 0)
+        if (id >= 0 && WindowManager::Get().CheckExistence(id))
         {
             if (auto window = WindowManager::Get().GetWindow(id))
             {
@@ -57,7 +57,7 @@ CaptureManager::CaptureManager()
     iconCaptureThreadLoop_.Start([this] 
     {
         int id = iconQueue_.Dequeue();
-        if (id >= 0)
+        if (id >= 0 && WindowManager::Get().CheckExistence(id))
         {
             if (auto window = WindowManager::Get().GetWindow(id))
             {

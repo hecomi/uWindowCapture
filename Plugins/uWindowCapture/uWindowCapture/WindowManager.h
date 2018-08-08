@@ -24,6 +24,7 @@ public:
     void Finalize();
     void Update();
     void Render();
+    bool CheckExistence(int id) const;
     std::shared_ptr<Window> GetWindow(int id) const;
     std::shared_ptr<Window> GetWindowFromPoint(POINT point) const;
     std::shared_ptr<Window> GetCursorWindow() const;

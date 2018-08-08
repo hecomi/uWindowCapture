@@ -148,6 +148,12 @@ extern "C"
         MessageManager::Get().ClearAll();
     }
 
+    UNITY_INTERFACE_EXPORT bool UNITY_INTERFACE_API UwcCheckWindowExistence(int id)
+    {
+        if (WindowManager::IsNull()) return false;
+        return WindowManager::Get().CheckExistence(id);
+    }
+
     UNITY_INTERFACE_EXPORT int UNITY_INTERFACE_API UwcGetWindowParentId(int id)
     {
         if (auto window = GetWindow(id))

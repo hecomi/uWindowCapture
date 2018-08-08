@@ -88,6 +88,8 @@ public static class Lib
     private static extern IntPtr GetMessages_Internal();
     [DllImport(name, EntryPoint = "UwcClearMessages")]
     private static extern void ClearMessages();
+    [DllImport(name, EntryPoint = "UwcCheckWindowExistence")]
+    public static extern bool CheckWindowExistence(int id);
     [DllImport(name, EntryPoint = "UwcGetWindowHandle")]
     public static extern IntPtr GetWindowHandle(int id);
     [DllImport(name, EntryPoint = "UwcGetWindowParentId")]

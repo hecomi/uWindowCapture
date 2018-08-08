@@ -90,6 +90,12 @@ const std::unique_ptr<Cursor>& WindowManager::GetCursor()
 }
 
 
+bool WindowManager::CheckExistence(int id) const
+{
+    return windows_.find(id) != windows_.end();
+}
+
+
 std::shared_ptr<Window> WindowManager::GetWindow(int id) const
 {
     auto it = windows_.find(id);
