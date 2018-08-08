@@ -143,14 +143,11 @@ public class UwcManager : MonoBehaviour
             var id = message.windowId;
             switch (message.type) {
                 case MessageType.WindowAdded: {
-                    if (Lib.CheckWindowExistence(id)) {
-                        var window = AddWindow(id);
-                        /*
-                        if (window.isDesktop) {
-                            desktops_.Add(id);
-                        }*/
-                        onWindowAdded.Invoke(window);
+                    var window = AddWindow(id);
+                    if (window.isAlive && window.isDesktop) {
+                        desktops_.Add(id);
                     }
+                    onWindowAdded.Invoke(window);
                     break;
                 }
                 case MessageType.WindowRemoved: {
@@ -160,11 +157,9 @@ public class UwcManager : MonoBehaviour
                         if (window.parentWindow != null) {
                             window.parentWindow.onChildRemoved.Invoke(window);
                         }
-                        /*
-                        if (window.isDesktop) {
+                        if (window.isAlive && window.isDesktop) {
                             desktops_.Remove(id);
                         }
-                        */
                         onWindowRemoved.Invoke(window);
                         windows.Remove(id);
                     }

@@ -65,6 +65,11 @@ public class UwcWindow
         get { return Lib.GetWindowThreadId(id); }
     }
 
+    public bool isValid
+    {
+        get { return Lib.CheckWindowExistence(id); }
+    }
+
     public bool isAlive
     {
         get;
