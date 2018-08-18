@@ -82,11 +82,10 @@ public class UwcWindowTextureChildrenManager : MonoBehaviour
         childWindowTexture.window = window;
         childWindowTexture.parent = windowTexture_;
         childWindowTexture.manager = windowTexture_.manager;
+        childWindowTexture.type = WindowTextureType.Child;
         childWindowTexture.captureFrameRate = windowTexture_.captureFrameRate;
         childWindowTexture.captureRequestTiming = windowTexture_.captureRequestTiming;
         childWindowTexture.cursorDraw = windowTexture_.cursorDraw;
-        childWindowTexture.scaleControlMode = ScaleControlMode.BaseScale;
-        childWindowTexture.scalePer1000Pixel = windowTexture_.scalePer1000Pixel;
 
         children.Add(window.id, childWindowTexture);
     }

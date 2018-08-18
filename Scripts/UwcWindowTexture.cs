@@ -4,14 +4,21 @@ using System.Collections.Generic;
 namespace uWindowCapture
 {
 
-public enum CaptureRequestTiming
+public enum WindowTextureType
+{
+    Window = 0,
+    Desktop = 1,
+    Child = 2,
+}
+
+public enum WindowTextureCaptureTiming
 {
     EveryFrame = 0,
     OnlyWhenVisible = 1,
     Manual = 2,
 }
 
-public enum ScaleControlMode
+public enum WindowTextureScaleControlType
 {
     BaseScale = 0,
     FixedWidth = 1,
@@ -21,15 +28,19 @@ public enum ScaleControlMode
 
 public class UwcWindowTexture : MonoBehaviour
 {
+    public WindowTextureType type = WindowTextureType.Window;
     public CaptureMode captureMode = CaptureMode.PrintWindow;
     public CapturePriority capturePriority = CapturePriority.Auto;
-    public CaptureRequestTiming captureRequestTiming = CaptureRequestTiming.OnlyWhenVisible;
+    public WindowTextureCaptureTiming captureRequestTiming = WindowTextureCaptureTiming.OnlyWhenVisible;
     public int captureFrameRate = 30;
     public bool cursorDraw = true;
 
     float captureTimer_ = 0f;
     bool hasBeenCaptured_ = false;
 
+    [SerializeField]
+    string partialWindowTitle_;
+    bool isPartialWindowTitleChanged_ = false;
     public string partialWindowTitle 
     {
         get 
@@ -44,10 +55,20 @@ public class UwcWindowTexture : MonoBehaviour
     }
 
     [SerializeField]
-    string partialWindowTitle_;
-    bool isPartialWindowTitleChanged_ = false;
+    public int desktopIndex_ = 0;
+    public int desktopIndex
+    {
+        get
+        {
+            return desktopIndex_;
+        }
+        set
+        {
+            desktopIndex_ = Mathf.Clamp(value, 0, UwcManager.desktopCount - 1);
+        }
+    }
 
-    public ScaleControlMode scaleControlMode = ScaleControlMode.BaseScale;
+    public WindowTextureScaleControlType scaleControlType = WindowTextureScaleControlType.BaseScale;
     public float scalePer1000Pixel = 1f;
 
     private static HashSet<UwcWindowTexture> list_ = new HashSet<UwcWindowTexture>();
@@ -124,7 +145,7 @@ public class UwcWindowTexture : MonoBehaviour
 
     void Update()
     {
-        UpdateFindTargetWindowByTitle();
+        UpdateTargetWindow();
 
         if (window == null) {
             material_.mainTexture = null;
@@ -135,7 +156,7 @@ public class UwcWindowTexture : MonoBehaviour
         UpdateRenderer();
         UpdateScale();
 
-        if (captureRequestTiming == CaptureRequestTiming.EveryFrame) {
+        if (captureRequestTiming == WindowTextureCaptureTiming.EveryFrame) {
             RequestCapture();
         }
 
@@ -146,7 +167,7 @@ public class UwcWindowTexture : MonoBehaviour
 
     void OnWillRenderObject()
     {
-        if (captureRequestTiming == CaptureRequestTiming.OnlyWhenVisible) {
+        if (captureRequestTiming == WindowTextureCaptureTiming.OnlyWhenVisible) {
             RequestCapture();
         }
     }
@@ -175,8 +196,8 @@ public class UwcWindowTexture : MonoBehaviour
 
         var scale = transform.localScale;
 
-        switch (scaleControlMode) {
-            case ScaleControlMode.BaseScale: {
+        switch (scaleControlType) {
+            case WindowTextureScaleControlType.BaseScale: {
                 var extents = meshFilter_.sharedMesh.bounds.extents;
                 var meshWidth = extents.x * 2f;
                 var meshHeight = extents.y * 2f;
@@ -186,15 +207,15 @@ public class UwcWindowTexture : MonoBehaviour
                 scale.y = window.height / baseHeight;
                 break;
             }
-            case ScaleControlMode.FixedWidth: {
+            case WindowTextureScaleControlType.FixedWidth: {
                 scale.y = transform.localScale.x * window.height / window.width;
                 break;
             }
-            case ScaleControlMode.FixedHeight: {
+            case WindowTextureScaleControlType.FixedHeight: {
                 scale.x = transform.localScale.y * window.width / window.height;
                 break;
             }
-            case ScaleControlMode.Manual: {
+            case WindowTextureScaleControlType.Manual: {
                 break;
             }
         }
@@ -202,11 +223,21 @@ public class UwcWindowTexture : MonoBehaviour
         transform.localScale = scale;
     }
 
-    void UpdateFindTargetWindowByTitle()
+    void UpdateTargetWindow()
     {
-        if (isPartialWindowTitleChanged_ || window == null) {
-            isPartialWindowTitleChanged_ = false;
-            window = UwcManager.Find(partialWindowTitle);
+        switch (type)
+        {
+            case WindowTextureType.Window:
+                if (isPartialWindowTitleChanged_ || window == null) {
+                    isPartialWindowTitleChanged_ = false;
+                    window = UwcManager.Find(partialWindowTitle);
+                }
+                break;
+            case WindowTextureType.Desktop:
+                window = UwcManager.FindDesktop(desktopIndex);
+                break;
+            case WindowTextureType.Child:
+                break;
         }
     }
 
