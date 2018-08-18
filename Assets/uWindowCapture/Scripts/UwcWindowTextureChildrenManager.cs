@@ -7,11 +7,6 @@ namespace uWindowCapture
 [RequireComponent(typeof(UwcWindowTexture))]
 public class UwcWindowTextureChildrenManager : MonoBehaviour 
 {
-    public GameObject childPrefab;
-
-    [Tooltip("Distance per z-order")]
-    public float zDistance = 0.02f;
-
     UwcWindowTexture windowTexture_;
     Dictionary<int, UwcWindowTexture> children = new Dictionary<int, UwcWindowTexture>();
 
@@ -29,14 +24,11 @@ public class UwcWindowTextureChildrenManager : MonoBehaviour
 
     UwcWindowTexture InstantiateChild()
     {
-        var prefabChildrenManager = childPrefab.GetComponent<UwcWindowTextureChildrenManager>();
-        var childTexture = Instantiate(childPrefab, transform);
-        var childWindowTexture = childTexture.GetComponent<UwcWindowTexture>();
-        var childrenManager = childTexture.GetComponent<UwcWindowTextureChildrenManager>();
-        if (prefabChildrenManager && childrenManager) {
-            childrenManager.childPrefab = prefabChildrenManager.childPrefab;
-        }
-        return childWindowTexture;
+        var prefab = windowTexture_.childWindowPrefab;
+        if (!prefab) return null;
+
+        var childTexture = Instantiate(prefab, transform);
+        return childTexture.GetComponent<UwcWindowTexture>();
     }
 
     void OnWindowChanged(UwcWindow newWindow, UwcWindow oldWindow)
@@ -73,19 +65,18 @@ public class UwcWindowTextureChildrenManager : MonoBehaviour
 
     void OnChildAdded(UwcWindow window)
     {
-        if (!childPrefab) {
-            Debug.LogError("childPrefab is not set.");
+        var childWindowTexture = InstantiateChild();
+        if (!childWindowTexture) {
+            Debug.LogError("childPrefab is not set or does not have UwcWindowTexture.");
             return;
         }
-
-        var childWindowTexture = InstantiateChild();
         childWindowTexture.window = window;
         childWindowTexture.parent = windowTexture_;
         childWindowTexture.manager = windowTexture_.manager;
         childWindowTexture.type = WindowTextureType.Child;
         childWindowTexture.captureFrameRate = windowTexture_.captureFrameRate;
         childWindowTexture.captureRequestTiming = windowTexture_.captureRequestTiming;
-        childWindowTexture.cursorDraw = windowTexture_.cursorDraw;
+        childWindowTexture.drawCursor = windowTexture_.drawCursor;
 
         children.Add(window.id, childWindowTexture);
     }
@@ -113,11 +104,12 @@ public class UwcWindowTextureChildrenManager : MonoBehaviour
         var cy = window.y;
         var cw = window.width;
         var ch = window.height;
+        var dz = windowTexture_.childWindowZDistance;
         var desktopX = (cw - pw) * 0.5f + (cx - px);
         var desktopY = (ch - ph) * 0.5f + (cy - py);
         var localX = desktopX / parent.width;
         var localY = -desktopY / parent.height;
-        var localZ = zDistance * (window.zOrder - window.parentWindow.zOrder) / transform.localScale.z;
+        var localZ = dz * (window.zOrder - window.parentWindow.zOrder) / transform.localScale.z;
         child.transform.localPosition = new Vector3(localX, localY, localZ);
 
         var widthRatio = 1f * window.width / window.parentWindow.width;

@@ -26,7 +26,7 @@ public class UwcIconTextureExample : MonoBehaviour
 
     void UpdateIconTexture()
     {
-        if (windowTexture != null && windowTexture.window != null) {
+        if (windowTexture && windowTexture.isValid) {
             windowTexture.window.RequestCaptureIcon();
             material_.mainTexture = windowTexture.window.iconTexture;
             renderer_.enabled = true;
@@ -38,7 +38,7 @@ public class UwcIconTextureExample : MonoBehaviour
 
     void UpdateTransform()
     {
-        if (windowTexture == null) return;
+        if (!windowTexture) return;
 
         var windowPos = windowTexture.transform.position;
         var windowScale = windowTexture.transform.localScale; 
