@@ -22,7 +22,6 @@ public class UwcWindowTextureEvent : UnityEvent<UwcWindowTexture>
 
 public static class UwcSetting
 {
-    public const int BasePixel = 1000;
     public const int MiddlePriorityMaxZ = 5;
 }
 
