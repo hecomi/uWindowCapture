@@ -7,10 +7,6 @@ namespace uWindowCapture
 [RequireComponent(typeof(UwcWindowTextureManager))]
 public class UwcHorizontalLayouter : MonoBehaviour
 {
-    [SerializeField] 
-    [Tooltip("meter / 1000 pixel")]
-    float scale = 1f;
-
     UwcWindowTextureManager manager_;
 
     void Awake()
