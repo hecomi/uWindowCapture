@@ -17,6 +17,8 @@ public class UwcWindowTextureEditor : Editor
     SerializedProperty captureRequestTiming;
     SerializedProperty captureFrameRate;
     SerializedProperty cursorDraw;
+    SerializedProperty scaleControlMode;
+    SerializedProperty scalePer1000Pixel;
 
     void OnEnable()
     {
@@ -25,6 +27,8 @@ public class UwcWindowTextureEditor : Editor
         captureRequestTiming = serializedObject.FindProperty("captureRequestTiming");
         captureFrameRate = serializedObject.FindProperty("captureFrameRate");
         cursorDraw = serializedObject.FindProperty("cursorDraw");
+        scaleControlMode = serializedObject.FindProperty("scaleControlMode");
+        scalePer1000Pixel = serializedObject.FindProperty("scalePer1000Pixel");
     }
 
     public override void OnInspectorGUI()
@@ -34,7 +38,10 @@ public class UwcWindowTextureEditor : Editor
         EditorGUILayout.Space();
 
         DrawPartialWindowTitle();
+        EditorGUILayout.Space();
         DrawCaptureSettings();
+        EditorGUILayout.Space();
+        DrawScaleSettings();
 
         serializedObject.ApplyModifiedProperties();
     }
@@ -56,6 +63,12 @@ public class UwcWindowTextureEditor : Editor
         EditorGUILayout.PropertyField(captureRequestTiming);
         EditorGUILayout.PropertyField(captureFrameRate);
         EditorGUILayout.PropertyField(cursorDraw);
+    }
+
+    void DrawScaleSettings()
+    {
+        EditorGUILayout.PropertyField(scaleControlMode);
+        EditorGUILayout.PropertyField(scalePer1000Pixel);
     }
 }
 

@@ -94,60 +94,6 @@ public class UwcWindowTexture : MonoBehaviour
         get { return 1000f / scalePer1000Pixel; }
     }
 
-    public float width 
-    {
-        get 
-        {
-            if (window == null) return 0f;
-
-            switch (scaleControlMode) {
-                case ScaleControlMode.BaseScale: {
-                    var meshWidth = meshFilter_.sharedMesh.bounds.extents.x * 2f;
-                    var baseWidth = meshWidth * basePixel;
-                    return window.width / baseWidth;
-                }
-                case ScaleControlMode.FixedWidth: {
-                    return transform.localScale.x;
-                }
-                case ScaleControlMode.FixedHeight: {
-                    return transform.localScale.y * window.width / window.height;
-                }
-                case ScaleControlMode.Manual: {
-                    return transform.localScale.x;
-                }
-            }
-
-            return 0f;
-        }
-    }
-
-    public float height 
-    {
-        get 
-        {
-            if (window == null) return 0f;
-
-            switch (scaleControlMode) {
-                case ScaleControlMode.BaseScale: {
-                    var meshHeight = meshFilter_.sharedMesh.bounds.extents.y * 2f;
-                    var baseHeight = meshHeight * basePixel;
-                    return window.height / baseHeight;
-                }
-                case ScaleControlMode.FixedWidth: {
-                    return transform.localScale.x * window.height / window.width;
-                }
-                case ScaleControlMode.FixedHeight: {
-                    return transform.localScale.y;
-                }
-                case ScaleControlMode.Manual: {
-                    return transform.localScale.y;
-                }
-            }
-
-            return 0f;
-        }
-    }
-
     bool isValid
     {
         get
@@ -227,7 +173,33 @@ public class UwcWindowTexture : MonoBehaviour
     {
         if (window == null || window.isChild) return;
 
-        transform.localScale = new Vector3(width, height, 1f);
+        var scale = transform.localScale;
+
+        switch (scaleControlMode) {
+            case ScaleControlMode.BaseScale: {
+                var extents = meshFilter_.sharedMesh.bounds.extents;
+                var meshWidth = extents.x * 2f;
+                var meshHeight = extents.y * 2f;
+                var baseHeight = meshHeight * basePixel;
+                var baseWidth = meshWidth * basePixel;
+                scale.x = window.width / baseWidth;
+                scale.y = window.height / baseHeight;
+                break;
+            }
+            case ScaleControlMode.FixedWidth: {
+                scale.y = transform.localScale.x * window.height / window.width;
+                break;
+            }
+            case ScaleControlMode.FixedHeight: {
+                scale.x = transform.localScale.y * window.width / window.height;
+                break;
+            }
+            case ScaleControlMode.Manual: {
+                break;
+            }
+        }
+
+        transform.localScale = scale;
     }
 
     void UpdateFindTargetWindowByTitle()
