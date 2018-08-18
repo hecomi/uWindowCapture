@@ -180,6 +180,8 @@ public static class Lib
     public static extern bool ScaleWindow(int id, int width, int height);
     [DllImport(name, EntryPoint = "UwcMoveAndScaleWindow")]
     public static extern bool MoveAndScaleWindow(int id, int x, int y, int width, int height);
+    [DllImport(name, EntryPoint = "UwcRequestCaptureCursor")]
+    public static extern void RequestCaptureCursor();
     [DllImport(name, EntryPoint = "UwcGetCursorPosition")]
     public static extern Point GetCursorPosition();
     [DllImport(name, EntryPoint = "UwcGetWindowIdFromPoint")]
