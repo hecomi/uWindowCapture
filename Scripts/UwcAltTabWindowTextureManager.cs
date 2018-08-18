@@ -18,8 +18,7 @@ public class UwcAltTabWindowTextureManager : UwcWindowTextureManager
     void OnWindowAdded(UwcWindow window)
     {
         if (window.parentWindow != null) return; // handled by UwcWindowTexture
-        if (!window.isVisible) return;
-        if (!window.isAltTabWindow) return;
+        if (!window.isVisible || !window.isAltTabWindow || window.isBackground) return;
 
         AddWindowTexture(window);
     }
