@@ -82,7 +82,11 @@ public class UwcWindowTextureChildrenManager : MonoBehaviour
         childWindowTexture.window = window;
         childWindowTexture.parent = windowTexture_;
         childWindowTexture.manager = windowTexture_.manager;
-        childWindowTexture.scale = windowTexture_.scale;
+        childWindowTexture.captureFrameRate = windowTexture_.captureFrameRate;
+        childWindowTexture.captureRequestTiming = windowTexture_.captureRequestTiming;
+        childWindowTexture.cursorDraw = windowTexture_.cursorDraw;
+        childWindowTexture.scaleControlMode = ScaleControlMode.BaseScale;
+        childWindowTexture.scalePer1000Pixel = windowTexture_.scalePer1000Pixel;
 
         children.Add(window.id, childWindowTexture);
     }
@@ -100,21 +104,26 @@ public class UwcWindowTextureChildrenManager : MonoBehaviour
     void MoveAndScaleChildWindow(UwcWindowTexture child)
     {
         var window = child.window;
-        var basePixel = child.basePixel;
+        var parent = window.parentWindow;
 
-        var parentDesktopPos = UwcWindowUtil.ConvertDesktopCoordToUnityPosition(window.parentWindow, basePixel);
-        var childDesktopPos = UwcWindowUtil.ConvertDesktopCoordToUnityPosition(window, basePixel);
-        var localPos = childDesktopPos - parentDesktopPos;
-        localPos.x /= windowTexture_.width;
-        localPos.y /= windowTexture_.height;
-        localPos.z = zDistance * (window.zOrder - window.parentWindow.zOrder) / transform.localScale.z;
-        child.transform.localPosition = localPos;
+        var px = parent.x;
+        var py = parent.y;
+        var pw = parent.width;
+        var ph = parent.height;
+        var cx = window.x;
+        var cy = window.y;
+        var cw = window.width;
+        var ch = window.height;
+        var desktopX = (cw - pw) * 0.5f + (cx - px);
+        var desktopY = (ch - ph) * 0.5f + (cy - py);
+        var localX = desktopX / parent.width;
+        var localY = -desktopY / parent.height;
+        var localZ = zDistance * (window.zOrder - window.parentWindow.zOrder) / transform.localScale.z;
+        child.transform.localPosition = new Vector3(localX, localY, localZ);
 
-        var worldScale = new Vector3(
-            child.width / windowTexture_.width, 
-            child.height / windowTexture_.height,
-            1f / transform.localScale.z);
-        child.transform.localScale = worldScale;
+        var widthRatio = 1f * window.width / window.parentWindow.width;
+        var heightRatio = 1f * window.height / window.parentWindow.height;
+        child.transform.localScale = new Vector3(widthRatio, heightRatio, 1f);
     }
 
     void UpdateChildren()

@@ -4,7 +4,7 @@ namespace uWindowCapture
 {
 
 [RequireComponent(typeof(Renderer))]
-public class UwcIconTexture : MonoBehaviour
+public class UwcIconTextureExample : MonoBehaviour
 {
     [SerializeField] UwcWindowTexture windowTexture;
 
