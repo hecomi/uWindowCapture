@@ -4,8 +4,52 @@ using System.Collections.Generic;
 namespace uWindowCapture
 {
 
+public enum CaptureRequestTiming
+{
+    EveryFrame = 0,
+    OnlyWhenVisible = 1,
+    Manual = 2,
+}
+
+public enum ScaleControlMode
+{
+    BaseScale = 0,
+    FixedWidth = 1,
+    FixedHeight = 2,
+    Manual = 3,
+}
+
 public class UwcWindowTexture : MonoBehaviour
 {
+    public CaptureMode captureMode = CaptureMode.PrintWindow;
+    public CapturePriority capturePriority = CapturePriority.Auto;
+    public CaptureRequestTiming captureRequestTiming = CaptureRequestTiming.OnlyWhenVisible;
+    public int captureFrameRate = 30;
+    public bool cursorDraw = true;
+
+    float captureTimer_ = 0f;
+    bool hasBeenCaptured_ = false;
+
+    public string partialWindowTitle 
+    {
+        get 
+        {
+            return partialWindowTitle_;
+        }
+        set 
+        {
+            isPartialWindowTitleChanged_ = true;
+            partialWindowTitle_ = value;
+        }
+    }
+
+    [SerializeField]
+    string partialWindowTitle_;
+    bool isPartialWindowTitleChanged_ = false;
+
+    public ScaleControlMode scaleControlMode = ScaleControlMode.BaseScale;
+    public float scalePer1000Pixel = 1f;
+
     private static HashSet<UwcWindowTexture> list_ = new HashSet<UwcWindowTexture>();
     public static HashSet<UwcWindowTexture> list
     {
@@ -30,8 +74,8 @@ public class UwcWindowTexture : MonoBehaviour
 
             if (window_ != null) {
                 captureMode = window_.captureMode;
-                window_.RequestCapture(CapturePriority.High);
                 window_.onCaptured.AddListener(OnCaptured);
+                window_.RequestCapture(CapturePriority.High);
             }
         }
     }
@@ -45,34 +89,62 @@ public class UwcWindowTexture : MonoBehaviour
         get { return onWindowChanged_; }
     }
 
-    [Tooltip("Window scale (meter per 1000 pixel)")]
-    public float scale = 1f;
     public float basePixel
     {
-        get { return 1000f / scale; }
+        get { return 1000f / scalePer1000Pixel; }
     }
 
-    public float width
+    public float width 
     {
         get 
         {
             if (window == null) return 0f;
 
-            var meshWidth = meshFilter_.sharedMesh.bounds.extents.x * 2f;
-            var baseWidth = meshWidth * basePixel;
-            return window.width / baseWidth;
+            switch (scaleControlMode) {
+                case ScaleControlMode.BaseScale: {
+                    var meshWidth = meshFilter_.sharedMesh.bounds.extents.x * 2f;
+                    var baseWidth = meshWidth * basePixel;
+                    return window.width / baseWidth;
+                }
+                case ScaleControlMode.FixedWidth: {
+                    return transform.localScale.x;
+                }
+                case ScaleControlMode.FixedHeight: {
+                    return transform.localScale.y * window.width / window.height;
+                }
+                case ScaleControlMode.Manual: {
+                    return transform.localScale.x;
+                }
+            }
+
+            return 0f;
         }
     }
 
-    public float height
+    public float height 
     {
         get 
         {
             if (window == null) return 0f;
 
-            var meshHeight = meshFilter_.sharedMesh.bounds.extents.y * 2f;
-            var baseHeight = meshHeight * basePixel;
-            return window.height / baseHeight;
+            switch (scaleControlMode) {
+                case ScaleControlMode.BaseScale: {
+                    var meshHeight = meshFilter_.sharedMesh.bounds.extents.y * 2f;
+                    var baseHeight = meshHeight * basePixel;
+                    return window.height / baseHeight;
+                }
+                case ScaleControlMode.FixedWidth: {
+                    return transform.localScale.x * window.height / window.width;
+                }
+                case ScaleControlMode.FixedHeight: {
+                    return transform.localScale.y;
+                }
+                case ScaleControlMode.Manual: {
+                    return transform.localScale.y;
+                }
+            }
+
+            return 0f;
         }
     }
 
@@ -80,32 +152,9 @@ public class UwcWindowTexture : MonoBehaviour
     {
         get
         {
-            return window != null;
+            return window != null && window.isValid;
         }
     }
-
-    [SerializeField]
-    [Tooltip("CaptureMethod\n" +
-        "- PrintWindow: can capture almost all windows.\n" +
-        "- BitBlt: faster but cannot capture some windows.\n")]
-    CaptureMode captureMode = CaptureMode.PrintWindow;
-
-    [SerializeField]
-    [Tooltip("CapturePriority\n" +
-        "- Auto (default): control priority automatically.\n" +
-        "- High: capture next frame.\n" +
-        "- Middle: add to queue.\n" + 
-        "- Low: capture only when no window capture requested.")]
-    CapturePriority capturePriority = CapturePriority.Auto;
-
-    [SerializeField]
-    int frameRate = 10;
-
-    [SerializeField]
-    bool drawCursor = true;
-
-    float captureTimer_ = 0f;
-    bool hasBeenCaptured_ = false;
 
     Material material_;
     Renderer renderer_;
@@ -129,6 +178,8 @@ public class UwcWindowTexture : MonoBehaviour
 
     void Update()
     {
+        UpdateFindTargetWindowByTitle();
+
         if (window == null) {
             material_.mainTexture = null;
             return;
@@ -136,18 +187,29 @@ public class UwcWindowTexture : MonoBehaviour
 
         UpdateTexture();
         UpdateRenderer();
+        UpdateScale();
+
+        if (captureRequestTiming == CaptureRequestTiming.EveryFrame) {
+            RequestCapture();
+        }
 
         captureTimer_ += Time.deltaTime;
 
-        if (renderer_) renderer_.enabled = isValid;
-        if (collider_) collider_.enabled = isValid;
+        UpdateBasicComponents();
+    }
+
+    void OnWillRenderObject()
+    {
+        if (captureRequestTiming == CaptureRequestTiming.OnlyWhenVisible) {
+            RequestCapture();
+        }
     }
 
     void UpdateTexture()
     {
         if (window == null) return;
 
-        window.cursorDraw = drawCursor;
+        window.cursorDraw = cursorDraw;
 
         if (material_.mainTexture != window.texture) {
             material_.mainTexture = window.texture;
@@ -161,13 +223,39 @@ public class UwcWindowTexture : MonoBehaviour
         }
     }
 
-    void OnWillRenderObject()
+    void UpdateScale()
+    {
+        if (window == null || window.isChild) return;
+
+        transform.localScale = new Vector3(width, height, 1f);
+    }
+
+    void UpdateFindTargetWindowByTitle()
+    {
+        if (isPartialWindowTitleChanged_ || window == null) {
+            isPartialWindowTitleChanged_ = false;
+            window = UwcManager.Find(partialWindowTitle);
+        }
+    }
+
+    void UpdateBasicComponents()
+    {
+        if (renderer_) renderer_.enabled = isValid;
+        if (collider_) collider_.enabled = isValid;
+    }
+
+    void OnCaptured()
+    {
+        hasBeenCaptured_ = true;
+    }
+
+    public void RequestCapture()
     {
         if (window == null) return;
 
         window.captureMode = captureMode;
 
-        float T = 1f / frameRate;
+        float T = 1f / captureFrameRate;
         if (captureTimer_ < T) return;
 
         while (captureTimer_  > T) {
@@ -185,11 +273,6 @@ public class UwcWindowTexture : MonoBehaviour
         }
 
         window.RequestCapture(priority);
-    }
-
-    void OnCaptured()
-    {
-        hasBeenCaptured_ = true;
     }
 }
 
