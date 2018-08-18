@@ -29,14 +29,11 @@ public enum WindowTextureScaleControlType
 public class UwcWindowTexture : MonoBehaviour
 {
     public WindowTextureType type = WindowTextureType.Window;
-    public CaptureMode captureMode = CaptureMode.PrintWindow;
-    public CapturePriority capturePriority = CapturePriority.Auto;
-    public WindowTextureCaptureTiming captureRequestTiming = WindowTextureCaptureTiming.OnlyWhenVisible;
-    public int captureFrameRate = 30;
-    public bool cursorDraw = true;
 
-    float captureTimer_ = 0f;
-    bool hasBeenCaptured_ = false;
+    public bool showChildWindows = true;
+    UwcWindowTextureChildrenManager childrenManager_;
+    public GameObject childWindowPrefab;
+    public float childWindowZDistance = 0.02f;
 
     [SerializeField]
     string partialWindowTitle_;
@@ -67,6 +64,12 @@ public class UwcWindowTexture : MonoBehaviour
             desktopIndex_ = Mathf.Clamp(value, 0, UwcManager.desktopCount - 1);
         }
     }
+
+    public CaptureMode captureMode = CaptureMode.PrintWindow;
+    public CapturePriority capturePriority = CapturePriority.Auto;
+    public WindowTextureCaptureTiming captureRequestTiming = WindowTextureCaptureTiming.OnlyWhenVisible;
+    public int captureFrameRate = 30;
+    public bool drawCursor = true;
 
     public WindowTextureScaleControlType scaleControlType = WindowTextureScaleControlType.BaseScale;
     public float scalePer1000Pixel = 1f;
@@ -110,12 +113,12 @@ public class UwcWindowTexture : MonoBehaviour
         get { return onWindowChanged_; }
     }
 
-    public float basePixel
+    float basePixel
     {
         get { return 1000f / scalePer1000Pixel; }
     }
 
-    bool isValid
+    public bool isValid
     {
         get
         {
@@ -127,6 +130,8 @@ public class UwcWindowTexture : MonoBehaviour
     Renderer renderer_;
     MeshFilter meshFilter_;
     Collider collider_;
+    float captureTimer_ = 0f;
+    bool hasBeenCaptured_ = false;
 
     void Awake()
     {
@@ -146,8 +151,9 @@ public class UwcWindowTexture : MonoBehaviour
     void Update()
     {
         UpdateTargetWindow();
+        UpdateChildrenManager();
 
-        if (window == null) {
+        if (!isValid) {
             material_.mainTexture = null;
             return;
         }
@@ -174,9 +180,9 @@ public class UwcWindowTexture : MonoBehaviour
 
     void UpdateTexture()
     {
-        if (window == null) return;
+        if (!isValid) return;
 
-        window.cursorDraw = cursorDraw;
+        window.cursorDraw = drawCursor;
 
         if (material_.mainTexture != window.texture) {
             material_.mainTexture = window.texture;
@@ -192,7 +198,7 @@ public class UwcWindowTexture : MonoBehaviour
 
     void UpdateScale()
     {
-        if (window == null || window.isChild) return;
+        if (!isValid || window.isChild) return;
 
         var scale = transform.localScale;
 
@@ -228,7 +234,7 @@ public class UwcWindowTexture : MonoBehaviour
         switch (type)
         {
             case WindowTextureType.Window:
-                if (isPartialWindowTitleChanged_ || window == null) {
+                if (isPartialWindowTitleChanged_ || !isValid) {
                     isPartialWindowTitleChanged_ = false;
                     window = UwcManager.Find(partialWindowTitle);
                 }
@@ -240,6 +246,17 @@ public class UwcWindowTexture : MonoBehaviour
                 break;
         }
     }
+
+    void UpdateChildrenManager()
+    {
+        if (!childrenManager_ && showChildWindows) {
+            childrenManager_ = 
+                GetComponent<UwcWindowTextureChildrenManager>() ?? 
+                gameObject.AddComponent<UwcWindowTextureChildrenManager>();
+        } else if (childrenManager_ && !showChildWindows) {
+            Destroy(childrenManager_);
+        }
+}
 
     void UpdateBasicComponents()
     {
@@ -254,7 +271,7 @@ public class UwcWindowTexture : MonoBehaviour
 
     public void RequestCapture()
     {
-        if (window == null) return;
+        if (!isValid) return;
 
         window.captureMode = captureMode;
 

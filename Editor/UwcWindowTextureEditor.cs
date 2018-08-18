@@ -40,11 +40,14 @@ public class UwcWindowTextureEditor : Editor
     bool windowInformationFold_ = true;
 
     SerializedProperty type;
+    SerializedProperty showChildWindows;
+    SerializedProperty childWindowPrefab;
+    SerializedProperty childWindowZDistance;
     SerializedProperty captureMode;
     SerializedProperty capturePriority;
     SerializedProperty captureRequestTiming;
     SerializedProperty captureFrameRate;
-    SerializedProperty cursorDraw;
+    SerializedProperty drawCursor;
     SerializedProperty scaleControlType;
     SerializedProperty scalePer1000Pixel;
 
@@ -62,11 +65,14 @@ public class UwcWindowTextureEditor : Editor
     void OnEnable()
     {
         type = serializedObject.FindProperty("type");
+        showChildWindows = serializedObject.FindProperty("showChildWindows");
+        childWindowPrefab = serializedObject.FindProperty("childWindowPrefab");
+        childWindowZDistance = serializedObject.FindProperty("childWindowZDistance");
         captureMode = serializedObject.FindProperty("captureMode");
         capturePriority = serializedObject.FindProperty("capturePriority");
         captureRequestTiming = serializedObject.FindProperty("captureRequestTiming");
         captureFrameRate = serializedObject.FindProperty("captureFrameRate");
-        cursorDraw = serializedObject.FindProperty("cursorDraw");
+        drawCursor = serializedObject.FindProperty("drawCursor");
         scaleControlType = serializedObject.FindProperty("scaleControlType");
         scalePer1000Pixel = serializedObject.FindProperty("scalePer1000Pixel");
     }
@@ -105,6 +111,11 @@ public class UwcWindowTextureEditor : Editor
                 if (title != texture.partialWindowTitle) {
                     texture.partialWindowTitle = title;
                 }
+                EditorGUILayout.PropertyField(showChildWindows);
+                if (texture.showChildWindows) {
+                    EditorGUILayout.PropertyField(childWindowPrefab);
+                    EditorGUILayout.PropertyField(childWindowZDistance);
+                }
                 break;
             case WindowTextureType.Desktop:
                 var index = EditorGUILayout.IntField("Desktop Index", texture.desktopIndex);
@@ -128,7 +139,7 @@ public class UwcWindowTextureEditor : Editor
         EditorGUILayout.PropertyField(capturePriority);
         EditorGUILayout.PropertyField(captureRequestTiming);
         EditorGUILayout.PropertyField(captureFrameRate);
-        EditorGUILayout.PropertyField(cursorDraw);
+        EditorGUILayout.PropertyField(drawCursor);
 
         EditorGUILayout.Space();
     }

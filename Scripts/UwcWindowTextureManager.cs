@@ -40,12 +40,6 @@ public class UwcWindowTextureManager : MonoBehaviour
         windowTexture.window = window;
         windowTexture.manager = this;
 
-        var prefabChildrenManager = windowPrefab.GetComponent<UwcWindowTextureChildrenManager>();
-        var childrenManager = windowTexture.GetComponent<UwcWindowTextureChildrenManager>();
-        if (prefabChildrenManager && childrenManager) {
-            childrenManager.childPrefab = prefabChildrenManager.childPrefab;
-        }
-
         windows_.Add(window.id, windowTexture);
         onWindowTextureAdded.Invoke(windowTexture);
 
