@@ -573,6 +573,15 @@ extern "C"
         return -1;
     }
 
+    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcRequestCaptureCursor()
+    {
+        if (WindowManager::IsNull()) return;
+        if (auto& cursor = WindowManager::Get().GetCursor())
+        {
+            return cursor->RequestCapture();
+        }
+    }
+
     UNITY_INTERFACE_EXPORT UINT UNITY_INTERFACE_API UwcGetCursorX()
     {
         if (WindowManager::IsNull()) return -1;

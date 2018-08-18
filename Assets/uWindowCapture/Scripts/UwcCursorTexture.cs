@@ -24,6 +24,7 @@ public class UwcCursorTexture : MonoBehaviour
     void Update()
     {
         cursor.CreateTextureIfNeeded();
+        cursor.RequestCapture();
     }
 
     void OnTextureChanged()

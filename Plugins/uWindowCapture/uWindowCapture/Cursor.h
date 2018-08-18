@@ -27,6 +27,7 @@ public:
     void SetUnityTexturePtr(ID3D11Texture2D* ptr);
     ID3D11Texture2D* GetUnityTexturePtr() const;
 
+    void RequestCapture();
     bool Capture();
     bool HasCaptured() const;
     bool Upload();
@@ -54,6 +55,7 @@ private:
     std::atomic<UINT> y_ = 0;
     std::mutex cursorMutex_;
 
+    std::atomic<bool> isCaptureRequested_ = false;
     std::atomic<bool> hasCaptured_ = false;
     std::atomic<bool> hasUploaded_ = false;
 };

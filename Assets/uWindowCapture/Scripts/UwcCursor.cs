@@ -48,6 +48,11 @@ public class UwcCursor
         get { return onTextureChanged_; }
     }
 
+    public void RequestCapture()
+    {
+        Lib.RequestCaptureCursor();
+    }
+
     void OnCaptured()
     {
     }

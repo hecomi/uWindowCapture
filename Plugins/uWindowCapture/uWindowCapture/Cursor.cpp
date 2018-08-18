@@ -11,7 +11,7 @@ using namespace Microsoft::WRL;
 
 Cursor::Cursor()
 {
-    // StartCapture();
+    StartCapture();
 }
 
 
@@ -26,14 +26,24 @@ void Cursor::StartCapture()
 {
     threadLoop_.Start([&] 
     {
-        Capture();
-    }, std::chrono::microseconds(16666));
+        if (isCaptureRequested_)
+        {
+            isCaptureRequested_ = false;
+            Capture();
+        }
+    }, std::chrono::microseconds(100));
 }
 
 
 void Cursor::StopCapture()
 {
     threadLoop_.Stop();
+}
+
+
+void Cursor::RequestCapture()
+{
+    isCaptureRequested_ = true;
 }
 
 
