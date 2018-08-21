@@ -28,16 +28,68 @@ public enum WindowTextureScaleControlType
 
 public class UwcWindowTexture : MonoBehaviour
 {
-    public WindowTextureType type = WindowTextureType.Window;
+    bool shouldFindNewWindow_ = true;
 
-    public bool showChildWindows = true;
-    UwcWindowTextureChildrenManager childrenManager_;
+    [SerializeField]
+    WindowTextureType type_ = WindowTextureType.Window;
+    public WindowTextureType type
+    {
+        get
+        {
+            return type_;
+        }
+        set
+        {
+            shouldFindNewWindow_ = true;
+            type_ = value;
+        }
+    }
+
+    [SerializeField]
+    bool altTabWindow_ = false;
+    public bool altTabWindow
+    {
+        get 
+        { 
+            return altTabWindow_; 
+        }
+        set
+        {
+            shouldFindNewWindow_ = true;
+            altTabWindow_ = value;
+        }
+    }
+
+    [SerializeField]
+    bool createChildWindows_ = true;
+    public bool createChildWindows
+    {
+        get 
+        { 
+            return createChildWindows_;
+        }
+        set
+        {
+            createChildWindows_ = value;
+
+            var manager = GetComponent<UwcWindowTextureChildrenManager>();
+            if (createChildWindows_) {
+                if (!manager) {
+                    gameObject.AddComponent<UwcWindowTextureChildrenManager>();
+                }
+            } else {
+                if (manager) {
+                    Destroy(manager);
+                }
+            }
+        }
+    }
+
     public GameObject childWindowPrefab;
     public float childWindowZDistance = 0.02f;
 
     [SerializeField]
     string partialWindowTitle_;
-    bool isPartialWindowTitleChanged_ = false;
     public string partialWindowTitle 
     {
         get 
@@ -46,13 +98,13 @@ public class UwcWindowTexture : MonoBehaviour
         }
         set 
         {
-            isPartialWindowTitleChanged_ = true;
+            shouldFindNewWindow_ = true;
             partialWindowTitle_ = value;
         }
     }
 
     [SerializeField]
-    public int desktopIndex_ = 0;
+    int desktopIndex_ = 0;
     public int desktopIndex
     {
         get
@@ -74,13 +126,13 @@ public class UwcWindowTexture : MonoBehaviour
     public WindowTextureScaleControlType scaleControlType = WindowTextureScaleControlType.BaseScale;
     public float scalePer1000Pixel = 1f;
 
-    private static HashSet<UwcWindowTexture> list_ = new HashSet<UwcWindowTexture>();
+    static HashSet<UwcWindowTexture> list_ = new HashSet<UwcWindowTexture>();
     public static HashSet<UwcWindowTexture> list
     {
         get { return list_; }
     }
 
-    private UwcWindow window_;
+    UwcWindow window_;
     public UwcWindow window 
     { 
         get 
@@ -234,9 +286,13 @@ public class UwcWindowTexture : MonoBehaviour
         switch (type)
         {
             case WindowTextureType.Window:
-                if (isPartialWindowTitleChanged_ || !isValid) {
-                    isPartialWindowTitleChanged_ = false;
-                    window = UwcManager.Find(partialWindowTitle);
+                if (shouldFindNewWindow_ || !isValid) {
+                    shouldFindNewWindow_ = false;
+                    if (altTabWindow) {
+                        window = UwcManager.Find(window => window.isAltTabWindow && window.title.IndexOf(partialWindowTitle) != -1);
+                    } else {
+                        window = UwcManager.Find(partialWindowTitle);
+                    }
                 }
                 break;
             case WindowTextureType.Desktop:
@@ -249,13 +305,6 @@ public class UwcWindowTexture : MonoBehaviour
 
     void UpdateChildrenManager()
     {
-        if (!childrenManager_ && showChildWindows) {
-            childrenManager_ = 
-                GetComponent<UwcWindowTextureChildrenManager>() ?? 
-                gameObject.AddComponent<UwcWindowTextureChildrenManager>();
-        } else if (childrenManager_ && !showChildWindows) {
-            Destroy(childrenManager_);
-        }
 }
 
     void UpdateBasicComponents()

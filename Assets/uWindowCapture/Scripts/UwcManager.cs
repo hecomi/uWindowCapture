@@ -226,6 +226,15 @@ public class UwcManager : MonoBehaviour
         return null;
     }
 
+    static public UwcWindow Find(System.Func<UwcWindow, bool> func)
+    {
+        foreach (var kv in windows) {
+            var window = kv.Value;
+            if (func(window)) return window;
+        }
+        return null;
+    }
+
     static public List<UwcWindow> FindAll(string title)
     {
         var list = new List<UwcWindow>();
