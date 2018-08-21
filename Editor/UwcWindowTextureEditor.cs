@@ -39,8 +39,6 @@ public class UwcWindowTextureEditor : Editor
     bool scaleSettingFold_ = true;
     bool windowInformationFold_ = true;
 
-    SerializedProperty type;
-    SerializedProperty showChildWindows;
     SerializedProperty childWindowPrefab;
     SerializedProperty childWindowZDistance;
     SerializedProperty captureMode;
@@ -64,8 +62,6 @@ public class UwcWindowTextureEditor : Editor
 
     void OnEnable()
     {
-        type = serializedObject.FindProperty("type");
-        showChildWindows = serializedObject.FindProperty("showChildWindows");
         childWindowPrefab = serializedObject.FindProperty("childWindowPrefab");
         childWindowZDistance = serializedObject.FindProperty("childWindowZDistance");
         captureMode = serializedObject.FindProperty("captureMode");
@@ -102,17 +98,27 @@ public class UwcWindowTextureEditor : Editor
 
     void DrawTargetSettings()
     {
-        EditorGUILayout.PropertyField(type);
+        var type = (WindowTextureType)EditorGUILayout.EnumPopup("Type", texture.type);
+        if (type != texture.type) {
+            texture.type = type;
+        }
 
-        switch ((WindowTextureType)type.enumValueIndex)
+        switch (type)
         {
             case WindowTextureType.Window:
                 var title = EditorGUILayout.TextField("Partial Window Title", texture.partialWindowTitle);
                 if (title != texture.partialWindowTitle) {
                     texture.partialWindowTitle = title;
                 }
-                EditorGUILayout.PropertyField(showChildWindows);
-                if (texture.showChildWindows) {
+                var altTabWindow = EditorGUILayout.Toggle("Alt Tab Window", texture.altTabWindow);
+                if (altTabWindow != texture.altTabWindow) {
+                    texture.altTabWindow = altTabWindow;
+                }
+                var createChildWindows = EditorGUILayout.Toggle("Create Child Windows", texture.createChildWindows);
+                if (createChildWindows != texture.createChildWindows) {
+                    texture.createChildWindows = createChildWindows;
+                }
+                if (texture.createChildWindows) {
                     EditorGUILayout.PropertyField(childWindowPrefab);
                     EditorGUILayout.PropertyField(childWindowZDistance);
                 }
