@@ -31,11 +31,6 @@ public class UwcDesktopLayouter : MonoBehaviour
         get { return 1000f / scale; }
     }
 
-    Vector3 offset
-    {
-        get { return new Vector3(-Lib.GetScreenWidth() / (2 * basePixel), 0f, 0f); }
-    }
-
     UwcWindowTextureManager manager_;
 
     void Awake()
@@ -75,7 +70,7 @@ public class UwcDesktopLayouter : MonoBehaviour
         var window = windowTexture.window;
         var pos = UwcWindowUtil.ConvertDesktopCoordToUnityPosition(window, basePixel);
         pos.z = window.zOrder * zMargin;
-        var targetPos = transform.localToWorldMatrix.MultiplyPoint3x4(offset + pos);
+        var targetPos = transform.localToWorldMatrix.MultiplyPoint3x4(pos);
         windowTexture.transform.position = (useFilter ? 
             Vector3.Slerp(windowTexture.transform.position, targetPos, filter) :
             targetPos);
@@ -83,18 +78,8 @@ public class UwcDesktopLayouter : MonoBehaviour
 
     void ScaleWindow(UwcWindowTexture windowTexture, bool useFilter)
     {
-        var window = windowTexture.window;
-
-        var w = window.width / basePixel;
-        var h = window.height / basePixel;
-
-        var parent = windowTexture.transform.parent;
-        var targetWorldScale = new Vector3(w, h, 1f);
-        var targetLocalScale = (parent.worldToLocalMatrix * transform.localToWorldMatrix).MultiplyVector(targetWorldScale);
-
-        windowTexture.transform.localScale = (useFilter ?
-            Vector3.Slerp(windowTexture.transform.localScale, targetLocalScale, filter) :
-            targetLocalScale);
+        windowTexture.scaleControlType = WindowTextureScaleControlType.BaseScale;
+        windowTexture.scalePer1000Pixel = scale;
     }
 }
 
