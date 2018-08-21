@@ -149,6 +149,7 @@ public class UwcWindowTexture : MonoBehaviour
             window_ = value;
 
             if (window_ != null) {
+                shouldUpdateWindow_ = false;
                 captureMode = window_.captureMode;
                 window_.onCaptured.AddListener(OnCaptured);
                 window_.RequestCapture(CapturePriority.High);
@@ -283,7 +284,6 @@ public class UwcWindowTexture : MonoBehaviour
     void UpdateTargetWindow()
     {
         if (!shouldUpdateWindow_) return;
-        shouldUpdateWindow_ = false;
 
         switch (type)
         {
