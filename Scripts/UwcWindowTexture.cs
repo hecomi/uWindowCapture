@@ -28,7 +28,7 @@ public enum WindowTextureScaleControlType
 
 public class UwcWindowTexture : MonoBehaviour
 {
-    bool shouldFindNewWindow_ = true;
+    bool shouldUpdateWindow_ = true;
 
     [SerializeField]
     WindowTextureType type_ = WindowTextureType.Window;
@@ -40,7 +40,7 @@ public class UwcWindowTexture : MonoBehaviour
         }
         set
         {
-            shouldFindNewWindow_ = true;
+            shouldUpdateWindow_ = true;
             type_ = value;
         }
     }
@@ -55,7 +55,7 @@ public class UwcWindowTexture : MonoBehaviour
         }
         set
         {
-            shouldFindNewWindow_ = true;
+            shouldUpdateWindow_ = true;
             altTabWindow_ = value;
         }
     }
@@ -98,7 +98,7 @@ public class UwcWindowTexture : MonoBehaviour
         }
         set 
         {
-            shouldFindNewWindow_ = true;
+            shouldUpdateWindow_ = true;
             partialWindowTitle_ = value;
         }
     }
@@ -203,7 +203,6 @@ public class UwcWindowTexture : MonoBehaviour
     void Update()
     {
         UpdateTargetWindow();
-        UpdateChildrenManager();
 
         if (!isValid) {
             material_.mainTexture = null;
@@ -283,16 +282,16 @@ public class UwcWindowTexture : MonoBehaviour
 
     void UpdateTargetWindow()
     {
+        if (!shouldUpdateWindow_) return;
+        shouldUpdateWindow_ = false;
+
         switch (type)
         {
             case WindowTextureType.Window:
-                if (shouldFindNewWindow_ || !isValid) {
-                    shouldFindNewWindow_ = false;
-                    if (altTabWindow) {
-                        window = UwcManager.Find(window => window.isAltTabWindow && window.title.IndexOf(partialWindowTitle) != -1);
-                    } else {
-                        window = UwcManager.Find(partialWindowTitle);
-                    }
+                if (altTabWindow) {
+                    window = UwcManager.Find(window => window.isAltTabWindow && window.title.IndexOf(partialWindowTitle) != -1);
+                } else {
+                    window = UwcManager.Find(partialWindowTitle);
                 }
                 break;
             case WindowTextureType.Desktop:
@@ -302,10 +301,6 @@ public class UwcWindowTexture : MonoBehaviour
                 break;
         }
     }
-
-    void UpdateChildrenManager()
-    {
-}
 
     void UpdateBasicComponents()
     {
