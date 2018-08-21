@@ -75,18 +75,19 @@ public class UwcWindowTextureEditor : Editor
 
     public override void OnInspectorGUI()
     {
-        serializedObject.Update();
-
         error = "";
 
-        EditorGUILayout.Space();
-        Fold("Target", ref targetFold_, () => { DrawTargetSettings(); });
-        Fold("Capture Settings", ref captureSettingFold_, () => { DrawCaptureSettings(); });
-        Fold("Scale Settings", ref scaleSettingFold_, () => { DrawScaleSettings(); });
-        Fold("Window Information", ref windowInformationFold_, () => { DrawWindowInformation(); });
-        DrawError();
-
+        serializedObject.Update();
+        {
+            EditorGUILayout.Space();
+            Fold("Target", ref targetFold_, () => { DrawTargetSettings(); });
+            Fold("Capture Settings", ref captureSettingFold_, () => { DrawCaptureSettings(); });
+            Fold("Scale Settings", ref scaleSettingFold_, () => { DrawScaleSettings(); });
+            Fold("Window Information", ref windowInformationFold_, () => { DrawWindowInformation(); });
+        }
         serializedObject.ApplyModifiedProperties();
+
+        DrawError();
     }
 
     void DrawError()
@@ -100,6 +101,7 @@ public class UwcWindowTextureEditor : Editor
     {
         var type = (WindowTextureType)EditorGUILayout.EnumPopup("Type", texture.type);
         if (type != texture.type) {
+            Undo.RecordObject(target, "Inspector");
             texture.type = type;
         }
 
@@ -108,14 +110,17 @@ public class UwcWindowTextureEditor : Editor
             case WindowTextureType.Window:
                 var title = EditorGUILayout.TextField("Partial Window Title", texture.partialWindowTitle);
                 if (title != texture.partialWindowTitle) {
+                    Undo.RecordObject(target, "Inspector");
                     texture.partialWindowTitle = title;
                 }
                 var altTabWindow = EditorGUILayout.Toggle("Alt Tab Window", texture.altTabWindow);
                 if (altTabWindow != texture.altTabWindow) {
+                    Undo.RecordObject(target, "Inspector");
                     texture.altTabWindow = altTabWindow;
                 }
                 var createChildWindows = EditorGUILayout.Toggle("Create Child Windows", texture.createChildWindows);
                 if (createChildWindows != texture.createChildWindows) {
+                    Undo.RecordObject(target, "Inspector");
                     texture.createChildWindows = createChildWindows;
                 }
                 if (texture.createChildWindows) {
@@ -126,6 +131,7 @@ public class UwcWindowTextureEditor : Editor
             case WindowTextureType.Desktop:
                 var index = EditorGUILayout.IntField("Desktop Index", texture.desktopIndex);
                 if (index != texture.desktopIndex) {
+                    Undo.RecordObject(target, "Inspector");
                     texture.desktopIndex = index;
                 }
                 break;
