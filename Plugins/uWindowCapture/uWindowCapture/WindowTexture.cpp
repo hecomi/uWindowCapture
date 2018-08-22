@@ -199,23 +199,13 @@ bool WindowTexture::Capture()
         case CaptureMode::BitBlt:
         {
             UWC_SCOPE_TIMER(BitBlt)
-            if (window_->IsDesktop())
+            const bool isDesktop = window_->IsDesktop();
+            const auto x = isDesktop ? window_->GetX() : 0;
+            const auto y = isDesktop ? window_->GetY() : 0;
+            if (!::BitBlt(hDcMem, 0, 0, bufferWidth_, bufferHeight_, hDc, x, y, SRCCOPY | CAPTUREBLT))
             {
-                const auto x = window_->GetX();
-                const auto y = window_->GetY();
-                if (!::BitBlt(hDcMem, 0, 0, bufferWidth_, bufferHeight_, hDc, x, y, SRCCOPY | CAPTUREBLT))
-                {
-                    OutputApiError(__FUNCTION__, "BitBlt");
-                    return false;
-                }
-            }
-            else
-            {
-                if (!::BitBlt(hDcMem, 0, 0, bufferWidth_, bufferHeight_, hDc, 0, 0, SRCCOPY | CAPTUREBLT))
-                {
-                    OutputApiError(__FUNCTION__, "BitBlt");
-                    return false;
-                }
+                OutputApiError(__FUNCTION__, "BitBlt");
+                return false;
             }
             break;
         }
