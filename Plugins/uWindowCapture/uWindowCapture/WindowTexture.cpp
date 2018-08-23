@@ -157,8 +157,8 @@ bool WindowTexture::Capture()
             RECT windowRect;
             ::GetWindowRect(hWnd, &windowRect);
 
-            offsetX_ = dwmRect.left - windowRect.left;
-            offsetY_ = dwmRect.top - windowRect.top;
+            offsetX_ = max(dwmRect.left - windowRect.left, 0);
+            offsetY_ = max(dwmRect.top - windowRect.top, 0);
             textureWidth_ = static_cast<UINT>((dwmRect.right - dwmRect.left) / dpiScaleX);
             textureHeight_ = static_cast<UINT>((dwmRect.bottom - dwmRect.top) / dpiScaleY);
         }
@@ -293,6 +293,12 @@ bool WindowTexture::Upload()
         }
     }
 
+    if (offsetX_ + textureWidth_ > bufferWidth_ || offsetY_ + textureHeight_ > bufferHeight_)
+    {
+        Debug::Error(__FUNCTION__, " => Offsets are invalid.");
+        return false;
+    }
+
     auto& uploader = WindowManager::GetUploadManager();
     if (!uploader) return false;
 
@@ -319,7 +325,8 @@ bool WindowTexture::Upload()
         std::lock_guard<std::mutex> lock(bufferMutex_);
 
         const UINT rawPitch = bufferWidth_ * 4;
-        const auto* start = &buffer_[offsetX_ * 4 + offsetY_ * rawPitch];
+        const int startIndex = offsetX_ * 4 + offsetY_ * rawPitch;
+        const auto* start = &buffer_[startIndex];
 
         ComPtr<ID3D11DeviceContext> context;
         uploader->GetDevice()->GetImmediateContext(&context);
