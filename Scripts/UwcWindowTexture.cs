@@ -113,6 +113,7 @@ public class UwcWindowTexture : MonoBehaviour
         }
         set
         {
+            shouldUpdateWindow_ = true;
             desktopIndex_ = Mathf.Clamp(value, 0, UwcManager.desktopCount - 1);
         }
     }
