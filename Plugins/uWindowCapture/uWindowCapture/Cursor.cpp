@@ -132,19 +132,35 @@ bool Cursor::Capture()
         if (iconInfo.hbmMask) ::DeleteObject(iconInfo.hbmMask); 
     });
 
-    if (!iconInfo.hbmColor || !iconInfo.hbmMask)
+    int width = 0, height = 0;
     {
-        return false;
+        BITMAP bmp;
+        ::ZeroMemory(&bmp, sizeof(BITMAP));
+        if (iconInfo.hbmColor)
+        {
+            if (!::GetObject(iconInfo.hbmColor, sizeof(BITMAP), &bmp))
+            {
+                OutputApiError(__FUNCTION__, "GetObject");
+                return false;
+            }
+            width = bmp.bmWidth;
+            height = bmp.bmHeight;
+        }
+        else if (iconInfo.hbmMask)
+        {
+            if (!::GetObject(iconInfo.hbmMask, sizeof(BITMAP), &bmp))
+            {
+                OutputApiError(__FUNCTION__, "GetObject");
+                return false;
+            }
+            width = bmp.bmWidth;
+            height = bmp.bmHeight / 2;
+        }
+        else
+        {
+            return false;
+        }
     }
-
-    BITMAP bmpColor;
-    ::ZeroMemory(&bmpColor, sizeof(BITMAP));
-    if (!::GetObject(iconInfo.hbmColor, sizeof(BITMAP), &bmpColor))
-    {
-        OutputApiError(__FUNCTION__, "GetObject");
-        return false;
-    }
-    ScopedReleaser hbmColorReleaser([&] { ::DeleteObject(iconInfo.hbmColor); });
 
     auto desktopDc = ::GetDC(GetDesktopWindow());
     ScopedReleaser hDcReleaser([&] { ::DeleteDC(desktopDc); });
@@ -152,7 +168,7 @@ bool Cursor::Capture()
     auto hDcMem = ::CreateCompatibleDC(NULL);
     ScopedReleaser hDcMemReleaser([&] { ::DeleteDC(hDcMem); });
 
-    CreateBitmapIfNeeded(desktopDc, bmpColor.bmWidth, bmpColor.bmHeight);
+    CreateBitmapIfNeeded(desktopDc, width, height);
 
     BITMAPINFOHEADER bmi {};
     bmi.biWidth       = static_cast<LONG>(width_);
@@ -170,7 +186,7 @@ bool Cursor::Capture()
     HGDIOBJ preObject = ::SelectObject(hDcMem, bitmap_);
     {
         // BitBlt desktop image
-        ::BitBlt(hDcMem, 0, 0, width_, height_, desktopDc, x_, y_, SRCCOPY);
+        ::BitBlt(hDcMem, 0, 0, width_, height_, desktopDc, x_ - iconInfo.xHotspot, y_ - iconInfo.yHotspot, SRCCOPY);
 
         if (!::GetDIBits(hDcMem, bitmap_, 0, height_, desktop.Get(), reinterpret_cast<BITMAPINFO*>(&bmi), DIB_RGB_COLORS))
         {
@@ -215,7 +231,6 @@ bool Cursor::Capture()
                 if (icon[4 * j + 3] > 0)
                 {
                     buffer32[i] = icon32[j];
-                    buffer_[4 * i + 3] = 255;
                 }
                 else
                 {
