@@ -20,6 +20,7 @@ public class UwcAltTabWindowTextureManager : UwcWindowTextureManager
         if (window.parentWindow != null) return; // handled by UwcWindowTextureChildrenManager
         if (!window.isVisible || !window.isAltTabWindow || window.isBackground) return;
 
+        window.RequestCapture();
         AddWindowTexture(window);
     }
 
