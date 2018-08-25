@@ -80,7 +80,7 @@ bool GetWindowTitle(HWND hWnd, std::wstring& outTitle, int timeout)
     {
         return false;
     }
-    if (length <= 0) return false;
+    if (length > 256) return false;
 
     std::vector<WCHAR> buf(length + 1);
     DWORD_PTR result;
