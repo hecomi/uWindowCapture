@@ -159,7 +159,9 @@ public class UwcWindowTextureEditor : Editor
     void DrawScaleSettings()
     {
         EditorGUILayout.PropertyField(scaleControlType);
-        EditorGUILayout.PropertyField(scalePer1000Pixel);
+        if (texture.scaleControlType == WindowTextureScaleControlType.BaseScale) {
+            EditorGUILayout.PropertyField(scalePer1000Pixel);
+        }
 
         EditorGUILayout.Space();
     }
