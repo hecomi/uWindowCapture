@@ -1,5 +1,4 @@
 #include <algorithm>
-#include <dwmapi.h>
 #include "WindowManager.h"
 #include "WindowTexture.h"
 #include "Message.h"
@@ -230,8 +229,8 @@ std::shared_ptr<Window> WindowManager::FindOrAddDesktop(HMONITOR hMonitor)
         windows_.end(),
         [hMonitor](const auto& pair) 
         { 
-            const auto &window = pair.second;
-            return window->IsDesktop() && window->data_.hMonitor == hMonitor; 
+            const auto& window = pair.second;
+            return window->IsDesktop() && window->data1_.hMonitor == hMonitor; 
         });
 
     if (it != windows_.end())
@@ -250,6 +249,8 @@ std::shared_ptr<Window> WindowManager::FindOrAddDesktop(HMONITOR hMonitor)
 
 void WindowManager::UpdateWindows()
 {
+    UWC_SCOPE_TIMER(UpdateWindows);
+
     for (const auto& pair : windows_)
     {
         pair.second->isAlive_ = false;
@@ -257,14 +258,16 @@ void WindowManager::UpdateWindows()
 
     {
         std::lock_guard<std::mutex> lock(windowsHandleListMutex_);
-        for (auto&& data : windowDataList_[0])
+        for (auto&& data1 : windowDataList_[0])
         {
-            auto window = data.isDesktop ?
-                WindowManager::Get().FindOrAddDesktop(data.hMonitor) :
-                WindowManager::Get().FindOrAddWindow(data.hWnd);
+            auto window = data1.isDesktop ?
+                WindowManager::Get().FindOrAddDesktop(data1.hMonitor) :
+                WindowManager::Get().FindOrAddWindow(data1.hWnd);
             if (window)
             {
-                window->SetData(std::move(data));
+                {
+                    window->SetData(data1);
+                }
                 window->isAlive_ = true;
 
                 // Newly added
@@ -275,43 +278,42 @@ void WindowManager::UpdateWindows()
                         window->parentId_ = parent->GetId();
                     }
 
-                    auto &initData = window->initData_;
+                    auto &data2 = window->data2_;
                     const auto hWnd = window->GetHandle();
 
                     if (!window->IsDesktop())
                     {
-                        initData.hParent = ::GetParent(hWnd);
-                        initData.hInstance = reinterpret_cast<HINSTANCE>(::GetWindowLongPtr(hWnd, GWLP_HINSTANCE));
-                        initData.threadId = ::GetWindowThreadProcessId(hWnd, &initData.processId);
-                        initData.isAltTabWindow = IsAltTabWindow(hWnd);
-                        GetWindowClassName(hWnd, initData.className);
-                        initData.isStoreApp = (initData.className == "ApplicationFrameWindow");
-                        if (initData.isStoreApp)
-                        {
-                            int attr = 0;
-                            ::DwmGetWindowAttribute(window->GetHandle(), DWMWA_CLOAKED, &attr, sizeof(attr));
-                            window->data_.isBackground = attr;
-                        }
+                        data2.hParent = ::GetParent(hWnd);
+                        data2.hInstance = reinterpret_cast<HINSTANCE>(::GetWindowLongPtr(hWnd, GWLP_HINSTANCE));
+                        data2.threadId = ::GetWindowThreadProcessId(hWnd, &data2.processId);
+                        data2.isAltTabWindow = IsAltTabWindow(hWnd);
+                        GetWindowClassName(hWnd, data2.className);
+                        data2.isStoreApp = (data2.className == "ApplicationFrameWindow");
+                        window->UpdateTitle();
+                        window->UpdateIsBackground();
                     }
                     else
                     {
-                        initData.hParent = NULL;
-                        initData.hInstance = NULL;
-                        initData.threadId = ::GetWindowThreadProcessId(hWnd, &initData.processId);
-                        initData.isAltTabWindow = false;
-                        initData.isStoreApp = false;
+                        data2.hParent = NULL;
+                        data2.hInstance = NULL;
+                        data2.threadId = ::GetWindowThreadProcessId(hWnd, &data2.processId);
+                        data2.isAltTabWindow = false;
+                        data2.isStoreApp = false;
+                        data2.isBackground = false;
+                        data2.className = "";
+                        window->UpdateTitle();
                     }
 
                     MessageManager::Get().Add({ MessageType::WindowAdded, window->GetId(), window->GetHandle() });
                 }
                 else
                 {
-                    if (window->IsStoreApp())
+                    if (window->hasTitleUpdateRequested_) 
                     {
-                        int attr = 0;
-                        ::DwmGetWindowAttribute(window->GetHandle(), DWMWA_CLOAKED, &attr, sizeof(attr));
-                        window->data_.isBackground = attr;
+                        window->hasTitleUpdateRequested_ = false;
+                        window->UpdateTitle();
                     }
+                    window->UpdateIsBackground();
                 }
 
                 window->frameCount_++;
@@ -339,6 +341,8 @@ void WindowManager::UpdateWindows()
 
 void WindowManager::UpdateWindowHandleList()
 {
+    UWC_SCOPE_TIMER(UpdateWindowHandleList);
+
     static const auto _EnumWindowsCallback = [](HWND hWnd, LPARAM lParam) -> BOOL
     {
         if (!::IsWindow(hWnd) || !::IsWindowVisible(hWnd) || ::IsHungAppWindow(hWnd))
@@ -346,7 +350,7 @@ void WindowManager::UpdateWindowHandleList()
             return TRUE;
         }
 
-        Window::Data data;
+        Window::Data1 data;
         data.hWnd = hWnd;
         data.hOwner = ::GetWindow(hWnd, GW_OWNER);
         ::GetWindowRect(hWnd, &data.windowRect);
@@ -354,10 +358,6 @@ void WindowManager::UpdateWindowHandleList()
         data.zOrder = ::GetWindowZOrder(hWnd);
         data.hMonitor = ::MonitorFromWindow(hWnd, MONITOR_DEFAULTTOPRIMARY);
         data.isDesktop = false;
-        data.isBackground = false; // set in UpdateWindows()
-
-        const UINT timeout = 100 /* milliseconds */;
-        GetWindowTitle(hWnd, data.title, timeout);
 
         auto thiz = reinterpret_cast<WindowManager*>(lParam);
         thiz->windowDataList_[1].push_back(data);
@@ -376,7 +376,7 @@ void WindowManager::UpdateWindowHandleList()
     {
         const auto hWnd = GetDesktopWindow();;
 
-        Window::Data data;
+        Window::Data1 data;
         data.hWnd = hWnd;
         data.hOwner = NULL;
         data.windowRect = *lpRect;
@@ -384,17 +384,6 @@ void WindowManager::UpdateWindowHandleList()
         data.zOrder = 0;
         data.hMonitor = hMonitor;
         data.isDesktop = true;
-        data.isBackground = false;
-
-        MONITORINFOEX monitor;
-        monitor.cbSize = sizeof(MONITORINFOEX);
-        if (::GetMonitorInfo(hMonitor, &monitor))
-        {
-            WCHAR buf[_countof(monitor.szDevice)];
-            size_t len;
-            mbstowcs_s(&len, buf, _countof(monitor.szDevice), monitor.szDevice, _TRUNCATE);
-            data.title = buf;
-        }
 
         auto thiz = reinterpret_cast<WindowManager*>(lParam);
         thiz->windowDataList_[1].push_back(data);

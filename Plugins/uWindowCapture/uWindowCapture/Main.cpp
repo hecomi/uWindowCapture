@@ -172,6 +172,14 @@ extern "C"
         return nullptr;
     }
 
+    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcRequestUpdateWindowTitle(int id)
+    {
+        if (auto window = GetWindow(id))
+        {
+            return window->RequestUpdateTitle();
+        }
+    }
+
     UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcRequestCaptureWindow(int id, CapturePriority priority)
     {
         if (WindowManager::IsNull()) return;

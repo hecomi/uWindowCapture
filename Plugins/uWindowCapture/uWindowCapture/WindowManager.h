@@ -54,7 +54,7 @@ private:
 
     ThreadLoop windowHandleListThreadLoop_;
 
-    std::vector<Window::Data> windowDataList_[2];
+    std::vector<Window::Data1> windowDataList_[2];
     mutable std::mutex windowsHandleListMutex_;
 };
 

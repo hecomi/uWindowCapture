@@ -15,18 +15,7 @@ class Window
 {
 friend class WindowManager;
 public:
-    struct InitData
-    {
-        HWND hParent;
-        HINSTANCE hInstance;
-        DWORD processId;
-        DWORD threadId;
-        std::string className;
-        BOOL isAltTabWindow;
-        BOOL isStoreApp;
-    };
-
-    struct Data
+    struct Data1
     {
         BOOL isDesktop;
         HWND hWnd;
@@ -35,14 +24,25 @@ public:
         RECT windowRect;
         RECT clientRect;
         UINT zOrder;
+    };
+
+    struct Data2
+    {
+        HWND hParent;
+        HINSTANCE hInstance;
+        DWORD processId;
+        DWORD threadId;
         std::wstring title;
+        std::string className;
+        BOOL isAltTabWindow;
+        BOOL isStoreApp;
         BOOL isBackground;
     };
 
     explicit Window(int id);
     ~Window();
 
-    void SetData(Data&& data);
+    void SetData(const Data1& data);
 
     int GetId() const;
     int GetParentId() const;
@@ -83,6 +83,8 @@ public:
     void SetCursorDraw(bool draw);
     bool GetCursorDraw() const;
 
+    void RequestUpdateTitle();
+
     void Capture();
     void Upload();
     void Render();
@@ -105,15 +107,19 @@ public:
     BOOL IsBackground() const;
 
 private:
+    void UpdateTitle();
+    void UpdateIsBackground();
+
     std::shared_ptr<class WindowTexture> windowTexture_ = std::make_shared<WindowTexture>(this);
     std::shared_ptr<class IconTexture> iconTexture_ = std::make_shared<IconTexture>(this);
-    InitData initData_;
-    Data data_;
+    Data1 data1_;
+    Data2 data2_;
 
     const int id_ = -1;
     int parentId_ = -1;
     int frameCount_ = 0;
 
+    std::atomic<bool> hasTitleUpdateRequested_ = false;
     std::atomic<bool> hasNewWindowTextureCaptured_ = false;
     std::atomic<bool> hasNewWindowTextureUploaded_ = false;
     std::atomic<bool> hasNewIconTextureUploaded_ = false;

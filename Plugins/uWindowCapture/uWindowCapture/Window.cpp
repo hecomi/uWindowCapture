@@ -1,3 +1,4 @@
+#include <dwmapi.h>
 #include "Window.h"
 #include "WindowTexture.h"
 #include "IconTexture.h"
@@ -18,9 +19,9 @@ Window::~Window()
 }
 
 
-void Window::SetData(Data&& data)
+void Window::SetData(const Data1& data)
 {
-    data_ = data;
+    data1_ = data;
 }
 
 
@@ -38,61 +39,61 @@ int Window::GetParentId() const
 
 HWND Window::GetHandle() const
 {
-    return data_.hWnd;
+    return data1_.hWnd;
 }
 
 
 HWND Window::GetOwnerHandle() const
 {
-    return data_.hOwner;
+    return data1_.hOwner;
 }
 
 
 HWND Window::GetParentHandle() const
 {
-    return initData_.hParent;
+    return data2_.hParent;
 }
 
 
 HINSTANCE Window::GetInstance() const
 {
-    return initData_.hInstance;
+    return data2_.hInstance;
 }
 
 
 DWORD Window::GetProcessId() const
 {
-    return initData_.processId;
+    return data2_.processId;
 }
 
 
 DWORD Window::GetThreadId() const
 {
-    return initData_.threadId;
+    return data2_.threadId;
 }
 
 
 const RECT & Window::GetWindowRect() const
 {
-    return data_.windowRect;
+    return data1_.windowRect;
 }
 
 
 const RECT & Window::GetClientRect() const
 {
-    return data_.clientRect;
+    return data1_.clientRect;
 }
 
 
 bool Window::IsAltTab() const
 {
-    return initData_.isAltTabWindow;
+    return data2_.isAltTabWindow;
 }
 
 
 bool Window::IsDesktop() const
 {
-    return data_.isDesktop;
+    return data1_.isDesktop;
 }
 
 
@@ -146,55 +147,55 @@ BOOL Window::IsTouchable() const
 
 BOOL Window::IsStoreApp() const
 {
-    return initData_.isStoreApp;
+    return data2_.isStoreApp;
 }
 
 
 BOOL Window::IsBackground() const
 {
-    return data_.isBackground;
+    return data2_.isBackground;
 }
 
 
 UINT Window::GetX() const
 {
-    return data_.windowRect.left;
+    return data1_.windowRect.left;
 }
 
 
 UINT Window::GetY() const
 {
-    return data_.windowRect.top;
+    return data1_.windowRect.top;
 }
 
 
 UINT Window::GetWidth() const
 {
-    return data_.windowRect.right - data_.windowRect.left;
+    return data1_.windowRect.right - data1_.windowRect.left;
 }
 
 
 UINT Window::GetHeight() const
 {
-    return data_.windowRect.bottom - data_.windowRect.top;
+    return data1_.windowRect.bottom - data1_.windowRect.top;
 }
 
 
 UINT Window::GetClientWidth() const
 {
-    return data_.clientRect.right - data_.clientRect.left;
+    return data1_.clientRect.right - data1_.clientRect.left;
 }
 
 
 UINT Window::GetClientHeight() const
 {
-    return data_.clientRect.bottom - data_.clientRect.top;
+    return data1_.clientRect.bottom - data1_.clientRect.top;
 }
 
 
 UINT Window::GetZOrder() const
 {
-    return data_.zOrder;
+    return data1_.zOrder;
 }
 
 
@@ -224,13 +225,13 @@ UINT Window::GetIconHeight() const
 
 const std::wstring& Window::GetTitle() const
 {
-    return data_.title;
+    return data2_.title;
 }
 
 
 const std::string& Window::GetClass() const
 {
-    return initData_.className;
+    return data2_.className;
 }
 
 
@@ -279,6 +280,49 @@ bool Window::GetCursorDraw() const
 CaptureMode Window::GetCaptureMode() const
 {
     return windowTexture_->GetCaptureMode();
+}
+
+
+void Window::RequestUpdateTitle()
+{
+    hasTitleUpdateRequested_ = true;
+}
+
+
+void Window::UpdateTitle()
+{
+    if (!IsDesktop())
+    {
+        constexpr UINT timeout = 100 /* milliseconds */;
+        GetWindowTitle(data1_.hWnd, data2_.title, timeout);
+    }
+    else
+    {
+        MONITORINFOEX monitor;
+        monitor.cbSize = sizeof(MONITORINFOEX);
+        if (::GetMonitorInfo(data1_.hMonitor, &monitor))
+        {
+            WCHAR buf[_countof(monitor.szDevice)];
+            size_t len;
+            mbstowcs_s(&len, buf, _countof(monitor.szDevice), monitor.szDevice, _TRUNCATE);
+            data2_.title = buf;
+        }
+    }
+}
+
+
+void Window::UpdateIsBackground()
+{
+    if (IsStoreApp())
+    {
+        int attr = 0;
+        ::DwmGetWindowAttribute(GetHandle(), DWMWA_CLOAKED, &attr, sizeof(attr));
+        data2_.isBackground = attr;
+    }
+    else
+    {
+        data2_.isBackground = false;
+    }
 }
 
 
