@@ -294,11 +294,7 @@ public class UwcWindowTexture : MonoBehaviour
         switch (type)
         {
             case WindowTextureType.Window:
-                if (altTabWindow) {
-                    window = UwcManager.Find(window => window.isAltTabWindow && window.title.IndexOf(partialWindowTitle) != -1);
-                } else {
-                    window = UwcManager.Find(partialWindowTitle);
-                }
+                window = UwcManager.Find(partialWindowTitle, altTabWindow);
                 break;
             case WindowTextureType.Desktop:
                 window = UwcManager.FindDesktop(desktopIndex);
