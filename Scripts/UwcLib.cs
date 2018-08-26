@@ -174,12 +174,6 @@ public static class Lib
     public static extern bool IsWindowStoreApp(int id);
     [DllImport(name, EntryPoint = "UwcIsWindowBackground")]
     public static extern bool IsWindowBackground(int id);
-    [DllImport(name, EntryPoint = "UwcMoveWindow")]
-    public static extern bool MoveWindow(int id, int x, int y);
-    [DllImport(name, EntryPoint = "UwcScaleWindow")]
-    public static extern bool ScaleWindow(int id, int width, int height);
-    [DllImport(name, EntryPoint = "UwcMoveAndScaleWindow")]
-    public static extern bool MoveAndScaleWindow(int id, int x, int y, int width, int height);
     [DllImport(name, EntryPoint = "UwcRequestCaptureCursor")]
     public static extern void RequestCaptureCursor();
     [DllImport(name, EntryPoint = "UwcGetCursorPosition")]
