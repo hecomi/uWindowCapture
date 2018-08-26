@@ -522,30 +522,6 @@ extern "C"
         return false;
     }
 
-    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcMoveWindow(int id, int x, int y)
-    {
-        if (auto window = GetWindow(id))
-        {
-            window->MoveWindow(x, y);
-        }
-    }
-
-    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcScaleWindow(int id, int width, int height)
-    {
-        if (auto window = GetWindow(id))
-        {
-            window->ScaleWindow(width, height);
-        }
-    }
-
-    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcMoveAndScaleWindow(int id, int x, int y, int width, int height)
-    {
-        if (auto window = GetWindow(id))
-        {
-            window->MoveAndScaleWindow(x, y, width, height);
-        }
-    }
-
     UNITY_INTERFACE_EXPORT POINT UNITY_INTERFACE_API UwcGetCursorPosition()
     {
         POINT point;

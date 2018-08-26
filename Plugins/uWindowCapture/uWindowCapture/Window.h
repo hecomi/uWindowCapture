@@ -100,10 +100,6 @@ public:
     BOOL IsStoreApp() const;
     BOOL IsBackground() const;
 
-    BOOL MoveWindow(int x, int y);
-    BOOL ScaleWindow(int width, int height);
-    BOOL MoveAndScaleWindow(int x, int y, int width, int height);
-
 private:
     std::shared_ptr<class WindowTexture> windowTexture_ = std::make_shared<WindowTexture>(this);
     std::shared_ptr<class IconTexture> iconTexture_ = std::make_shared<IconTexture>(this);

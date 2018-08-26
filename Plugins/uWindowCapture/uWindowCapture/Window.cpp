@@ -156,25 +156,6 @@ BOOL Window::IsBackground() const
 }
 
 
-BOOL Window::MoveWindow(int x, int y)
-{
-    return MoveAndScaleWindow(x, y, GetWidth(), GetHeight());
-}
-
-
-BOOL Window::ScaleWindow(int width, int height)
-{
-    return MoveAndScaleWindow(GetX(), GetY(), width, height);
-}
-
-
-BOOL Window::MoveAndScaleWindow(int x, int y, int width, int height)
-{
-    bool repaint = (width != GetWidth() || height != GetHeight());
-    return ::MoveWindow(GetHandle(), x, y, width, height, repaint);
-}
-
-
 UINT Window::GetX() const
 {
     return data_.windowRect.left;
