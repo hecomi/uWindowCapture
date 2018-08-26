@@ -263,6 +263,24 @@ public class UwcManager : MonoBehaviour
         var id = instance.desktops_[index];
         return Find(id);
     }
+
+    static public void UpdateAllWindowTitles()
+    {
+        foreach (var kv in windows) {
+            var window = kv.Value;
+            window.RequestUpdateTitle();
+        }
+    }
+
+    static public void UpdateAltTabWindowTitles()
+    {
+        foreach (var kv in windows) {
+            var window = kv.Value;
+            if (window.isAltTabWindow) {
+                window.RequestUpdateTitle();
+            }
+        }
+    }
 }
 
 }

@@ -272,6 +272,11 @@ public class UwcWindow
         get { return onChildRemoved_; } 
     }
 
+    public void RequestUpdateTitle()
+    {
+        Lib.RequestUpdateWindowTitle(id);
+    }
+
     public void RequestCaptureIcon()
     {
         Lib.RequestCaptureIcon(id);

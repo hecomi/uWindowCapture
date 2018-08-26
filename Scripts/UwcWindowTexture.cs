@@ -123,6 +123,7 @@ public class UwcWindowTexture : MonoBehaviour
     public WindowTextureCaptureTiming captureRequestTiming = WindowTextureCaptureTiming.OnlyWhenVisible;
     public int captureFrameRate = 30;
     public bool drawCursor = true;
+    public bool updateTitle = true;
 
     public WindowTextureScaleControlType scaleControlType = WindowTextureScaleControlType.BaseScale;
     public float scalePer1000Pixel = 1f;
@@ -214,6 +215,10 @@ public class UwcWindowTexture : MonoBehaviour
         UpdateTexture();
         UpdateRenderer();
         UpdateScale();
+
+        if (updateTitle && isValid) {
+            window.RequestUpdateTitle();
+        }
 
         if (captureRequestTiming == WindowTextureCaptureTiming.EveryFrame) {
             RequestCapture();

@@ -39,6 +39,7 @@ public class UwcWindowTextureEditor : Editor
     bool scaleSettingFold_ = true;
     bool windowInformationFold_ = true;
 
+    SerializedProperty updateTitle;
     SerializedProperty childWindowPrefab;
     SerializedProperty childWindowZDistance;
     SerializedProperty captureMode;
@@ -62,6 +63,7 @@ public class UwcWindowTextureEditor : Editor
 
     void OnEnable()
     {
+        updateTitle = serializedObject.FindProperty("updateTitle");
         childWindowPrefab = serializedObject.FindProperty("childWindowPrefab");
         childWindowZDistance = serializedObject.FindProperty("childWindowZDistance");
         captureMode = serializedObject.FindProperty("captureMode");
@@ -113,6 +115,7 @@ public class UwcWindowTextureEditor : Editor
                     Undo.RecordObject(target, "Inspector");
                     texture.partialWindowTitle = title;
                 }
+                EditorGUILayout.PropertyField(updateTitle);
                 var altTabWindow = EditorGUILayout.Toggle("Alt Tab Window", texture.altTabWindow);
                 if (altTabWindow != texture.altTabWindow) {
                     Undo.RecordObject(target, "Inspector");
