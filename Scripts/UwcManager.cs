@@ -13,7 +13,7 @@ public class UwcManager : MonoBehaviour
         get { return CreateInstance(); }
     }
 
-    public static UwcManager CreateInstance()
+    private static UwcManager CreateInstance()
     {
         if (instance_ != null) return instance_;
 
@@ -204,15 +204,24 @@ public class UwcManager : MonoBehaviour
         return window;
     }
 
-    static public UwcWindow Find(string title)
+    static public UwcWindow Find(string partialTitle, bool isAltTabWindow = true)
     {
+        UwcWindow target = null;
+        int minIndex = int.MaxValue;
         foreach (var kv in windows) {
             var window = kv.Value;
-            if (window.title.IndexOf(title) != -1) {
+            if (isAltTabWindow && !window.isAltTabWindow) {
+                continue;
+            }
+            var index = window.title.IndexOf(partialTitle);
+            if (index == 0) {
                 return window;
+            } else if (index != -1 && index < minIndex) {
+                minIndex = index;
+                target = window;
             }
         }
-        return null;
+        return target;
     }
 
     static public UwcWindow Find(System.IntPtr handle)
