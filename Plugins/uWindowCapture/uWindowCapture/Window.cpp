@@ -322,7 +322,6 @@ void Window::Capture()
     {
         if (auto& uploader = WindowManager::GetUploadManager())
         {
-            hasNewIconTextureUploaded_ = true;
             uploader->RequestUploadWindow(id_);
         }
     }
