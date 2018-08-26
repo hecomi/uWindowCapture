@@ -8,9 +8,9 @@ uWindowCapture
 
 Screenshots
 ------------
-![Single Window](https://raw.githubusercontent.com/wiki/hecomi/uWindowCapture/single-window.gif)
-![Window Object](https://raw.githubusercontent.com/wiki/hecomi/uWindowCapture/window-object.gif)
-![Window Manager](https://raw.githubusercontent.com/wiki/hecomi/uWindowCapture/window-manager.gif)
+<img src="https://raw.githubusercontent.com/wiki/hecomi/uWindowCapture/single-window.gif" width="720" /><br />
+<img src="https://raw.githubusercontent.com/wiki/hecomi/uWindowCapture/window-object.gif" width="720" /><br />
+<img src="https://raw.githubusercontent.com/wiki/hecomi/uWindowCapture/window-manager.gif" width="720" />
 
 
 Installation
