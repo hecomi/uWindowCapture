@@ -308,7 +308,7 @@ void WindowManager::UpdateWindows()
                 }
                 else
                 {
-                    if (window->hasTitleUpdateRequested_) 
+                    if (window->hasTitleUpdateRequested_ || window->GetTitle().empty()) 
                     {
                         window->hasTitleUpdateRequested_ = false;
                         window->UpdateTitle();
