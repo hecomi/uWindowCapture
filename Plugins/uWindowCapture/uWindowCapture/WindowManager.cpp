@@ -273,11 +273,6 @@ void WindowManager::UpdateWindows()
                 // Newly added
                 if (window->frameCount_ == 0)
                 {
-                    if (auto parent = FindParentWindow(window))
-                    {
-                        window->parentId_ = parent->GetId();
-                    }
-
                     auto &data2 = window->data2_;
                     const auto hWnd = window->GetHandle();
 
@@ -302,6 +297,11 @@ void WindowManager::UpdateWindows()
                         data2.isBackground = false;
                         data2.className = "";
                         window->UpdateTitle();
+                    }
+
+                    if (auto parent = FindParentWindow(window))
+                    {
+                        window->parentId_ = parent->GetId();
                     }
 
                     MessageManager::Get().Add({ MessageType::WindowAdded, window->GetId(), window->GetHandle() });
