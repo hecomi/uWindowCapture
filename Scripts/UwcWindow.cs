@@ -343,6 +343,7 @@ public class UwcWindow
         var h = iconHeight;
         if (w == 0 || h == 0) return;
         iconTexture_ = new Texture2D(w, h, TextureFormat.BGRA32, false);
+        iconTexture_.filterMode = FilterMode.Point;
         Lib.SetWindowIconTexturePtr(id, iconTexture_.GetNativeTexturePtr());
         errorIconTexture_ = Resources.Load<Texture2D>("uWindowCapture/Textures/uWC_No_Image");
     }
