@@ -6,6 +6,13 @@ uWindowCapture
 **uWindowCapture** is an Unity asset to capture windows and make them available in Unity as `Texture2D`.
 
 
+Screenshots
+------------
+![Single Window](https://raw.githubusercontent.com/wiki/hecomi/uWindowCapture/single-window.gif)
+![Window Object](https://raw.githubusercontent.com/wiki/hecomi/uWindowCapture/window-object.gif)
+![Window Manager](https://raw.githubusercontent.com/wiki/hecomi/uWindowCapture/window-manager.gif)
+
+
 Installation
 ------------
 Please download the latest *uWindowCapture.unitypackage* from the [release page](https://github.com/hecomi/uWindowCapture/releases).
