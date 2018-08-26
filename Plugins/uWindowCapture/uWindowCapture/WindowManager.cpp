@@ -359,10 +359,10 @@ void WindowManager::UpdateWindowHandleList()
         data.hWnd = hWnd;
         data.windowRect = *lpRect;
         data.clientRect = *lpRect;
-        data.zOrder = ::GetWindowZOrder(hWnd);
-        data.hOwner = ::GetWindow(hWnd, GW_OWNER);
-        data.hParent = ::GetParent(hWnd);
-        data.hInstance = reinterpret_cast<HINSTANCE>(::GetWindowLongPtr(hWnd, GWLP_HINSTANCE));
+        data.zOrder = 0;
+        data.hOwner = NULL;
+        data.hParent = NULL;
+        data.hInstance = NULL;
         data.threadId = ::GetWindowThreadProcessId(hWnd, &data.processId);
         data.hMonitor = hMonitor;
         data.isDesktop = true;
