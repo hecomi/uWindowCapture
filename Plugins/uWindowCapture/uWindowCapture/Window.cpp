@@ -50,25 +50,25 @@ HWND Window::GetOwnerHandle() const
 
 HWND Window::GetParentHandle() const
 {
-    return data_.hParent;
+    return initData_.hParent;
 }
 
 
 HINSTANCE Window::GetInstance() const
 {
-    return data_.hInstance;
+    return initData_.hInstance;
 }
 
 
 DWORD Window::GetProcessId() const
 {
-    return data_.processId;
+    return initData_.processId;
 }
 
 
 DWORD Window::GetThreadId() const
 {
-    return data_.threadId;
+    return initData_.threadId;
 }
 
 
@@ -86,7 +86,7 @@ const RECT & Window::GetClientRect() const
 
 bool Window::IsAltTab() const
 {
-    return data_.isAltTabWindow;
+    return initData_.isAltTabWindow;
 }
 
 
@@ -146,7 +146,7 @@ BOOL Window::IsTouchable() const
 
 BOOL Window::IsStoreApp() const
 {
-    return data_.isStoreApp;
+    return initData_.isStoreApp;
 }
 
 
@@ -230,7 +230,7 @@ const std::wstring& Window::GetTitle() const
 
 const std::string& Window::GetClass() const
 {
-    return data_.className;
+    return initData_.className;
 }
 
 

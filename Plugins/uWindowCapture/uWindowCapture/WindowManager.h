@@ -41,7 +41,6 @@ private:
     void StartWindowHandleListThread();
     void StopWindowHandleListThread();
     void UpdateWindowHandleList();
-
     void UpdateWindows();
     void RenderWindows();
 

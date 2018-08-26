@@ -15,23 +15,27 @@ class Window
 {
 friend class WindowManager;
 public:
-    struct Data
+    struct InitData
     {
-        HWND hWnd;
-        RECT windowRect;
-        RECT clientRect;
-        UINT zOrder;
-        HWND hOwner;
         HWND hParent;
         HINSTANCE hInstance;
         DWORD processId;
         DWORD threadId;
-        std::wstring title;
         std::string className;
-        HMONITOR hMonitor;
         BOOL isAltTabWindow;
         BOOL isStoreApp;
+    };
+
+    struct Data
+    {
         BOOL isDesktop;
+        HWND hWnd;
+        HMONITOR hMonitor;
+        HWND hOwner;
+        RECT windowRect;
+        RECT clientRect;
+        UINT zOrder;
+        std::wstring title;
         BOOL isBackground;
     };
 
@@ -103,6 +107,7 @@ public:
 private:
     std::shared_ptr<class WindowTexture> windowTexture_ = std::make_shared<WindowTexture>(this);
     std::shared_ptr<class IconTexture> iconTexture_ = std::make_shared<IconTexture>(this);
+    InitData initData_;
     Data data_;
 
     const int id_ = -1;
