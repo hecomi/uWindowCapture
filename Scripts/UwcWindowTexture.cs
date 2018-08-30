@@ -152,7 +152,9 @@ public class UwcWindowTexture : MonoBehaviour
 
             if (window_ != null) {
                 shouldUpdateWindow_ = false;
-                captureMode = window_.captureMode;
+                if (window_.isDesktop || window_.isChild) {
+                    captureMode = window_.captureMode;
+                }
                 window_.onCaptured.AddListener(OnCaptured);
                 window_.RequestCapture(CapturePriority.High);
             }
