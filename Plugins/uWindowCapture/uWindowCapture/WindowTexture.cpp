@@ -228,9 +228,31 @@ bool WindowTexture::Capture()
             {
                 if (cursorInfo.flags == CURSOR_SHOWING)
                 {
-                    const auto windowLocalCursorX = static_cast<int>((cursorInfo.ptScreenPos.x - window_->GetX()) / dpiScaleX);
-                    const auto windowLocalCursorY = static_cast<int>((cursorInfo.ptScreenPos.y - window_->GetY()) / dpiScaleY);
-                    ::DrawIcon(hDcMem, windowLocalCursorX, windowLocalCursorY, cursorInfo.hCursor);
+                    switch (captureMode_)
+                    {
+                        case CaptureMode::PrintWindow:
+                        {
+                            const auto windowLocalCursorX = static_cast<int>((cursorInfo.ptScreenPos.x - window_->GetX()) / dpiScaleX);
+                            const auto windowLocalCursorY = static_cast<int>((cursorInfo.ptScreenPos.y - window_->GetY()) / dpiScaleY);
+                            ::DrawIcon(hDcMem, windowLocalCursorX, windowLocalCursorY, cursorInfo.hCursor);
+                            break;
+                        }
+                        case CaptureMode::BitBlt:
+                        {
+                            POINT pos = cursorInfo.ptScreenPos;
+                            if (::ScreenToClient(hWnd, &pos))
+                            {
+                                const auto windowLocalCursorX = static_cast<int>(pos.x / dpiScaleX);
+                                const auto windowLocalCursorY = static_cast<int>(pos.y / dpiScaleY);
+                                ::DrawIcon(hDcMem, windowLocalCursorX, windowLocalCursorY, cursorInfo.hCursor);
+                            }
+                            break;
+                        }
+                        default:
+                        {
+                            break;
+                        }
+                    }
                 }
             }
             else
