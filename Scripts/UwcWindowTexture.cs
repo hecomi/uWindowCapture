@@ -4,28 +4,6 @@ using System.Collections.Generic;
 namespace uWindowCapture
 {
 
-public enum WindowTextureType
-{
-    Window = 0,
-    Desktop = 1,
-    Child = 2,
-}
-
-public enum WindowTextureCaptureTiming
-{
-    EveryFrame = 0,
-    OnlyWhenVisible = 1,
-    Manual = 2,
-}
-
-public enum WindowTextureScaleControlType
-{
-    BaseScale = 0,
-    FixedWidth = 1,
-    FixedHeight = 2,
-    Manual = 3,
-}
-
 public class UwcWindowTexture : MonoBehaviour
 {
     bool shouldUpdateWindow_ = true;
@@ -341,6 +319,45 @@ public class UwcWindowTexture : MonoBehaviour
         }
 
         window.RequestCapture(priority);
+    }
+
+    static public RayCastResult RayCast(Vector3 from, Vector3 dir, float distance, LayerMask layerMask)
+    {
+        var ray = new Ray();
+        ray.origin = from;
+        ray.direction = dir;
+        RaycastHit hit;
+
+        if (Physics.Raycast(ray, out hit, distance, layerMask)) {
+            var collider = hit.collider;
+            var texture = 
+                collider.GetComponent<UwcWindowTexture>() ??
+                collider.GetComponentInChildren<UwcWindowTexture>();
+            if (texture) {
+                var window = texture.window;
+                var meshFilter = texture.GetComponent<MeshFilter>();
+                if (window != null && meshFilter && meshFilter.sharedMesh) {
+                    var localPos = texture.transform.InverseTransformPoint(hit.point);
+                    var meshScale = 2f * meshFilter.sharedMesh.bounds.extents;
+                    var windowLocalX = (int)((localPos.x / meshScale.x + 0.5f) * window.width);
+                    var windowLocalY = (int)((0.5f - localPos.y / meshScale.y) * window.height);
+                    var desktopX = window.x + windowLocalX;
+                    var desktopY = window.y + windowLocalY;
+                    return new RayCastResult {
+                        hit = true,
+                        texture = texture,
+                        position = hit.point,
+                        normal = hit.normal,
+                        windowCoord = new Vector2(windowLocalX, windowLocalY),
+                        desktopCoord = new Vector2(desktopX, desktopY),
+                    };
+                }
+            }
+        }
+
+        return new RayCastResult() {
+            hit = false,
+        };
     }
 }
 
