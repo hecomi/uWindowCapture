@@ -7,6 +7,33 @@ namespace uWindowCapture
 public class UwcWindowTexture : MonoBehaviour
 {
     bool shouldUpdateWindow_ = true;
+    bool shouldUpdateWindow 
+    {
+        get
+        {
+            return shouldUpdateWindow_;
+        }
+        set
+        {
+            if (value && searchTiming == WindowSearchTiming.Manual) return;
+            shouldUpdateWindow_ = value;
+        }
+    }
+
+    [SerializeField]
+    WindowSearchTiming searchTiming_ = WindowSearchTiming.OnlyWhenParameterChanged;
+    public WindowSearchTiming searchTiming
+    {
+        get
+        {
+            return searchTiming_;
+        }
+        set
+        {
+            searchTiming_ = value;
+            shouldUpdateWindow = true;
+        }
+    }
 
     [SerializeField]
     WindowTextureType type_ = WindowTextureType.Window;
@@ -18,7 +45,7 @@ public class UwcWindowTexture : MonoBehaviour
         }
         set
         {
-            shouldUpdateWindow_ = true;
+            shouldUpdateWindow = true;
             type_ = value;
         }
     }
@@ -33,7 +60,7 @@ public class UwcWindowTexture : MonoBehaviour
         }
         set
         {
-            shouldUpdateWindow_ = true;
+            shouldUpdateWindow = true;
             altTabWindow_ = value;
         }
     }
@@ -76,7 +103,7 @@ public class UwcWindowTexture : MonoBehaviour
         }
         set 
         {
-            shouldUpdateWindow_ = true;
+            shouldUpdateWindow = true;
             partialWindowTitle_ = value;
         }
     }
@@ -91,7 +118,7 @@ public class UwcWindowTexture : MonoBehaviour
         }
         set
         {
-            shouldUpdateWindow_ = true;
+            shouldUpdateWindow = true;
             desktopIndex_ = Mathf.Clamp(value, 0, UwcManager.desktopCount - 1);
         }
     }
@@ -102,6 +129,7 @@ public class UwcWindowTexture : MonoBehaviour
     public int captureFrameRate = 30;
     public bool drawCursor = true;
     public bool updateTitle = true;
+    public bool searchAnotherWindowWhenInvalid = false;
 
     public WindowTextureScaleControlType scaleControlType = WindowTextureScaleControlType.BaseScale;
     public float scalePer1000Pixel = 1f;
@@ -129,7 +157,7 @@ public class UwcWindowTexture : MonoBehaviour
             window_ = value;
 
             if (window_ != null) {
-                shouldUpdateWindow_ = false;
+                shouldUpdateWindow = false;
                 if (window_.isDesktop || window_.isChild) {
                     captureMode = window_.captureMode;
                 }
@@ -185,6 +213,7 @@ public class UwcWindowTexture : MonoBehaviour
 
     void Update()
     {
+        UpdateSearchTiming();
         UpdateTargetWindow();
 
         if (!isValid) {
@@ -267,9 +296,16 @@ public class UwcWindowTexture : MonoBehaviour
         transform.localScale = scale;
     }
 
+    void UpdateSearchTiming()
+    {
+        if (searchTiming == WindowSearchTiming.Always) {
+            shouldUpdateWindow = true;
+        }
+    }
+
     void UpdateTargetWindow()
     {
-        if (!shouldUpdateWindow_) return;
+        if (!shouldUpdateWindow) return;
 
         switch (type)
         {
@@ -319,6 +355,11 @@ public class UwcWindowTexture : MonoBehaviour
         }
 
         window.RequestCapture(priority);
+    }
+
+    public void RequestWindowUpdate()
+    {
+        shouldUpdateWindow = true;
     }
 
     static public RayCastResult RayCast(Vector3 from, Vector3 dir, float distance, LayerMask layerMask)

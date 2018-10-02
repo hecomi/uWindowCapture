@@ -107,6 +107,12 @@ public class UwcWindowTextureEditor : Editor
             texture.type = type;
         }
 
+        var searchTiming = (WindowSearchTiming)EditorGUILayout.EnumPopup("Search Timing", texture.searchTiming);
+        if (searchTiming != texture.searchTiming) {
+            Undo.RecordObject(target, "Inspector");
+            texture.searchTiming = searchTiming;
+        }
+
         switch (type)
         {
             case WindowTextureType.Window:
