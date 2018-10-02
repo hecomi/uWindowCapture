@@ -32,6 +32,8 @@ public class UwcManager : MonoBehaviour
     public static event Lib.DebugLogDelegate onDebugLog = msg => Debug.Log(msg);
     public static event Lib.DebugLogDelegate onDebugErr = msg => Debug.LogError(msg);
 
+    public WindowTitlesUpdateTiming windowTitlesUpdateTiming = WindowTitlesUpdateTiming.Manual;
+
     private UwcWindowEvent onWindowAdded_ = new UwcWindowEvent();
     public static UwcWindowEvent onWindowAdded
     {
@@ -120,6 +122,7 @@ public class UwcManager : MonoBehaviour
         Lib.Update();
         UpdateWindowInfo();
         UpdateMessages();
+        UpdateWindowTitles();
     }
 
     void UpdateWindowInfo()
@@ -194,6 +197,20 @@ public class UwcManager : MonoBehaviour
                     break;
                 }
             }
+        }
+    }
+
+    void UpdateWindowTitles()
+    {
+        switch (windowTitlesUpdateTiming) {
+            case WindowTitlesUpdateTiming.Manual:
+                break;
+            case WindowTitlesUpdateTiming.AlwaysAllWindows:
+                UpdateAllWindowTitles();
+                break;
+            case WindowTitlesUpdateTiming.AlwaysAltTabWindows:
+                UpdateAltTabWindowTitles();
+                break;
         }
     }
 

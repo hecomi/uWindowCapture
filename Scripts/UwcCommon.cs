@@ -33,6 +33,13 @@ public enum WindowSearchTiming
     OnlyWhenParameterChanged = 2,
 }
 
+public enum WindowTitlesUpdateTiming
+{
+    Manual = 0,
+    AlwaysAllWindows = 1,
+    AlwaysAltTabWindows = 2,
+}
+
 public class UwcEvent : UnityEvent
 {
 }
