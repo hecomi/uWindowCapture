@@ -616,6 +616,16 @@ extern "C"
         return;
     }
 
+    UNITY_INTERFACE_EXPORT UINT UNITY_INTERFACE_API UwcGetScreenX()
+    {
+        return ::GetSystemMetrics(SM_XVIRTUALSCREEN);
+    }
+
+    UNITY_INTERFACE_EXPORT UINT UNITY_INTERFACE_API UwcGetScreenY()
+    {
+        return ::GetSystemMetrics(SM_YVIRTUALSCREEN);
+    }
+
     UNITY_INTERFACE_EXPORT UINT UNITY_INTERFACE_API UwcGetScreenWidth()
     {
         return ::GetSystemMetrics(SM_CXVIRTUALSCREEN);
