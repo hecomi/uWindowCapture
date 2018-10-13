@@ -194,6 +194,10 @@ public static class Lib
     public static extern int GetCursorHeight();
     [DllImport(name, EntryPoint = "UwcSetCursorTexturePtr")]
     public static extern void SetCursorTexturePtr(IntPtr ptr);
+    [DllImport(name, EntryPoint = "UwcGetScreenX")]
+    public static extern int GetScreenX();
+    [DllImport(name, EntryPoint = "UwcGetScreenY")]
+    public static extern int GetScreenY();
     [DllImport(name, EntryPoint = "UwcGetScreenWidth")]
     public static extern int GetScreenWidth();
     [DllImport(name, EntryPoint = "UwcGetScreenHeight")]
