@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
 
+#pragma warning disable 0414
+
 namespace uWindowCapture
 {
 
