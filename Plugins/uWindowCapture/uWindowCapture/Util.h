@@ -8,6 +8,7 @@
 
 
 // Window utilities
+bool IsFullScreenWindow(HWND hWnd);
 bool IsAltTabWindow(HWND hWnd);
 UINT GetWindowZOrder(HWND hWnd);
 bool GetWindowTitle(HWND hWnd, std::wstring& outTitle);

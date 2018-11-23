@@ -6,6 +6,27 @@
 
 
 
+bool IsFullScreenWindow(HWND hWnd)
+{
+    const auto hMonitor = ::MonitorFromWindow(hWnd, MONITOR_DEFAULTTOPRIMARY);
+    MONITORINFO monitorInfo;
+    monitorInfo.cbSize = sizeof(MONITORINFO);
+    if (!::GetMonitorInfo(hMonitor, &monitorInfo)) return false;
+    const auto &monitor = monitorInfo.rcMonitor;
+    const auto monitorWidth = monitor.right - monitor.left;
+    const auto monitorHeight = monitor.bottom - monitor.top;
+
+    RECT client;
+    if (!::GetClientRect(hWnd, &client)) return false;
+
+    return
+        client.left == 0 &&
+        client.top == 0 &&
+        client.right == monitorWidth &&
+        client.bottom == monitorHeight;
+}
+
+
 bool IsAltTabWindow(HWND hWnd)
 {
     if (!::IsWindowVisible(hWnd)) return false;
@@ -23,13 +44,19 @@ bool IsAltTabWindow(HWND hWnd)
         return false;
     }
 
-    // Tool window
+    // Exclude tool windows
     if (::GetWindowLong(hWnd, GWL_EXSTYLE) & WS_EX_TOOLWINDOW)
     {
         return false;
     }
 
-    // Remove task tray programs
+    // Include fullscreen
+    if (IsFullScreenWindow(hWnd))
+    {
+        return true;
+    }
+
+    // Exclude task tray programs
     TITLEBARINFO titleBar;
     titleBar.cbSize = sizeof(TITLEBARINFO);
     ::GetTitleBarInfo(hWnd, &titleBar);
