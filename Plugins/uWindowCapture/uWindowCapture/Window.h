@@ -83,6 +83,9 @@ public:
     void SetCursorDraw(bool draw);
     bool GetCursorDraw() const;
 
+    UINT GetPixel(int x, int y) const;
+    bool GetPixels(BYTE* output, int x, int y, int width, int height) const;
+
     void RequestUpdateTitle();
 
     void Capture();

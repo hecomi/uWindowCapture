@@ -530,6 +530,24 @@ extern "C"
         return false;
     }
 
+    UNITY_INTERFACE_EXPORT UINT UNITY_INTERFACE_API UwcGetWindowPixel(int id, int x, int y)
+    {
+        if (auto window = GetWindow(id))
+        {
+            return window->GetPixel(x, y);
+        }
+        return 0;
+    }
+
+    UNITY_INTERFACE_EXPORT bool UNITY_INTERFACE_API UwcGetWindowPixels(int id, BYTE* output, int x, int y, int width, int height)
+    {
+        if (auto window = GetWindow(id))
+        {
+            return window->GetPixels(output, x, y, width, height);
+        }
+        return false;
+    }
+
     UNITY_INTERFACE_EXPORT POINT UNITY_INTERFACE_API UwcGetCursorPosition()
     {
         POINT point;

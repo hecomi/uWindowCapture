@@ -42,6 +42,9 @@ public:
     bool Upload();
     bool Render();
 
+    UINT GetPixel(int x, int y) const;
+    bool GetPixels(BYTE* output, int x, int y, int width, int height) const;
+
 private:
     void CreateBitmapIfNeeded(HDC hDc, UINT width, UINT height);
     void DeleteBitmap();
@@ -63,5 +66,5 @@ private:
     std::atomic<UINT> textureWidth_ = 0;
     std::atomic<UINT> textureHeight_ = 0;
     std::atomic<bool> drawCursor_ = true;
-    std::mutex bufferMutex_;
+    mutable std::mutex bufferMutex_;
 };

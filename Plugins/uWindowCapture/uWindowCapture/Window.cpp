@@ -277,6 +277,18 @@ bool Window::GetCursorDraw() const
 }
 
 
+UINT Window::GetPixel(int x, int y) const
+{
+    return windowTexture_->GetPixel(x, y);
+}
+
+
+bool Window::GetPixels(BYTE* output, int x, int y, int width, int height) const
+{
+    return windowTexture_->GetPixels(output, x, y, width, height);
+}
+
+
 CaptureMode Window::GetCaptureMode() const
 {
     return windowTexture_->GetCaptureMode();

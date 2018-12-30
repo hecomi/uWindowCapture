@@ -1,4 +1,5 @@
-﻿using System;
+﻿using UnityEngine;
+using System;
 using System.Runtime.InteropServices;
 
 #pragma warning disable 114, 465
@@ -176,6 +177,10 @@ public static class Lib
     public static extern bool IsWindowStoreApp(int id);
     [DllImport(name, EntryPoint = "UwcIsWindowBackground")]
     public static extern bool IsWindowBackground(int id);
+    [DllImport(name, EntryPoint = "UwcGetWindowPixel")]
+    public static extern Color32 GetWindowPixel(int id, int x, int y);
+    [DllImport(name, EntryPoint = "UwcGetWindowPixels")]
+    private static extern bool GetWindowPixels_Internal(int id, IntPtr output, int x, int y, int width, int height);
     [DllImport(name, EntryPoint = "UwcRequestCaptureCursor")]
     public static extern void RequestCaptureCursor();
     [DllImport(name, EntryPoint = "UwcGetCursorPosition")]
@@ -243,6 +248,29 @@ public static class Lib
         } else {
             return "";
         }
+    }
+
+    public static Color32[] GetWindowPixels(int id, int x, int y, int width, int height)
+    {
+        var color = new Color32[width * height];       
+        GetWindowPixels(id, color, x, y, width, height);
+        return color;
+    }
+
+    public static bool GetWindowPixels(int id, Color32[] colors, int x, int y, int width, int height)
+    {
+        if (colors.Length < width * height) {
+            Debug.LogErrorFormat("colors is smaller than (width * height).", id, x, y, width, height);
+            return false;
+        }
+		var handle = GCHandle.Alloc(colors, GCHandleType.Pinned);
+		var ptr = handle.AddrOfPinnedObject();
+        if (!GetWindowPixels_Internal(id, ptr, x, y, width, height)) {
+            Debug.LogErrorFormat("GetWindowPixels({0}, {1}, {2}, {3}, {4}) failed.", id, x, y, width, height);
+            return false;
+        }
+        handle.Free();
+        return true;
     }
 }
 

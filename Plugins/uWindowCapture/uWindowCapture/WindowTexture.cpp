@@ -384,3 +384,54 @@ bool WindowTexture::Render()
 
     return true;
 }
+
+
+UINT WindowTexture::GetPixel(int x, int y) const
+{
+    BYTE output[4];
+    if (GetPixels(output, x, y, 1, 1))
+    {
+        return *reinterpret_cast<UINT*>(output);
+    }
+    return 0;
+}
+
+
+bool WindowTexture::GetPixels(BYTE* output, int x, int y, int width, int height) const
+{
+    if (!buffer_)
+    {
+        Debug::Error("WindowTexture::GetPixels() => buffer has not been set yet.");
+        return false;
+    }
+
+    int bufferWidth = bufferWidth_.load();
+    int bufferHeight = bufferHeight_.load();
+    if (x < 0 || x + width >= bufferWidth || y < 0 || y + height >= bufferHeight)
+    {
+        Debug::Error("The given range is out of the buffer area: x=", x, ", y=", y, ", width=", width, ", height=", height);
+        Debug::Error("The buffer width=", bufferWidth_, ", height=", bufferHeight_);
+        return false;
+    }
+
+    std::lock_guard<std::mutex> lock(bufferMutex_);
+
+    constexpr int rgba = 4;
+    for (int j = 0; j < height; ++j)
+    {
+        for (int i = 0; i < width; ++i)
+        {
+            for (int c = 0; c < rgba; ++c)
+            {
+                const int indexOut = i + j * width;
+                const int indexIn = (x + i) + (y + (height - 1 - j)) * bufferWidth_;
+                output[indexOut * rgba + 0] = buffer_[indexIn * rgba + 2];
+                output[indexOut * rgba + 1] = buffer_[indexIn * rgba + 1];
+                output[indexOut * rgba + 2] = buffer_[indexIn * rgba + 0];
+                output[indexOut * rgba + 3] = buffer_[indexIn * rgba + 3];
+            }
+        }
+    }
+
+    return true;
+}
