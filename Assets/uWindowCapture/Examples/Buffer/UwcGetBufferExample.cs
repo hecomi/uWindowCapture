@@ -41,41 +41,20 @@ public class UwcGetBufferExample : MonoBehaviour
         if (!isValid) return;
 
         var window = uwcTexture.window;
-        if (texture_ == null || 
-            window.bufferWidth != texture_.width || 
-            window.bufferHeight != texture_.height) {
-            UpdateTexture();
+        var width = window.width;
+        var height = window.height;
+
+        if (texture_ == null || width != texture_.width || height != texture_.height) {
+            texture_ = new Texture2D(width, height, TextureFormat.RGBA32, false);
+            texture_.filterMode = FilterMode.Bilinear;
+            pixels_ = texture_.GetPixels32();
+            handle_ = GCHandle.Alloc(pixels_, GCHandleType.Pinned);
+            ptr_ = handle_.AddrOfPinnedObject();
+            GetComponent<Renderer>().material.mainTexture = texture_;
         }
 
-        CopyTexture();
-    }
-
-    void UpdateTexture()
-    {
-        if (!isValid) return;
-
-        var window = uwcTexture.window;
-        var width = window.bufferWidth;
-        var height = window.bufferHeight;
-
-        texture_ = new Texture2D(width, height, TextureFormat.RGBA32, false);
-        texture_.filterMode = FilterMode.Bilinear;
-        pixels_ = texture_.GetPixels32();
-        handle_ = GCHandle.Alloc(pixels_, GCHandleType.Pinned);
-        ptr_ = handle_.AddrOfPinnedObject();
-
-        GetComponent<Renderer>().material.mainTexture = texture_;
-    }
-
-    void CopyTexture()
-    {
-        if (!isValid) return;
-
-        var window = uwcTexture.window;
-        var width = window.bufferWidth;
-        var height = window.bufferHeight;
+        // memcpy can be run in another thread. 
         var buffer = window.buffer;
-
         memcpy(ptr_, buffer, width * height * sizeof(Byte) * 4);
 
         texture_.SetPixels32(pixels_);

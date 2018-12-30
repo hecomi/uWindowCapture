@@ -42,7 +42,7 @@ public:
     bool Upload();
     bool Render();
 
-    BYTE* GetBuffer() const;
+    BYTE* GetBuffer();
 
     UINT GetPixel(int x, int y) const;
     bool GetPixels(BYTE* output, int x, int y, int width, int height) const;
@@ -60,6 +60,7 @@ private:
     std::mutex sharedTextureMutex_;
 
     Buffer<BYTE> buffer_;
+    Buffer<BYTE> bufferForGetBuffer_;
     HBITMAP bitmap_ = nullptr;
     std::atomic<UINT> bufferWidth_ = 0;
     std::atomic<UINT> bufferHeight_ = 0;

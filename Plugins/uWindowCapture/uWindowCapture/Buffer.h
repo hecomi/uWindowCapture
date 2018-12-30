@@ -77,12 +77,12 @@ public:
         return value_ != nullptr;
     }
 
-    const T operator [](UINT index) const
+    const T& operator [](UINT index) const
     {
         if (index >= size_)
         {
             Debug::Error("Array index out of range: ", index, size_);
-            return T(0);
+            return value_[0];
         }
         return value_[index];
     }

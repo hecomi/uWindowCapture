@@ -348,7 +348,7 @@ bool WindowTexture::Upload()
 
         const UINT rawPitch = bufferWidth_ * 4;
         const int startIndex = offsetX_ * 4 + offsetY_ * rawPitch;
-        const auto* start = &buffer_[startIndex];
+        const auto* start = buffer_.Get(startIndex);
 
         ComPtr<ID3D11DeviceContext> context;
         uploader->GetDevice()->GetImmediateContext(&context);
@@ -386,9 +386,16 @@ bool WindowTexture::Render()
 }
 
 
-BYTE* WindowTexture::GetBuffer() const
+BYTE* WindowTexture::GetBuffer()
 {
-    return buffer_.Empty() ? nullptr : buffer_.Get();
+    if (buffer_.Empty()) return nullptr;
+
+    std::lock_guard<std::mutex> lock(bufferMutex_);
+
+    bufferForGetBuffer_.ExpandIfNeeded(buffer_.Size());
+    memcpy(bufferForGetBuffer_.Get(), buffer_.Get(), buffer_.Size());
+
+    return bufferForGetBuffer_.Get();
 }
 
 
