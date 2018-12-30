@@ -186,6 +186,11 @@ public class UwcWindow
         get { return Lib.GetWindowZOrder(id); }
     }
 
+    public System.IntPtr buffer
+    {
+        get { return Lib.GetWindowBuffer(id); }
+    }
+
     public int bufferWidth
     {
         get { return Lib.GetWindowBufferWidth(id); }
