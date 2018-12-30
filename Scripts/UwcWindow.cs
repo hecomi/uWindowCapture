@@ -348,6 +348,21 @@ public class UwcWindow
         Lib.SetWindowIconTexturePtr(id, iconTexture_.GetNativeTexturePtr());
         errorIconTexture_ = Resources.Load<Texture2D>("uWindowCapture/Textures/uWC_No_Image");
     }
+
+    public Color32[] GetPixels(int x, int y, int width, int height)
+    {
+        return Lib.GetWindowPixels(id, x, y, width, height);
+    }
+
+    public bool GetPixels(Color32[] colors, int x, int y, int width, int height)
+    {
+        return Lib.GetWindowPixels(id, colors, x, y, width, height);
+    }
+
+    public Color32 GetPixel(int x, int y)
+    {
+        return Lib.GetWindowPixel(id, x, y);
+    }
 }
 
 }
