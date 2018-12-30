@@ -282,6 +282,15 @@ extern "C"
         return 0;
     }
 
+    UNITY_INTERFACE_EXPORT BYTE* UNITY_INTERFACE_API UwcGetWindowBuffer(int id)
+    {
+        if (auto window = GetWindow(id))
+        {
+            return window->GetBuffer();
+        }
+        return nullptr;
+    }
+
     UNITY_INTERFACE_EXPORT UINT UNITY_INTERFACE_API UwcGetWindowBufferWidth(int id)
     {
         if (auto window = GetWindow(id))

@@ -42,6 +42,8 @@ public:
     bool Upload();
     bool Render();
 
+    BYTE* GetBuffer() const;
+
     UINT GetPixel(int x, int y) const;
     bool GetPixels(BYTE* output, int x, int y, int width, int height) const;
 

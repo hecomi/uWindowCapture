@@ -199,6 +199,12 @@ UINT Window::GetZOrder() const
 }
 
 
+BYTE* Window::GetBuffer() const
+{
+    return windowTexture_->GetBuffer();
+}
+
+
 UINT Window::GetBufferWidth() const
 {
     return windowTexture_->GetWidth();

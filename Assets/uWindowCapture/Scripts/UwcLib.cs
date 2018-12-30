@@ -121,6 +121,8 @@ public static class Lib
     public static extern int GetWindowHeight(int id);
     [DllImport(name, EntryPoint = "UwcGetWindowZOrder")]
     public static extern int GetWindowZOrder(int id);
+    [DllImport(name, EntryPoint = "UwcGetWindowBuffer")]
+    public static extern IntPtr GetWindowBuffer(int id);
     [DllImport(name, EntryPoint = "UwcGetWindowBufferWidth")]
     public static extern int GetWindowBufferWidth(int id);
     [DllImport(name, EntryPoint = "UwcGetWindowBufferHeight")]

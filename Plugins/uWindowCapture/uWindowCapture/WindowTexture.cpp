@@ -386,6 +386,12 @@ bool WindowTexture::Render()
 }
 
 
+BYTE* WindowTexture::GetBuffer() const
+{
+    return buffer_.Empty() ? nullptr : buffer_.Get();
+}
+
+
 UINT WindowTexture::GetPixel(int x, int y) const
 {
     BYTE output[4];

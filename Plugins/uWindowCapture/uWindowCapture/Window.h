@@ -63,6 +63,7 @@ public:
     UINT GetClientWidth() const;
     UINT GetClientHeight() const;
     UINT GetZOrder() const;
+    BYTE* GetBuffer() const;
     UINT GetBufferWidth() const;
     UINT GetBufferHeight() const;
     UINT GetIconWidth() const;
