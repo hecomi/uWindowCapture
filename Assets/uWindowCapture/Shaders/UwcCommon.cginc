@@ -42,7 +42,7 @@ v2f vert(appdata v)
 
 fixed4 frag(v2f i) : SV_Target
 {
-    float4 col = tex2D(_MainTex, i.uv) * _Color;
+    float4 col = float4(tex2D(_MainTex, i.uv).rgb * _Color, _Color.a);
     UNITY_APPLY_FOG(i.fogCoord, col);
     return col;
 }
