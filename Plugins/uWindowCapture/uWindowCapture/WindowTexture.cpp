@@ -222,8 +222,9 @@ bool WindowTexture::Capture()
         const bool isCursorWindow = cursorWindow && cursorWindow->GetHandle() == window_->GetHandle();
         if (isCursorWindow || window_->IsDesktop())
         {
-            CURSORINFO cursorInfo;
+            CURSORINFO cursorInfo { 0 };
             cursorInfo.cbSize = sizeof(CURSORINFO);
+            POINT pos = cursorInfo.ptScreenPos;
             if (::GetCursorInfo(&cursorInfo))
             {
                 if (cursorInfo.flags == CURSOR_SHOWING)
