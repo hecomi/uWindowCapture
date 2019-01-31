@@ -46,6 +46,18 @@ public class UwcManager : MonoBehaviour
         get { return instance.onWindowRemoved_; }
     }
 
+    private UwcWindowEvent onDesktopAdded_ = new UwcWindowEvent();
+    public static UwcWindowEvent onDesktopAdded
+    {
+        get { return instance.onDesktopAdded_; }
+    }
+
+    private UwcWindowEvent onDesktopRemoved_ = new UwcWindowEvent();
+    public static UwcWindowEvent onDesktopRemoved
+    {
+        get { return instance.onDesktopRemoved_; }
+    }
+
     private UwcEvent onCursorCaptured_ = new UwcEvent();
     public static UwcEvent onCursorCaptured
     {
@@ -149,8 +161,10 @@ public class UwcManager : MonoBehaviour
                     var window = AddWindow(id);
                     if (window.isAlive && window.isDesktop) {
                         desktops_.Add(id);
+                        onDesktopAdded.Invoke(window);
+                    } else {
+                        onWindowAdded.Invoke(window);
                     }
-                    onWindowAdded.Invoke(window);
                     break;
                 }
                 case MessageType.WindowRemoved: {
@@ -161,9 +175,11 @@ public class UwcManager : MonoBehaviour
                             window.parentWindow.onChildRemoved.Invoke(window);
                         }
                         if (window.isAlive && window.isDesktop) {
+                            onDesktopRemoved.Invoke(window);
                             desktops_.Remove(id);
+                        } else {
+                            onWindowRemoved.Invoke(window);
                         }
-                        onWindowRemoved.Invoke(window);
                         windows.Remove(id);
                     }
                     break;
