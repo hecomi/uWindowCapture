@@ -65,7 +65,6 @@ public class UwcWindowTextureChildrenManager : MonoBehaviour
 
     void OnChildAdded(UwcWindow window)
     {
-        Debug.Log("OnChildAdded");
         var childWindowTexture = InstantiateChild();
         if (!childWindowTexture) {
             Debug.LogError("childPrefab is not set or does not have UwcWindowTexture.");
