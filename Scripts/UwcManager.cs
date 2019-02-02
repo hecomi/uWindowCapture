@@ -1,6 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace uWindowCapture
 {
@@ -27,6 +30,14 @@ public class UwcManager : MonoBehaviour
         instance_ = go.AddComponent<UwcManager>();
         return instance_;
     }
+
+#if UNITY_EDITOR
+    [MenuItem("GameObject/uWindowCapture/Manager", false, 100)]
+    public static void CreateManagerGameObject()
+    {
+        CreateInstance();
+    }
+#endif
 
     public DebugMode debugMode = DebugMode.File;
     public static event Lib.DebugLogDelegate onDebugLog = OnDebugLog;
