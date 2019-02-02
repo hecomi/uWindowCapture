@@ -39,7 +39,24 @@ public class UwcManager : MonoBehaviour
     }
 #endif
 
-    public DebugMode debugMode = DebugMode.File;
+    public DebugMode debugModeFromInspector = DebugMode.File;
+    private static DebugMode debugModeFromScript = DebugMode.File;
+    private static bool debugModeChangedFromScript = false;
+    public static DebugMode debugMode
+    {
+        get 
+        { 
+            return debugModeChangedFromScript ? 
+                debugModeFromScript : 
+                instance.debugModeFromInspector;
+        }
+        set 
+        { 
+            debugModeFromScript = value; 
+            debugModeChangedFromScript = true; 
+        }
+    }
+
     public static event Lib.DebugLogDelegate onDebugLog = OnDebugLog;
     public static event Lib.DebugLogDelegate onDebugErr = OnDebugErr;
     [AOT.MonoPInvokeCallback(typeof(Lib.DebugLogDelegate))]

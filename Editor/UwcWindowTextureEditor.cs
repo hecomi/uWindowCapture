@@ -50,17 +50,6 @@ public class UwcWindowTextureEditor : Editor
     SerializedProperty scaleControlType;
     SerializedProperty scalePer1000Pixel;
 
-    void Fold(string name, ref bool folded, System.Action func)
-    {
-        folded = EditorUtils.Foldout(name, folded);
-        if (folded)
-        {
-            ++EditorGUI.indentLevel;
-            func();
-            --EditorGUI.indentLevel;
-        }
-    }
-
     void OnEnable()
     {
         updateTitle = serializedObject.FindProperty("updateTitle");
@@ -82,10 +71,10 @@ public class UwcWindowTextureEditor : Editor
         serializedObject.Update();
         {
             EditorGUILayout.Space();
-            Fold("Target", ref targetFold_, () => { DrawTargetSettings(); });
-            Fold("Capture Settings", ref captureSettingFold_, () => { DrawCaptureSettings(); });
-            Fold("Scale Settings", ref scaleSettingFold_, () => { DrawScaleSettings(); });
-            Fold("Window Information", ref windowInformationFold_, () => { DrawWindowInformation(); });
+            EditorUtils.Fold("Target", ref targetFold_, () => { DrawTargetSettings(); });
+            EditorUtils.Fold("Capture Settings", ref captureSettingFold_, () => { DrawCaptureSettings(); });
+            EditorUtils.Fold("Scale Settings", ref scaleSettingFold_, () => { DrawScaleSettings(); });
+            EditorUtils.Fold("Window Information", ref windowInformationFold_, () => { DrawWindowInformation(); });
         }
         serializedObject.ApplyModifiedProperties();
 

@@ -33,6 +33,17 @@ public static class EditorUtils
 
         return display;
     }
+
+    public static void Fold(string name, ref bool folded, System.Action func)
+    {
+        folded = Foldout(name, folded);
+        if (folded)
+        {
+            ++EditorGUI.indentLevel;
+            func();
+            --EditorGUI.indentLevel;
+        }
+    }
 }
 
 }
