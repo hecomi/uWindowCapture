@@ -29,8 +29,12 @@ public class UwcManager : MonoBehaviour
     }
 
     public DebugMode debugMode = DebugMode.File;
-    public static event Lib.DebugLogDelegate onDebugLog = msg => Debug.Log(msg);
-    public static event Lib.DebugLogDelegate onDebugErr = msg => Debug.LogError(msg);
+    public static event Lib.DebugLogDelegate onDebugLog = OnDebugLog;
+    public static event Lib.DebugLogDelegate onDebugErr = OnDebugErr;
+    [AOT.MonoPInvokeCallback(typeof(Lib.DebugLogDelegate))]
+    private static void OnDebugLog(string msg) { Debug.Log(msg); }
+    [AOT.MonoPInvokeCallback(typeof(Lib.DebugLogDelegate))]
+    private static void OnDebugErr(string msg) { Debug.LogError(msg); }
 
     public WindowTitlesUpdateTiming windowTitlesUpdateTiming = WindowTitlesUpdateTiming.Manual;
 
@@ -174,13 +178,13 @@ public class UwcManager : MonoBehaviour
                         if (window.parentWindow != null) {
                             window.parentWindow.onChildRemoved.Invoke(window);
                         }
+                        windows.Remove(id);
                         if (window.isAlive && window.isDesktop) {
-                            onDesktopRemoved.Invoke(window);
                             desktops_.Remove(id);
+                            onDesktopRemoved.Invoke(window);
                         } else {
                             onWindowRemoved.Invoke(window);
                         }
-                        windows.Remove(id);
                     }
                     break;
                 }
