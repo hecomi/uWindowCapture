@@ -123,10 +123,14 @@ public static class Lib
     public static extern int GetWindowZOrder(int id);
     [DllImport(name, EntryPoint = "UwcGetWindowBuffer")]
     public static extern IntPtr GetWindowBuffer(int id);
-    [DllImport(name, EntryPoint = "UwcGetWindowBufferWidth")]
-    public static extern int GetWindowBufferWidth(int id);
-    [DllImport(name, EntryPoint = "UwcGetWindowBufferHeight")]
-    public static extern int GetWindowBufferHeight(int id);
+    [DllImport(name, EntryPoint = "UwcGetWindowTextureWidth")]
+    public static extern int GetWindowTextureWidth(int id);
+    [DllImport(name, EntryPoint = "UwcGetWindowTextureHeight")]
+    public static extern int GetWindowTextureHeight(int id);
+    [DllImport(name, EntryPoint = "UwcGetWindowTextureOffsetX")]
+    public static extern int GetWindowTextureOffsetX(int id);
+    [DllImport(name, EntryPoint = "UwcGetWindowTextureOffsetY")]
+    public static extern int GetWindowTextureOffsetY(int id);
     [DllImport(name, EntryPoint = "UwcGetWindowIconWidth")]
     public static extern int GetWindowIconWidth(int id);
     [DllImport(name, EntryPoint = "UwcGetWindowIconHeight")]

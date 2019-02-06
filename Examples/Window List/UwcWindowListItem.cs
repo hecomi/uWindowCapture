@@ -43,8 +43,8 @@ public class UwcWindowListItem : MonoBehaviour
         var windowTitle = window.title;
         title.text = string.IsNullOrEmpty(windowTitle) ? "-No Name-" : windowTitle;
 
-        x.text = window.x.ToString();
-        y.text = window.y.ToString();
+        x.text = window.isMinimized ? "-" : window.x.ToString();
+        y.text = window.isMinimized ? "-" : window.y.ToString();
         z.text = window.zOrder.ToString();
 
         width.text = window.width.ToString();

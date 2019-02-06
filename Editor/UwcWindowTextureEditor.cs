@@ -181,8 +181,6 @@ public class UwcWindowTextureEditor : Editor
         EditorGUILayout.IntField("Window Width", window.width);
         EditorGUILayout.IntField("Window Height", window.height);
         EditorGUILayout.IntField("Window Z-Order", window.zOrder);
-        EditorGUILayout.IntField("Buffer Width", window.bufferWidth);
-        EditorGUILayout.IntField("Buffer Height", window.bufferHeight);
         EditorGUILayout.Toggle("Alt-Tab Window", window.isAltTabWindow);
         EditorGUILayout.Toggle("Minimized", window.isMinimized);
         EditorGUILayout.Toggle("Maximized", window.isMaximized);
