@@ -205,15 +205,27 @@ BYTE* Window::GetBuffer() const
 }
 
 
-UINT Window::GetBufferWidth() const
+UINT Window::GetTextureWidth() const
 {
     return windowTexture_->GetWidth();
 }
 
 
-UINT Window::GetBufferHeight() const
+UINT Window::GetTextureHeight() const
 {
     return windowTexture_->GetHeight();
+}
+
+
+UINT Window::GetTextureOffsetX() const
+{
+    return windowTexture_->GetOffsetX();
+}
+
+
+UINT Window::GetTextureOffsetY() const
+{
+    return windowTexture_->GetOffsetY();
 }
 
 

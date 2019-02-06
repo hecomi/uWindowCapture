@@ -161,24 +161,44 @@ public class UwcWindow
         get { return Lib.GetWindowClassName(id); } 
     }
 
-    public int x
+    public int rawX
     {
         get { return Lib.GetWindowX(id); }
     }
 
-    public int y
+    public int rawY
     {
         get { return Lib.GetWindowY(id); }
     }
 
-    public int width
+    public int rawWidth
     {
         get { return Lib.GetWindowWidth(id); }
     }
 
-    public int height
+    public int rawHeight
     {
         get { return Lib.GetWindowHeight(id); }
+    }
+
+    public int x
+    {
+        get { return rawX + Lib.GetWindowTextureOffsetX(id); }
+    }
+
+    public int y
+    {
+        get { return rawY + Lib.GetWindowTextureOffsetY(id); }
+    }
+
+    public int width
+    {
+        get { return Lib.GetWindowTextureWidth(id); }
+    }
+
+    public int height
+    {
+        get { return Lib.GetWindowTextureHeight(id); }
     }
 
     public int zOrder
@@ -191,14 +211,14 @@ public class UwcWindow
         get { return Lib.GetWindowBuffer(id); }
     }
 
-    public int bufferWidth
+    public int textureOffsetX
     {
-        get { return Lib.GetWindowBufferWidth(id); }
+        get { return Lib.GetWindowTextureOffsetX(id); }
     }
 
-    public int bufferHeight
+    public int textureOffsetY
     {
-        get { return Lib.GetWindowBufferHeight(id); }
+        get { return Lib.GetWindowTextureOffsetY(id); }
     }
 
     public int iconWidth
@@ -317,8 +337,8 @@ public class UwcWindow
 
     void CreateWindowTexture()
     {
-        var w = bufferWidth;
-        var h = bufferHeight;
+        var w = width;
+        var h = height;
         if (w == 0 || h == 0) return;
 
         if (!texture || texture.width != w || texture.height != h) {

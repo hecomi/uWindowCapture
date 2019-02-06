@@ -35,7 +35,7 @@ public class UwcGetPixelsExample : MonoBehaviour
         CreateTextureIfNeeded();
 
         var window = uwcTexture.window;
-        if (window == null || window.bufferWidth == 0) return;
+        if (window == null || window.width == 0) return;
 
         // GetPixels() can be run in another thread
         if (window.GetPixels(colors, x, y, w, h)) {

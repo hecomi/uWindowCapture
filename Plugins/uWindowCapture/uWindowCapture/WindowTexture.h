@@ -37,6 +37,8 @@ public:
 
     UINT GetWidth() const;
     UINT GetHeight() const;
+    UINT GetOffsetX() const;
+    UINT GetOffsetY() const;
 
     bool Capture();
     bool Upload();

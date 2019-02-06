@@ -64,8 +64,10 @@ public:
     UINT GetClientHeight() const;
     UINT GetZOrder() const;
     BYTE* GetBuffer() const;
-    UINT GetBufferWidth() const;
-    UINT GetBufferHeight() const;
+    UINT GetTextureWidth() const;
+    UINT GetTextureHeight() const;
+    UINT GetTextureOffsetX() const;
+    UINT GetTextureOffsetY() const;
     UINT GetIconWidth() const;
     UINT GetIconHeight() const;
 

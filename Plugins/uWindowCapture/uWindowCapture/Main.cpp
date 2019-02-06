@@ -291,20 +291,38 @@ extern "C"
         return nullptr;
     }
 
-    UNITY_INTERFACE_EXPORT UINT UNITY_INTERFACE_API UwcGetWindowBufferWidth(int id)
+    UNITY_INTERFACE_EXPORT UINT UNITY_INTERFACE_API UwcGetWindowTextureWidth(int id)
     {
         if (auto window = GetWindow(id))
         {
-            return window->GetBufferWidth();
+            return window->GetTextureWidth();
         }
         return 0;
     }
 
-    UNITY_INTERFACE_EXPORT UINT UNITY_INTERFACE_API UwcGetWindowBufferHeight(int id)
+    UNITY_INTERFACE_EXPORT UINT UNITY_INTERFACE_API UwcGetWindowTextureHeight(int id)
     {
         if (auto window = GetWindow(id))
         {
-            return window->GetBufferHeight();
+            return window->GetTextureHeight();
+        }
+        return 0;
+    }
+
+    UNITY_INTERFACE_EXPORT UINT UNITY_INTERFACE_API UwcGetWindowTextureOffsetX(int id)
+    {
+        if (auto window = GetWindow(id))
+        {
+            return window->GetTextureOffsetX();
+        }
+        return 0;
+    }
+
+    UNITY_INTERFACE_EXPORT UINT UNITY_INTERFACE_API UwcGetWindowTextureOffsetY(int id)
+    {
+        if (auto window = GetWindow(id))
+        {
+            return window->GetTextureOffsetY();
         }
         return 0;
     }

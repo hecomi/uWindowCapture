@@ -73,6 +73,18 @@ UINT WindowTexture::GetHeight() const
 }
 
 
+UINT WindowTexture::GetOffsetX() const
+{
+    return offsetX_;
+}
+
+
+UINT WindowTexture::GetOffsetY() const
+{
+    return offsetY_;
+}
+
+
 void WindowTexture::CreateBitmapIfNeeded(HDC hDc, UINT width, UINT height)
 {
     std::lock_guard<std::mutex> lock(bufferMutex_);
@@ -151,16 +163,27 @@ bool WindowTexture::Capture()
         // Remove dropshadow area
         if (captureMode_ == CaptureMode::PrintWindow)
         {
-            RECT dwmRect;
-            ::DwmGetWindowAttribute(hWnd, DWMWA_EXTENDED_FRAME_BOUNDS, &dwmRect, sizeof(RECT));
-
             RECT windowRect;
             ::GetWindowRect(hWnd, &windowRect);
+
+            RECT dwmRect;
+            ::DwmGetWindowAttribute(hWnd, DWMWA_EXTENDED_FRAME_BOUNDS, &dwmRect, sizeof(RECT));
 
             offsetX_ = max(dwmRect.left - windowRect.left, 0);
             offsetY_ = max(dwmRect.top - windowRect.top, 0);
             textureWidth_ = static_cast<UINT>((dwmRect.right - dwmRect.left) / dpiScaleX);
             textureHeight_ = static_cast<UINT>((dwmRect.bottom - dwmRect.top) / dpiScaleY);
+
+            if (::IsZoomed(hWnd))
+            {
+                auto hMonitor = ::MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST);
+                MONITORINFO monitor = { sizeof(MONITORINFO) };
+                ::GetMonitorInfo(hMonitor, &monitor);
+                offsetX_ = monitor.rcMonitor.left - windowRect.left;
+                offsetY_ = monitor.rcMonitor.top - windowRect.top;
+                textureWidth_ -= 2 * offsetX_;
+                textureHeight_ -= 2 * offsetY_;
+            }
         }
         else
         {
