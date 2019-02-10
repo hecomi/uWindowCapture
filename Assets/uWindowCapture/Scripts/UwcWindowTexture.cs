@@ -119,7 +119,8 @@ public class UwcWindowTexture : MonoBehaviour
         set
         {
             shouldUpdateWindow = true;
-            desktopIndex_ = Mathf.Clamp(value, 0, UwcManager.desktopCount - 1);
+            desktopIndex_ = (UwcManager.desktopCount > 0) ?
+                Mathf.Clamp(value, 0, UwcManager.desktopCount - 1) : 0;
         }
     }
 
@@ -149,6 +150,10 @@ public class UwcWindowTexture : MonoBehaviour
         }
         set 
         {
+            if (window_ == value) {
+                return;
+            }
+
             if (window_ != null) {
                 window_.onCaptured.RemoveListener(OnCaptured);
             }
