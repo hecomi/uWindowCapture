@@ -158,8 +158,9 @@ public class UwcWindowTexture : MonoBehaviour
                 window_.onCaptured.RemoveListener(OnCaptured);
             }
 
-            onWindowChanged_.Invoke(value, window_);
+            var old = window_;
             window_ = value;
+            onWindowChanged_.Invoke(window_, old);
 
             if (window_ != null) {
                 shouldUpdateWindow = false;
