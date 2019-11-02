@@ -344,7 +344,7 @@ public class UwcWindow
     {
         var w = width;
         var h = height;
-        if (w == 0 || h == 0) return;
+        if (w <= 0 || h <= 0) return;
 
         if (force || !texture || texture.width != w || texture.height != h) {
             if (backTexture_) {
