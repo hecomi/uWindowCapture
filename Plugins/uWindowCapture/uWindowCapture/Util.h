@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string>
 #include <functional>
 #include <chrono>
 #include <Windows.h>
