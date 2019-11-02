@@ -326,6 +326,7 @@ bool WindowTexture::Upload()
         unityTexture_.load()->GetDesc(&desc);
         if (desc.Width != GetWidth() && desc.Height != GetHeight())
         {
+            MessageManager::Get().Add({ MessageType::TextureSizeError, window_->GetId(), nullptr });
             Debug::Error(__FUNCTION__, " => Texture size is wrong.");
             return false;
         }

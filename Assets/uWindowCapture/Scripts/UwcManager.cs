@@ -244,7 +244,14 @@ public class UwcManager : MonoBehaviour
                 case MessageType.TextureNullError: {
                     var window = Find(id);
                     if (window != null) {
-                        window.onCaptured.Invoke();
+                        window.ResetWindowTexture();
+                    }
+                    break;
+                }
+                case MessageType.TextureSizeError: {
+                    var window = Find(id);
+                    if (window != null) {
+                        window.ResetWindowTexture();
                     }
                     break;
                 }

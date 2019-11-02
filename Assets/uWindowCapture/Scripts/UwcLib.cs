@@ -40,6 +40,7 @@ public enum MessageType
     CursorCaptured = 5,
     Error = 1000,
     TextureNullError = 1001,
+    TextureSizeError = 1002,
 }
 
 [StructLayout(LayoutKind.Sequential)]

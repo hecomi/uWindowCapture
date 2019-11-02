@@ -19,6 +19,7 @@ enum class MessageType : int
     CursorCaptured = 5,
     Error = 1000,
     TextureNullError = 1001,
+    TextureSizeError = 1002,
 };
 
 
