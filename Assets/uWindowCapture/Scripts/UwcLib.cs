@@ -38,6 +38,8 @@ public enum MessageType
     WindowSizeChanged = 3,
     IconCaptured = 4,
     CursorCaptured = 5,
+    Error = 1000,
+    TextureNullError = 1001,
 }
 
 [StructLayout(LayoutKind.Sequential)]

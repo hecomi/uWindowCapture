@@ -17,6 +17,8 @@ enum class MessageType : int
     WindowSizeChanged = 3,
     IconCaptured = 4,
     CursorCaptured = 5,
+    Error = 1000,
+    TextureNullError = 1001,
 };
 
 

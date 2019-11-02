@@ -311,7 +311,11 @@ bool WindowTexture::Capture()
 
 bool WindowTexture::Upload()
 {
-    if (!unityTexture_.load()) return false;
+    if (!unityTexture_.load()) 
+    {
+        MessageManager::Get().Add({ MessageType::TextureNullError, window_->GetId(), nullptr });
+        return false;
+    }
 
     UWC_SCOPE_TIMER(UploadTexture)
 
