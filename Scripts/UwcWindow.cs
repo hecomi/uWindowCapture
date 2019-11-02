@@ -335,13 +335,13 @@ public class UwcWindow
         hasIconTextureCaptured_ = true;
     }
 
-    void CreateWindowTexture()
+    void CreateWindowTexture(bool force = false)
     {
         var w = width;
         var h = height;
         if (w == 0 || h == 0) return;
 
-        if (!texture || texture.width != w || texture.height != h) {
+        if (force || !texture || texture.width != w || texture.height != h) {
             if (backTexture_) {
                 Object.DestroyImmediate(backTexture_);
             }
@@ -361,6 +361,11 @@ public class UwcWindow
             backTexture_ = null;
             willTextureSizeChange_ = false;
         }
+    }
+
+    public void ResetWindowTexture()
+    {
+        CreateWindowTexture(true);
     }
 
     void CreateIconTexture()

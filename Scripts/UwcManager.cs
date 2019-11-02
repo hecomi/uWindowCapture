@@ -241,6 +241,13 @@ public class UwcManager : MonoBehaviour
                     cursor.onCaptured.Invoke();
                     break;
                 }
+                case MessageType.TextureNullError: {
+                    var window = Find(id);
+                    if (window != null) {
+                        window.onCaptured.Invoke();
+                    }
+                    break;
+                }
                 default: {
                     break;
                 }
