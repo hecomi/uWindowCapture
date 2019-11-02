@@ -141,9 +141,14 @@ public class UwcWindow
         get { return Lib.IsWindowTouchable(id); }
     }
 
-    public bool isStoreApp
+    public bool isApplicationFrameWindow
     {
-        get { return Lib.IsWindowStoreApp(id); }
+        get { return Lib.IsApplicationFrameWindow(id); }
+    }
+
+    public bool isUWP
+    {
+        get { return Lib.IsWindowUWP(id); }
     }
 
     public bool isBackground

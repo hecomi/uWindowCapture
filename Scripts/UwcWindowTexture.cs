@@ -242,6 +242,10 @@ public class UwcWindowTexture : MonoBehaviour
         captureTimer_ += Time.deltaTime;
 
         UpdateBasicComponents();
+
+        if (window != null) {
+            Debug.Log(window.isUWP + "  " + window.isApplicationFrameWindow);
+        }
     }
 
     void OnWillRenderObject()

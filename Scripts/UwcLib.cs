@@ -181,8 +181,10 @@ public static class Lib
     public static extern bool IsWindowHungUp(int id);
     [DllImport(name, EntryPoint = "UwcIsWindowTouchable")]
     public static extern bool IsWindowTouchable(int id);
-    [DllImport(name, EntryPoint = "UwcIsWindowStoreApp")]
-    public static extern bool IsWindowStoreApp(int id);
+    [DllImport(name, EntryPoint = "UwcIsWindowApplicationFrameWindow")]
+    public static extern bool IsApplicationFrameWindow(int id);
+    [DllImport(name, EntryPoint = "UwcIsWindowUWP")]
+    public static extern bool IsWindowUWP(int id);
     [DllImport(name, EntryPoint = "UwcIsWindowBackground")]
     public static extern bool IsWindowBackground(int id);
     [DllImport(name, EntryPoint = "UwcGetWindowPixel")]
