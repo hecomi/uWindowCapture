@@ -283,7 +283,8 @@ void WindowManager::UpdateWindows()
                         data2.threadId = ::GetWindowThreadProcessId(hWnd, &data2.processId);
                         data2.isAltTabWindow = IsAltTabWindow(hWnd);
                         GetWindowClassName(hWnd, data2.className);
-                        data2.isStoreApp = (data2.className == "ApplicationFrameWindow");
+                        data2.isApplicationFrameWindow = IsApplicationFrameWindow(data2.className);
+                        data2.isUWP = IsUWP(data2.processId);
                         window->UpdateTitle();
                         window->UpdateIsBackground();
                     }
@@ -293,7 +294,8 @@ void WindowManager::UpdateWindows()
                         data2.hInstance = NULL;
                         data2.threadId = ::GetWindowThreadProcessId(hWnd, &data2.processId);
                         data2.isAltTabWindow = false;
-                        data2.isStoreApp = false;
+                        data2.isApplicationFrameWindow = false;
+                        data2.isUWP = false;
                         data2.isBackground = false;
                         data2.className = "";
                         window->UpdateTitle();

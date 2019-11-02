@@ -145,9 +145,15 @@ BOOL Window::IsTouchable() const
 }
 
 
-BOOL Window::IsStoreApp() const
+BOOL Window::IsApplicationFrameWindow() const
 {
-    return data2_.isStoreApp;
+    return data2_.isApplicationFrameWindow;
+}
+
+
+BOOL Window::IsUWP() const
+{
+    return data2_.isUWP;
 }
 
 
@@ -343,7 +349,7 @@ void Window::UpdateTitle()
 
 void Window::UpdateIsBackground()
 {
-    if (IsStoreApp())
+    if (IsApplicationFrameWindow())
     {
         int attr = 0;
         ::DwmGetWindowAttribute(GetHandle(), DWMWA_CLOAKED, &attr, sizeof(attr));

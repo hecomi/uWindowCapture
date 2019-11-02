@@ -69,6 +69,32 @@ bool IsAltTabWindow(HWND hWnd)
 }
 
 
+bool IsUWP(DWORD pid)
+{
+    using GetPackageFamilyNameType = LONG (WINAPI*)(HANDLE, UINT32*, PWSTR);
+
+    const auto hKernel32 = ::GetModuleHandleA("kernel32.dll");
+    if (!hKernel32) return false;
+
+    const auto GetPackageFamilyName = (GetPackageFamilyNameType)::GetProcAddress(hKernel32, "GetPackageFamilyName");
+    if (!GetPackageFamilyName) return false;
+
+    auto process = ::OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid);
+    ScopedReleaser releaser([&] { ::CloseHandle(process); });
+
+    UINT32 len = 0;
+    const auto res = GetPackageFamilyName(process, &len, NULL);
+
+    return res == ERROR_INSUFFICIENT_BUFFER;
+}
+
+
+bool IsApplicationFrameWindow(const std::string& className)
+{
+    return className == "ApplicationFrameWindow";
+}
+
+
 UINT GetWindowZOrder(HWND hWnd)
 {
     int z = 0;

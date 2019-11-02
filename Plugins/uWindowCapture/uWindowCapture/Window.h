@@ -35,7 +35,8 @@ public:
         std::wstring title;
         std::string className;
         BOOL isAltTabWindow;
-        BOOL isStoreApp;
+        BOOL isApplicationFrameWindow;
+        BOOL isUWP;
         BOOL isBackground;
     };
 
@@ -109,7 +110,8 @@ public:
     BOOL IsIconic() const;
     BOOL IsHungUp() const;
     BOOL IsTouchable() const;
-    BOOL IsStoreApp() const;
+    BOOL IsApplicationFrameWindow() const;
+    BOOL IsUWP() const;
     BOOL IsBackground() const;
 
 private:

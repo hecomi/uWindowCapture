@@ -15,6 +15,8 @@
 #include "WindowTexture.h"
 #include "WindowManager.h"
 
+#include "Util.h"
+
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "Dwmapi.lib")
 
@@ -539,11 +541,20 @@ extern "C"
         return false;
     }
 
-    UNITY_INTERFACE_EXPORT bool UNITY_INTERFACE_API UwcIsWindowStoreApp(int id)
+    UNITY_INTERFACE_EXPORT bool UNITY_INTERFACE_API UwcIsWindowApplicationFrameWindow(int id)
     {
         if (auto window = GetWindow(id))
         {
-            return window->IsStoreApp() > 0;
+            return window->IsApplicationFrameWindow() > 0;
+        }
+        return false;
+    }
+
+    UNITY_INTERFACE_EXPORT bool UNITY_INTERFACE_API UwcIsWindowUWP(int id)
+    {
+        if (auto window = GetWindow(id))
+        {
+            return IsUWP(window->GetProcessId());
         }
         return false;
     }
