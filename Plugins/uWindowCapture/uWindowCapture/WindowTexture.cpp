@@ -140,16 +140,16 @@ bool WindowTexture::Capture()
     }
 
     // DPI scale
-    float dpiScaleX = std::fmax(static_cast<float>(window_->GetWidth()) / dcWidth, 0.01f);
-    float dpiScaleY = std::fmax(static_cast<float>(window_->GetHeight()) / dcHeight, 0.01f);
+    dpiScaleX_ = std::fmax(static_cast<float>(window_->GetWidth()) / dcWidth, 0.01f);
+    dpiScaleY_ = std::fmax(static_cast<float>(window_->GetHeight()) / dcHeight, 0.01f);
 
     if (captureMode_ == CaptureMode::BitBlt && !window_->IsDesktop())
     {
         // Remove frame areas
         const auto frameWidth = window_->GetWidth() - window_->GetClientWidth();
         const auto frameHeight = window_->GetHeight() - window_->GetClientHeight();
-        dcWidth -= static_cast<LONG>(ceil(frameWidth / dpiScaleX));
-        dcHeight -= static_cast<LONG>(ceil(frameHeight / dpiScaleY));
+        dcWidth -= static_cast<LONG>(ceil(frameWidth / dpiScaleX_));
+        dcHeight -= static_cast<LONG>(ceil(frameHeight / dpiScaleY_));
     }
 
     CreateBitmapIfNeeded(hDc, dcWidth, dcHeight);
@@ -171,8 +171,8 @@ bool WindowTexture::Capture()
 
             offsetX_ = max(dwmRect.left - windowRect.left, 0);
             offsetY_ = max(dwmRect.top - windowRect.top, 0);
-            textureWidth_ = static_cast<UINT>((dwmRect.right - dwmRect.left) / dpiScaleX);
-            textureHeight_ = static_cast<UINT>((dwmRect.bottom - dwmRect.top) / dpiScaleY);
+            textureWidth_ = static_cast<UINT>((dwmRect.right - dwmRect.left) / dpiScaleX_);
+            textureHeight_ = static_cast<UINT>((dwmRect.bottom - dwmRect.top) / dpiScaleY_);
 
             if (::IsZoomed(hWnd))
             {
@@ -241,49 +241,7 @@ bool WindowTexture::Capture()
     // Draw cursor
     if (drawCursor_)
     {
-        const auto cursorWindow = WindowManager::Get().GetCursorWindow();
-        const bool isCursorWindow = cursorWindow && cursorWindow->GetHandle() == window_->GetHandle();
-        if (isCursorWindow || window_->IsDesktop())
-        {
-            CURSORINFO cursorInfo { 0 };
-            cursorInfo.cbSize = sizeof(CURSORINFO);
-            POINT pos = cursorInfo.ptScreenPos;
-            if (::GetCursorInfo(&cursorInfo))
-            {
-                if (cursorInfo.flags == CURSOR_SHOWING)
-                {
-                    switch (captureMode_)
-                    {
-                        case CaptureMode::PrintWindow:
-                        {
-                            const auto windowLocalCursorX = static_cast<int>((cursorInfo.ptScreenPos.x - window_->GetX()) / dpiScaleX);
-                            const auto windowLocalCursorY = static_cast<int>((cursorInfo.ptScreenPos.y - window_->GetY()) / dpiScaleY);
-                            ::DrawIcon(hDcMem, windowLocalCursorX, windowLocalCursorY, cursorInfo.hCursor);
-                            break;
-                        }
-                        case CaptureMode::BitBlt:
-                        {
-                            POINT pos = cursorInfo.ptScreenPos;
-                            if (::ScreenToClient(hWnd, &pos))
-                            {
-                                const auto windowLocalCursorX = static_cast<int>(pos.x / dpiScaleX);
-                                const auto windowLocalCursorY = static_cast<int>(pos.y / dpiScaleY);
-                                ::DrawIcon(hDcMem, windowLocalCursorX, windowLocalCursorY, cursorInfo.hCursor);
-                            }
-                            break;
-                        }
-                        default:
-                        {
-                            break;
-                        }
-                    }
-                }
-            }
-            else
-            {
-                OutputApiError(__FUNCTION__, "GetCursorInfo");
-            }
-        }
+        DrawCursor(hWnd, hDcMem);
     }
 
     BITMAPINFOHEADER bmi {};
@@ -306,6 +264,61 @@ bool WindowTexture::Capture()
     }
 
     return true;
+}
+
+
+void WindowTexture::DrawCursor(HWND hWnd, HDC hDcMem)
+{
+    const auto cursorWindow = WindowManager::Get().GetCursorWindow();
+    const bool isCursorWindow = cursorWindow && cursorWindow->GetHandle() == window_->GetHandle();
+    if (!isCursorWindow && !window_->IsDesktop()) return;
+
+    CURSORINFO cursorInfo { 0 };
+    cursorInfo.cbSize = sizeof(CURSORINFO);
+    if (!::GetCursorInfo(&cursorInfo))
+    {
+        OutputApiError(__FUNCTION__, "GetCursorInfo");
+        return;
+    }
+    POINT pos = cursorInfo.ptScreenPos;
+
+    if (cursorInfo.flags != CURSOR_SHOWING) return;
+
+    int localX = pos.x;
+    int localY = pos.y;
+
+    switch (captureMode_)
+    {
+        case CaptureMode::PrintWindow:
+        {
+            localX = static_cast<int>((pos.x - window_->GetX()) / dpiScaleX_);
+            localY = static_cast<int>((pos.y - window_->GetY()) / dpiScaleY_);
+            break;
+        }
+        case CaptureMode::BitBlt:
+        {
+            if (window_->IsDesktop())
+            {
+                localX -= window_->GetX();
+                localY -= window_->GetY();
+            }
+            else
+            {
+                if (::ScreenToClient(hWnd, &pos))
+                {
+                    localX = static_cast<int>(pos.x / dpiScaleX_);
+                    localY = static_cast<int>(pos.y / dpiScaleY_);
+                }
+            }
+            break;
+        }
+        default:
+        {
+            break;
+        }
+    }
+
+    ::DrawIcon(hDcMem, localX, localY, cursorInfo.hCursor);
 }
 
 

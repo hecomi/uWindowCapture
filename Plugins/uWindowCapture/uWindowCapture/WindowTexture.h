@@ -52,6 +52,7 @@ public:
 private:
     void CreateBitmapIfNeeded(HDC hDc, UINT width, UINT height);
     void DeleteBitmap();
+    void DrawCursor(HWND hWnd, HDC hDcMem);
 
     const Window* const window_;
     CaptureMode captureMode_ = CaptureMode::PrintWindow;
@@ -72,4 +73,7 @@ private:
     std::atomic<UINT> textureHeight_ = 0;
     std::atomic<bool> drawCursor_ = true;
     mutable std::mutex bufferMutex_;
+
+    float dpiScaleX_ = 1.f;
+    float dpiScaleY_ = 1.f;
 };
