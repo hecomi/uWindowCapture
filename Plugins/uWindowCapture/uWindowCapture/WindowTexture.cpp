@@ -179,10 +179,34 @@ bool WindowTexture::Capture()
                 auto hMonitor = ::MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST);
                 MONITORINFO monitor = { sizeof(MONITORINFO) };
                 ::GetMonitorInfo(hMonitor, &monitor);
-                offsetX_ = monitor.rcMonitor.left - windowRect.left;
-                offsetY_ = monitor.rcMonitor.top - windowRect.top;
-                textureWidth_ -= 2 * offsetX_;
-                textureHeight_ -= 2 * offsetY_;
+                const auto ml = monitor.rcMonitor.left;
+                const auto mr = monitor.rcMonitor.right;
+                const auto mt = monitor.rcMonitor.top;
+                const auto mb = monitor.rcMonitor.bottom;
+                const auto wl = dwmRect.left;
+                const auto wr = dwmRect.right;
+                const auto wt = dwmRect.top;
+                const auto wb = dwmRect.bottom;
+                if (wl < ml || wt < mt || wr > mr || wb > mb)
+                {
+                    // Remote taskbar area and get pixels out of the monitor range
+                    const auto calcSize = [&](LONG size) -> LONG
+                    {
+                        constexpr LONG taskBarSizeThresh = 30;
+                        if (size > taskBarSizeThresh) return 0;
+                        return max(size, 0);
+                    };
+                    const auto offsetExLeft = max(calcSize(ml - wl), 0);
+                    const auto offsetExRight = max(calcSize(wr - mr), 0);
+                    const auto offsetExTop = max(calcSize(mt - wt), 0);
+                    const auto offsetExBottom = max(calcSize(wb - mb), 0);
+                    const auto offsetExX = max(offsetExLeft, offsetExRight);
+                    const auto offsetExY = max(offsetExTop, offsetExBottom);
+                    textureWidth_ -= offsetExX * 2;
+                    textureHeight_ -= offsetExY * 2;
+                    offsetX_ += offsetExX;
+                    offsetY_ += offsetExY;
+                }
             }
         }
         else
