@@ -350,9 +350,14 @@ public class UwcWindow
             if (backTexture_) {
                 Object.DestroyImmediate(backTexture_);
             }
-            backTexture_ = new Texture2D(w, h, TextureFormat.BGRA32, false);
-            Lib.SetWindowTexturePtr(id, backTexture_.GetNativeTexturePtr());
-            willTextureSizeChange_ = true;
+            try {
+                backTexture_ = new Texture2D(w, h, TextureFormat.BGRA32, false);
+                Lib.SetWindowTexturePtr(id, backTexture_.GetNativeTexturePtr());
+                willTextureSizeChange_ = true;
+            } catch (System.Exception e) {
+                Debug.LogError(e.Message);
+                Debug.LogErrorFormat("Width: {0}, Height: {1}", w, h);
+            }
         }
     }
 
