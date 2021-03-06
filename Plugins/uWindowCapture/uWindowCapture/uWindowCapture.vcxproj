@@ -131,6 +131,9 @@
     <PostBuildEvent>
       <Command>copy /Y "$(SolutionDir)$(Platform)\$(Configuration)\$(TargetFileName)" "$(SolutionDir)..\..\Assets\$(ProjectName)\Plugins\x86"</Command>
     </PostBuildEvent>
+    <Manifest>
+      <EnableDpiAwareness>PerMonitorHighDPIAware</EnableDpiAwareness>
+    </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -149,6 +152,9 @@
     <PostBuildEvent>
       <Command>copy /Y "$(SolutionDir)$(Platform)\$(Configuration)\$(TargetFileName)" "$(SolutionDir)..\..\Assets\$(ProjectName)\Plugins\x86_64"</Command>
     </PostBuildEvent>
+    <Manifest>
+      <EnableDpiAwareness>PerMonitorHighDPIAware</EnableDpiAwareness>
+    </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="CaptureManager.cpp" />
