@@ -38,7 +38,7 @@ void ThreadLoop::Start(const ThreadFunc& func, const microseconds& interval)
 {
     if (isRunning_) return;
 
-    func_ = func;
+    loopFunc_ = func;
     interval_ = interval;
     isRunning_ = true;
 
@@ -50,18 +50,22 @@ void ThreadLoop::Start(const ThreadFunc& func, const microseconds& interval)
 
     thread_ = std::thread([this] 
     {
+        if (initializerFunc_) initializerFunc_();
+
         while (isRunning_)
         {
             ScopedThreadSleeper sleeper(interval_);
-            func_();
+            loopFunc_();
         }
+
+        if (finalizerFunc_) finalizerFunc_();
     });
 }
 
 
 void ThreadLoop::Restart()
 {
-    Start(func_, interval_);
+    Start(loopFunc_, interval_);
 }
 
 
@@ -86,5 +90,5 @@ bool ThreadLoop::IsRunning() const
 
 bool ThreadLoop::HasFunction() const
 {
-    return func_ != nullptr;
+    return loopFunc_ != nullptr;
 }

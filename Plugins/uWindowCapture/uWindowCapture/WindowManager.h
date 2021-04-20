@@ -11,6 +11,7 @@
 #include "Thread.h"
 #include "CaptureManager.h"
 #include "UploadManager.h"
+#include "WindowsGraphicsCapture.h"
 #include "Window.h"
 #include "Cursor.h"
 
@@ -22,7 +23,7 @@ class WindowManager
 public:
     void Initialize();
     void Finalize();
-    void Update();
+    void Update(float dt);
     void Render();
     bool CheckExistence(int id) const;
     std::shared_ptr<Window> GetWindow(int id) const;
@@ -31,6 +32,7 @@ public:
 
     static const std::unique_ptr<CaptureManager>& GetCaptureManager();
     static const std::unique_ptr<UploadManager>& GetUploadManager();
+    static const std::unique_ptr<WindowsGraphicsCaptureManager>& GetWindowsGraphicsCaptureManager();
     static const std::unique_ptr<Cursor>& GetCursor();
 
 private:
@@ -46,6 +48,7 @@ private:
 
     std::unique_ptr<CaptureManager> captureManager_;
     std::unique_ptr<UploadManager> uploadManager_;
+    std::unique_ptr<WindowsGraphicsCaptureManager> windowsGraphicsCaptureManager_;
     std::unique_ptr<Cursor> cursor_;
 
     std::map<int, std::shared_ptr<Window>> windows_;

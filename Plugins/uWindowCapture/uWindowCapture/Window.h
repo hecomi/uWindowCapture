@@ -48,6 +48,7 @@ public:
     int GetId() const;
     int GetParentId() const;
     HWND GetHandle() const;
+    HMONITOR GetMonitorHandle() const;
     HWND GetOwnerHandle() const;
     HWND GetParentHandle() const;
     HINSTANCE GetInstance() const;

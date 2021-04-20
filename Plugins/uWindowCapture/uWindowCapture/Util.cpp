@@ -171,7 +171,12 @@ ScopedTimer::ScopedTimer(TimerFuncType&& func)
 
 ScopedTimer::~ScopedTimer()
 {
+    func_(GetElapsedTime());
+}
+
+
+ScopedTimer::microseconds ScopedTimer::GetElapsedTime() const
+{
     const auto end = std::chrono::high_resolution_clock::now();
-    const auto time = std::chrono::duration_cast<microseconds>(end - start_);
-    func_(time);
+    return std::chrono::duration_cast<microseconds>(end - start_);
 }

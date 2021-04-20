@@ -120,10 +120,10 @@ extern "C"
         return OnRenderEvent;
     }
 
-    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcUpdate()
+    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcUpdate(float dt)
     {
         if (WindowManager::IsNull()) return;
-        WindowManager::Get().Update();
+        WindowManager::Get().Update(dt);
     }
 
     UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcTriggerGpuUpload()

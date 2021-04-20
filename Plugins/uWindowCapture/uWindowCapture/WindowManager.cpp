@@ -15,6 +15,10 @@ UWC_SINGLETON_INSTANCE(WindowManager)
 void WindowManager::Initialize()
 {
     {
+        UWC_SCOPE_TIMER(InitWindowsGraphicsCaptureManager);
+        windowsGraphicsCaptureManager_ = std::make_unique<WindowsGraphicsCaptureManager>();
+    }
+    {
         UWC_SCOPE_TIMER(InitUploadManager);
         uploadManager_ = std::make_unique<UploadManager>();
     }
@@ -38,13 +42,17 @@ void WindowManager::Finalize()
     StopWindowHandleListThread();
     captureManager_.reset();
     uploadManager_.reset();
+    windowsGraphicsCaptureManager_.reset();
     cursor_.reset();
     windows_.clear();
 }
 
 
-void WindowManager::Update()
+void WindowManager::Update(float dt)
 {
+    if (windowsGraphicsCaptureManager_) {
+        windowsGraphicsCaptureManager_->Update(dt);
+    }
 }
 
 
@@ -80,6 +88,12 @@ const std::unique_ptr<CaptureManager>& WindowManager::GetCaptureManager()
 const std::unique_ptr<UploadManager>& WindowManager::GetUploadManager()
 {
     return WindowManager::Get().uploadManager_;
+}
+
+
+const std::unique_ptr<WindowsGraphicsCaptureManager>& WindowManager::GetWindowsGraphicsCaptureManager()
+{
+    return WindowManager::Get().windowsGraphicsCaptureManager_;
 }
 
 

@@ -200,6 +200,7 @@ public class UwcWindowTexture : MonoBehaviour
     MeshFilter meshFilter_;
     Collider collider_;
     float captureTimer_ = 0f;
+    bool isCaptureRequested_ = false;
     bool hasBeenCaptured_ = false;
 
     void Awake()
@@ -230,22 +231,17 @@ public class UwcWindowTexture : MonoBehaviour
         UpdateTexture();
         UpdateRenderer();
         UpdateScale();
-
-        if (updateTitle && isValid) {
-            window.RequestUpdateTitle();
-        }
-
-        if (captureRequestTiming == WindowTextureCaptureTiming.EveryFrame) {
-            RequestCapture();
-        }
-
-        captureTimer_ += Time.deltaTime;
+        UpdateTitle();
+        UpdateCaptureTimer();
+        UpdateRequestCapture();
 
         UpdateBasicComponents();
     }
 
     void OnWillRenderObject()
     {
+        if (!isCaptureRequested_) return;
+
         if (captureRequestTiming == WindowTextureCaptureTiming.OnlyWhenVisible) {
             RequestCapture();
         }
@@ -302,6 +298,36 @@ public class UwcWindowTexture : MonoBehaviour
         transform.localScale = scale;
     }
 
+    void UpdateTitle()
+    {
+        if (updateTitle && isValid) {
+            window.RequestUpdateTitle();
+        }
+    }
+
+    void UpdateCaptureTimer()
+    {
+        captureTimer_ += Time.deltaTime;
+
+        float T = 1f / captureFrameRate;
+        if (captureTimer_ < T) return;
+
+        while (captureTimer_  > T) {
+            captureTimer_ -= T;
+        }
+
+        isCaptureRequested_ = true;
+    }
+
+    void UpdateRequestCapture()
+    {
+        if (!isCaptureRequested_) return;
+
+        if (captureRequestTiming == WindowTextureCaptureTiming.EveryFrame) {
+            RequestCapture();
+        }
+    }
+
     void UpdateSearchTiming()
     {
         if (searchTiming == WindowSearchTiming.Always) {
@@ -341,14 +367,8 @@ public class UwcWindowTexture : MonoBehaviour
     {
         if (!isValid) return;
 
+        isCaptureRequested_ = false;
         window.captureMode = captureMode;
-
-        float T = 1f / captureFrameRate;
-        if (captureTimer_ < T) return;
-
-        while (captureTimer_  > T) {
-            captureTimer_ -= T;
-        }
 
         var priority = capturePriority;
         if (priority == CapturePriority.Auto) {

@@ -30,6 +30,7 @@
     <ClInclude Include="WindowTexture.h" />
     <ClInclude Include="IconTexture.h" />
     <ClInclude Include="Cursor.h" />
+    <ClInclude Include="WindowsGraphicsCapture.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp" />
@@ -46,5 +47,6 @@
     <ClCompile Include="WindowTexture.cpp" />
     <ClCompile Include="IconTexture.cpp" />
     <ClCompile Include="Cursor.cpp" />
+    <ClCompile Include="WindowsGraphicsCapture.cpp" />
   </ItemGroup>
 </Project>

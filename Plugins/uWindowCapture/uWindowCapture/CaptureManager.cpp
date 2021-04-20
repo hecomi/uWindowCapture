@@ -11,7 +11,7 @@ using namespace Microsoft::WRL;
 
 namespace
 {
-    constexpr int kLoopMinTime = 100;
+    constexpr auto kLoopMinTime = std::chrono::microseconds(100);
 }
 
 
@@ -20,31 +20,39 @@ namespace
 
 CaptureManager::CaptureManager()
 {
+    windowCaptureThreadLoop_.SetFinalizer([]
+    {
+        if (auto& wgcManager = WindowManager::Get().GetWindowsGraphicsCaptureManager())
+        {
+            wgcManager->StopAllInstances();
+        }
+    });
+
     windowCaptureThreadLoop_.Start([this] 
     {
-        // at first, check high queue.
+        // at first, check the high-priority queue.
         int id = highPriorityQueue_.Dequeue();
 
-        // move middle queue item to high queue to give chance to middle priority one.
+        // move an item in the mid-priority queue to the high-priority queue to give a chance to it.
         if (id >= 0 && !middlePriorityQueue_.Empty())
         {
             const auto midId = middlePriorityQueue_.Dequeue();
             highPriorityQueue_.Enqueue(midId);
         }
 
-        // second, check imddle queue.
+        // second, check the mid-priority queue.
         if (id < 0)
         {
             id = middlePriorityQueue_.Dequeue();
         }
 
-        // at last, check imddle queue.
+        // at last, check the low-priority queue.
         if (id < 0)
         {
             id = lowPriorityQueue_.Dequeue();
         }
 
-        // update if needed.
+        // update the window if needed.
         if (id >= 0 && WindowManager::Get().CheckExistence(id))
         {
             if (auto window = WindowManager::Get().GetWindow(id))
@@ -52,7 +60,12 @@ CaptureManager::CaptureManager()
                 window->Capture();
             }
         }
-    }, std::chrono::microseconds(kLoopMinTime));
+
+        if (auto& wgcManager = WindowManager::Get().GetWindowsGraphicsCaptureManager())
+        {
+            wgcManager->StopNonUpdatedInstances();
+        }
+    }, kLoopMinTime);
 
     iconCaptureThreadLoop_.Start([this] 
     {
@@ -64,7 +77,7 @@ CaptureManager::CaptureManager()
                 window->CaptureIcon();
             }
         }
-    }, std::chrono::microseconds(kLoopMinTime));
+    }, kLoopMinTime);
 }
 
 

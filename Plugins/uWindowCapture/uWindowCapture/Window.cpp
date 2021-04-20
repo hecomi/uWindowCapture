@@ -43,6 +43,12 @@ HWND Window::GetHandle() const
 }
 
 
+HMONITOR Window::GetMonitorHandle() const
+{
+    return data1_.hMonitor;
+}
+
+
 HWND Window::GetOwnerHandle() const
 {
     return data1_.hOwner;
@@ -381,6 +387,8 @@ void Window::Capture()
 
     if (windowTexture_->Capture())
     {
+        hasNewWindowTextureCaptured_ = true;
+
         if (auto& uploader = WindowManager::GetUploadManager())
         {
             uploader->RequestUploadWindow(id_);
@@ -392,11 +400,12 @@ void Window::Capture()
 void Window::Upload()
 {
     // Run this scope in the thread loop managed by UploadManager.
-
     if (windowTexture_->Upload())
     {
         hasNewWindowTextureUploaded_ = true;
     }
+
+    hasNewWindowTextureCaptured_ = false;
 }
 
 

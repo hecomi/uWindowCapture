@@ -40,6 +40,7 @@ public:
     using TimerFuncType = std::function<void(microseconds)>;
     ScopedTimer(TimerFuncType&& func);
     ~ScopedTimer();
+    microseconds GetElapsedTime() const;
 
 private:
     const TimerFuncType func_;

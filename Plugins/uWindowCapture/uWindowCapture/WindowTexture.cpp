@@ -1,5 +1,6 @@
 #include <dwmapi.h>
 #include "WindowTexture.h"
+#include "WindowsGraphicsCapture.h"
 #include "Window.h"
 #include "WindowManager.h"
 #include "UploadManager.h"
@@ -115,6 +116,19 @@ void WindowTexture::DeleteBitmap()
 
 bool WindowTexture::Capture()
 {
+    if (IsWindowsGraphicsCapture())
+    {
+        return CaptureByWindowsGraphicsCapture();
+    }
+    else
+    {
+        return CaptureByWin32API();
+    }
+}
+    
+
+bool WindowTexture::CaptureByWin32API()
+{
     auto hWnd = window_->GetHandle();
 
     auto hDc = ::GetDC(hWnd);
@@ -189,7 +203,7 @@ bool WindowTexture::Capture()
                 const auto wb = dwmRect.bottom;
                 if (wl < ml || wt < mt || wr > mr || wb > mb)
                 {
-                    // Remote taskbar area and get pixels out of the monitor range
+                    // Remove taskbar area and get pixels out of the monitor range
                     const auto calcSize = [&](LONG size) -> LONG
                     {
                         constexpr LONG taskBarSizeThresh = 30;
@@ -265,7 +279,7 @@ bool WindowTexture::Capture()
     // Draw cursor
     if (drawCursor_)
     {
-        DrawCursor(hWnd, hDcMem);
+        DrawCursorByWin32API(hWnd, hDcMem);
     }
 
     BITMAPINFOHEADER bmi {};
@@ -291,7 +305,7 @@ bool WindowTexture::Capture()
 }
 
 
-void WindowTexture::DrawCursor(HWND hWnd, HDC hDcMem)
+void WindowTexture::DrawCursorByWin32API(HWND hWnd, HDC hDcMem)
 {
     const auto cursorWindow = WindowManager::Get().GetCursorWindow();
     const bool isCursorWindow = cursorWindow && cursorWindow->GetHandle() == window_->GetHandle();
@@ -346,15 +360,60 @@ void WindowTexture::DrawCursor(HWND hWnd, HDC hDcMem)
 }
 
 
+bool WindowTexture::CaptureByWindowsGraphicsCapture()
+{
+    if (!windowsGraphicsCapture_)
+    {
+        if (window_->IsDesktop())
+        {
+            windowsGraphicsCapture_ = std::make_shared<WindowsGraphicsCapture>(window_->GetMonitorHandle());
+        }
+        else
+        {
+            windowsGraphicsCapture_ = std::make_shared<WindowsGraphicsCapture>(window_->GetHandle());
+        }
+    }
+
+    if (!windowsGraphicsCapture_->IsStarted())
+    {
+        windowsGraphicsCapture_->Start();
+    }
+
+    windowsGraphicsCapture_->EnableCursorCapture(GetCursorDraw());
+
+    textureWidth_ = windowsGraphicsCapture_->GetWidth();
+    textureHeight_ = windowsGraphicsCapture_->GetHeight();
+    offsetX_ = 0;
+    offsetY_ = 0;
+
+    return true;
+}
+
+
 bool WindowTexture::Upload()
 {
+    if (!RecreateSharedTextureIfNeeded()) return false;
+
+    if (IsWindowsGraphicsCapture())
+    {
+        return UploadByWindowsGraphicsCapture();
+    }
+    else
+    {
+        return UploadByWin32API();
+    }
+}
+
+
+bool WindowTexture::RecreateSharedTextureIfNeeded()
+{
+    UWC_SCOPE_TIMER(UploadByWin32API)
+
     if (!unityTexture_.load()) 
     {
         MessageManager::Get().Add({ MessageType::TextureNullError, window_->GetId(), nullptr });
         return false;
     }
-
-    UWC_SCOPE_TIMER(UploadTexture)
 
     std::lock_guard<std::mutex> lock(sharedTextureMutex_);
 
@@ -387,7 +446,7 @@ bool WindowTexture::Upload()
         return false;
     }
 
-    auto& uploader = WindowManager::GetUploadManager();
+    const auto& uploader = WindowManager::GetUploadManager();
     if (!uploader) return false;
 
     if (shouldUpdateTexture)
@@ -409,17 +468,60 @@ bool WindowTexture::Upload()
         }
     }
 
+    return true;
+}
+
+
+bool WindowTexture::UploadByWin32API()
+{
+    std::lock_guard<std::mutex> lock(bufferMutex_);
+
+    const auto& uploader = WindowManager::GetUploadManager();
+    if (!uploader) return false;
+
+    const UINT rawPitch = bufferWidth_ * 4;
+    const int startIndex = offsetX_ * 4 + offsetY_ * rawPitch;
+    const auto* start = buffer_.Get(startIndex);
+
+    ComPtr<ID3D11DeviceContext> context;
+    uploader->GetDevice()->GetImmediateContext(&context);
+    context->UpdateSubresource(sharedTexture_.Get(), 0, nullptr, start, rawPitch, 0);
+    context->Flush();
+
+    return true;
+}
+
+
+bool WindowTexture::UploadByWindowsGraphicsCapture()
+{
+    UWC_SCOPE_TIMER(UploadByWindowsGraphicsCapture)
+
+    if (!windowsGraphicsCapture_) return false;
+
+    const auto result = windowsGraphicsCapture_->TryGetLatestResult();
+    if (!result.pTexture) return false;
+
+    const auto& uploader = WindowManager::GetUploadManager();
+    if (!uploader) return false;
+
+    ComPtr<ID3D11DeviceContext> context;
+    uploader->GetDevice()->GetImmediateContext(&context);
+    context->CopySubresourceRegion(
+        sharedTexture_.Get(), 
+        D3D11CalcSubresource(0, 0, 1), 
+        0, 
+        0, 
+        0,
+        result.pTexture,
+        0, 
+        NULL);
+    context->Flush();
+
+    if (result.hasSizeChanged)
     {
-        std::lock_guard<std::mutex> lock(bufferMutex_);
-
-        const UINT rawPitch = bufferWidth_ * 4;
-        const int startIndex = offsetX_ * 4 + offsetY_ * rawPitch;
-        const auto* start = buffer_.Get(startIndex);
-
-        ComPtr<ID3D11DeviceContext> context;
-        uploader->GetDevice()->GetImmediateContext(&context);
-        context->UpdateSubresource(sharedTexture_.Get(), 0, nullptr, start, rawPitch, 0);
-        context->Flush();
+        const auto w = result.width;
+        const auto h = result.height;
+        windowsGraphicsCapture_->ChangePoolSize(w, h);
     }
 
     return true;

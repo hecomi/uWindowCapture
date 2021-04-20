@@ -148,7 +148,7 @@ void UploadManager::StartUploadThread()
         {
             cursor->Upload();
         }
-    }, std::chrono::microseconds(10) /* check uploading every 10 us */);
+    }, std::chrono::microseconds(1000));
 }
 
 
