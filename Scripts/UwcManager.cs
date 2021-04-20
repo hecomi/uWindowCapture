@@ -163,7 +163,7 @@ public class UwcManager : MonoBehaviour
 
     void Update()
     {
-        Lib.Update();
+        Lib.Update(Time.deltaTime);
         UpdateWindowInfo();
         UpdateMessages();
         UpdateWindowTitles();

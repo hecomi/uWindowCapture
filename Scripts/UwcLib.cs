@@ -19,6 +19,7 @@ public enum CaptureMode
     None = -1,
     PrintWindow = 0,
     BitBlt = 1,
+    WindowsGraphicsCapture = 2,
 }
 
 public enum CapturePriority
@@ -83,7 +84,7 @@ public static class Lib
     [DllImport(name, EntryPoint = "UwcGetRenderEventFunc")]
     public static extern IntPtr GetRenderEventFunc();
     [DllImport(name, EntryPoint = "UwcUpdate")]
-    public static extern void Update();
+    public static extern void Update(float dt);
     [DllImport(name, EntryPoint = "UwcTriggerGpuUpload")]
     public static extern void TriggerGpuUpload();
     [DllImport(name, EntryPoint = "UwcGetMessageCount")]
@@ -114,6 +115,10 @@ public static class Lib
     public static extern void RequestCaptureWindow(int id, CapturePriority priority);
     [DllImport(name, EntryPoint = "UwcRequestCaptureIcon")]
     public static extern void RequestCaptureIcon(int id);
+    [DllImport(name, EntryPoint = "StartCaptureWindow")]
+    public static extern void StartCaptureWindow(int id, CapturePriority priority);
+    [DllImport(name, EntryPoint = "StopCaptureWindow")]
+    public static extern void StopCaptureWindow(int id);
     [DllImport(name, EntryPoint = "UwcGetWindowX")]
     public static extern int GetWindowX(int id);
     [DllImport(name, EntryPoint = "UwcGetWindowY")]
