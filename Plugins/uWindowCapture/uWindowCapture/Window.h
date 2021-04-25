@@ -40,14 +40,14 @@ public:
         BOOL isBackground;
     };
 
-    explicit Window(int id);
+    Window(int id, const Data1 &data);
     ~Window();
 
     void SetData(const Data1& data);
 
     int GetId() const;
     int GetParentId() const;
-    HWND GetHandle() const;
+    HWND GetWindowHandle() const;
     HMONITOR GetMonitorHandle() const;
     HWND GetOwnerHandle() const;
     HWND GetParentHandle() const;
@@ -115,17 +115,19 @@ public:
     BOOL IsUWP() const;
     BOOL IsBackground() const;
 
+    bool IsWindowsGraphicsCaptureAvailable() const;
+
 private:
     void UpdateTitle();
     void UpdateIsBackground();
 
-    std::shared_ptr<class WindowTexture> windowTexture_ = std::make_shared<WindowTexture>(this);
-    std::shared_ptr<class IconTexture> iconTexture_ = std::make_shared<IconTexture>(this);
-    Data1 data1_;
-    Data2 data2_;
-
     const int id_ = -1;
     int parentId_ = -1;
+    Data1 data1_ = {};
+    Data2 data2_ = {};
+    std::shared_ptr<class WindowTexture> windowTexture_ = std::make_shared<WindowTexture>(this);
+    std::shared_ptr<class IconTexture> iconTexture_ = std::make_shared<IconTexture>(this);
+
     int frameCount_ = 0;
 
     std::atomic<bool> hasTitleUpdateRequested_ = false;

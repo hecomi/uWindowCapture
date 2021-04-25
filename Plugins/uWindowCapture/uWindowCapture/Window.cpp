@@ -8,8 +8,9 @@
 
 
 
-Window::Window(int id)
+Window::Window(int id, const Data1 &data)
     : id_(id)
+    , data1_(data)
 {
 }
 
@@ -37,7 +38,7 @@ int Window::GetParentId() const
 }
 
 
-HWND Window::GetHandle() const
+HWND Window::GetWindowHandle() const
 {
     return data1_.hWnd;
 }
@@ -105,49 +106,49 @@ bool Window::IsDesktop() const
 
 BOOL Window::IsWindow() const
 {
-    return ::IsWindow(GetHandle());
+    return ::IsWindow(GetWindowHandle());
 }
 
 
 BOOL Window::IsVisible() const
 {
-    return ::IsWindowVisible(GetHandle());
+    return ::IsWindowVisible(GetWindowHandle());
 }
 
 
 BOOL Window::IsEnabled() const
 {
-    return ::IsWindowEnabled(GetHandle());
+    return ::IsWindowEnabled(GetWindowHandle());
 }
 
 
 BOOL Window::IsUnicode() const
 {
-    return ::IsWindowUnicode(GetHandle());
+    return ::IsWindowUnicode(GetWindowHandle());
 }
 
 
 BOOL Window::IsZoomed() const
 {
-    return ::IsZoomed(GetHandle());
+    return ::IsZoomed(GetWindowHandle());
 }
 
 
 BOOL Window::IsIconic() const
 {
-    return ::IsIconic(GetHandle());
+    return ::IsIconic(GetWindowHandle());
 }
 
 
 BOOL Window::IsHungUp() const
 {
-    return ::IsHungAppWindow(GetHandle());
+    return ::IsHungAppWindow(GetWindowHandle());
 }
 
 
 BOOL Window::IsTouchable() const
 {
-    return ::IsTouchWindow(GetHandle(), NULL);
+    return ::IsTouchWindow(GetWindowHandle(), NULL);
 }
 
 
@@ -166,6 +167,12 @@ BOOL Window::IsUWP() const
 BOOL Window::IsBackground() const
 {
     return data2_.isBackground;
+}
+
+
+bool Window::IsWindowsGraphicsCaptureAvailable() const
+{
+    return windowTexture_ && windowTexture_->IsWindowsGraphicsCaptureAvailable();
 }
 
 
@@ -358,7 +365,7 @@ void Window::UpdateIsBackground()
     if (IsApplicationFrameWindow())
     {
         int attr = 0;
-        ::DwmGetWindowAttribute(GetHandle(), DWMWA_CLOAKED, &attr, sizeof(attr));
+        ::DwmGetWindowAttribute(GetWindowHandle(), DWMWA_CLOAKED, &attr, sizeof(attr));
         data2_.isBackground = attr;
     }
     else

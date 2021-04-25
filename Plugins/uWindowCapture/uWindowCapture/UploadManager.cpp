@@ -26,6 +26,7 @@ UploadManager::UploadManager()
     {
         CreateDevice();
         StartUploadThread();
+        isReady_ = true;
     });
 }
 

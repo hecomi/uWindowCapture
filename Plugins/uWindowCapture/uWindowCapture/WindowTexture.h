@@ -15,6 +15,7 @@ enum class CaptureMode
     PrintWindow = 0,
     BitBlt = 1,
     WindowsGraphicsCapture = 2,
+    Auto = 3,
 };
 
 
@@ -50,8 +51,11 @@ public:
     UINT GetPixel(int x, int y) const;
     bool GetPixels(BYTE* output, int x, int y, int width, int height) const;
 
+    bool IsWindowsGraphicsCaptureAvailable() const;
+
 private:
-    bool IsWindowsGraphicsCapture() const { return captureMode_ == CaptureMode::WindowsGraphicsCapture; }
+    CaptureMode GetCaptureModeInternal() const;
+    bool IsWindowsGraphicsCapture() const;
     bool CaptureByWin32API();
     void CreateBitmapIfNeeded(HDC hDc, UINT width, UINT height);
     void DeleteBitmap();
@@ -62,7 +66,7 @@ private:
     bool UploadByWindowsGraphicsCapture();
 
     const Window* const window_;
-    CaptureMode captureMode_ = CaptureMode::PrintWindow;
+    CaptureMode captureMode_ = CaptureMode::Auto;
     std::shared_ptr<class WindowsGraphicsCapture> windowsGraphicsCapture_;
 
     std::atomic<ID3D11Texture2D*> unityTexture_ = nullptr;

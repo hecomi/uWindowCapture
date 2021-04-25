@@ -37,8 +37,7 @@ public:
 
 private:
     std::shared_ptr<Window> FindParentWindow(const std::shared_ptr<Window>& window) const;
-    std::shared_ptr<Window> FindOrAddWindow(HWND hwnd);
-    std::shared_ptr<Window> FindOrAddDesktop(HMONITOR hMonitor);
+    std::shared_ptr<Window> FindOrAddWindow(const Window::Data1 &data);
 
     void StartWindowHandleListThread();
     void StopWindowHandleListThread();
@@ -58,6 +57,6 @@ private:
     ThreadLoop windowHandleListThreadLoop_;
 
     std::vector<Window::Data1> windowDataList_[2];
-    mutable std::mutex windowsHandleListMutex_;
+    mutable std::mutex windowsDataListMutex_;
 };
 

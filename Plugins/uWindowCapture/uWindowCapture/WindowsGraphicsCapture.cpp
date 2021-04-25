@@ -35,6 +35,8 @@ bool WindowsGraphicsCapture::IsCursorCaptureEnabledApiSupported()
 {
     using ApiInfo = winrt::Windows::Foundation::Metadata::ApiInformation;
 
+    if (!IsSupported()) return false;
+
     static bool isChecked = false;
     static bool isEnabled = false;
     if (isChecked) return isEnabled;
@@ -63,6 +65,7 @@ WindowsGraphicsCapture::WindowsGraphicsCapture(HWND hWnd)
     : hWnd_(hWnd)
     , hMonitor_(NULL)
 {
+    CreateItem();
 }
 
 
@@ -70,48 +73,70 @@ WindowsGraphicsCapture::WindowsGraphicsCapture(HMONITOR hMonitor)
     : hMonitor_(hMonitor)
     , hWnd_(NULL)
 {
+    CreateItem();
 }
 
 
-void WindowsGraphicsCapture::CreateSession()
+void WindowsGraphicsCapture::CreateItem()
 {
-    auto device = WindowManager::Get().GetUploadManager()->GetDevice();
+    if (!IsSupported()) return;
 
-    com_ptr<IDXGIDevice> dxgiDevice;
-    const auto hr = device->QueryInterface<IDXGIDevice>(dxgiDevice.put());
-    if (FAILED(hr)) return;
-
-    com_ptr<::IInspectable> deviceWinRt;
-    ::CreateDirect3D11DeviceFromDXGIDevice(dxgiDevice.get(), deviceWinRt.put());
-    deviceWinRt_ = deviceWinRt.as<IDirect3DDevice>();
-
-    const auto factory = get_activation_factory<GraphicsCaptureItem>();
-    const auto interop = factory.as<IGraphicsCaptureItemInterop>();
-    if (hWnd_)
+    try
     {
-        interop->CreateForWindow(
-            hWnd_,
-            guid_of<ABI::Windows::Graphics::Capture::IGraphicsCaptureItem>(), 
-            reinterpret_cast<void**>(put_abi(graphicsCaptureItem_)));
+        const auto factory = get_activation_factory<GraphicsCaptureItem>();
+        const auto interop = factory.as<IGraphicsCaptureItemInterop>();
+        if (hWnd_)
+        {
+            interop->CreateForWindow(
+                hWnd_,
+                guid_of<ABI::Windows::Graphics::Capture::IGraphicsCaptureItem>(), 
+                reinterpret_cast<void**>(put_abi(graphicsCaptureItem_)));
+        }
+        else
+        {
+            interop->CreateForMonitor(
+                hMonitor_,
+                guid_of<ABI::Windows::Graphics::Capture::IGraphicsCaptureItem>(), 
+                reinterpret_cast<void**>(put_abi(graphicsCaptureItem_)));
+        }
     }
-    else
+    catch (const std::exception &e)
     {
-        interop->CreateForMonitor(
-            hMonitor_,
-            guid_of<ABI::Windows::Graphics::Capture::IGraphicsCaptureItem>(), 
-            reinterpret_cast<void**>(put_abi(graphicsCaptureItem_)));
+        Debug::Log("WindowsGraphicsCapture::CreateItem() throws an exception :", e.what());
     }
+    catch (...)
+    {
+        Debug::Log("WindowsGraphicsCapture::CreateItem() throws an unknown exception.");
+    }
+}
 
+
+void WindowsGraphicsCapture::CreatePoolAndSession()
+{
     if (!graphicsCaptureItem_) return;
 
     size_ = graphicsCaptureItem_.Size();
-    captureFramePool_ = Direct3D11CaptureFramePool::CreateFreeThreaded(
-        deviceWinRt_, 
-        DirectXPixelFormat::B8G8R8A8UIntNormalized,
-        2,
-        size_);
 
-    graphicsCaptureSession_ = captureFramePool_.CreateCaptureSession(graphicsCaptureItem_);
+    const auto& manager = WindowManager::Get().GetWindowsGraphicsCaptureManager();
+    auto &device = manager->GetDevice();
+
+    try
+    {
+        captureFramePool_ = Direct3D11CaptureFramePool::CreateFreeThreaded(
+            device, 
+            DirectXPixelFormat::B8G8R8A8UIntNormalized,
+            2,
+            size_);
+        graphicsCaptureSession_ = captureFramePool_.CreateCaptureSession(graphicsCaptureItem_);
+    }
+    catch (const std::exception &e)
+    {
+        Debug::Log("WindowsGraphicsCapture::CreatePoolAndSession() throws an exception :", e.what());
+    }
+    catch (...)
+    {
+        Debug::Log("WindowsGraphicsCapture::CreatePoolAndSession() throws an unknown exception.");
+    }
 }
 
 
@@ -134,7 +159,6 @@ void WindowsGraphicsCapture::DestroySession()
 WindowsGraphicsCapture::~WindowsGraphicsCapture()
 {
     DestroySession();
-    deviceWinRt_ = nullptr;
 }
 
 
@@ -148,20 +172,7 @@ void WindowsGraphicsCapture::Start()
         manager->Add(shared_from_this());
     }
 
-    try
-    {
-        CreateSession();
-    }
-    catch (const std::exception &e)
-    {
-        Debug::Log("WindowsGraphicsCapture::CreateSession() throws an exception :", e.what());
-    }
-    catch (...)
-    {
-        Debug::Log("WindowsGraphicsCapture::CreateSession() throws an unknown exception.");
-    }
-
-    if (!graphicsCaptureItem_) return;
+    CreatePoolAndSession();
 
     if (graphicsCaptureSession_)
     {
@@ -257,9 +268,12 @@ void WindowsGraphicsCapture::ChangePoolSize(int width, int height)
 {
     if (!captureFramePool_) return;
 
+    const auto& manager = WindowManager::Get().GetWindowsGraphicsCaptureManager();
+    auto &device = manager->GetDevice();
+
     size_ = { width, height };
     captureFramePool_.Recreate(
-        deviceWinRt_, 
+        device, 
         DirectXPixelFormat::B8G8R8A8UIntNormalized,
         2,
         size_);
@@ -267,6 +281,34 @@ void WindowsGraphicsCapture::ChangePoolSize(int width, int height)
 
 
 // ---
+
+
+IDirect3DDevice & WindowsGraphicsCaptureManager::GetDevice()
+{
+    if (!deviceWinRt_)
+    {
+        const auto& uploader = WindowManager::Get().GetUploadManager();
+        while (!uploader->IsReady())
+        {
+            const std::chrono::microseconds waitTime(100);
+            std::this_thread::sleep_for(waitTime);
+        }
+
+        if (auto device = uploader->GetDevice())
+        {
+            com_ptr<IDXGIDevice> dxgiDevice;
+            const auto hr = device->QueryInterface<IDXGIDevice>(dxgiDevice.put());
+            if (SUCCEEDED(hr))
+            {
+                com_ptr<::IInspectable> deviceWinRt;
+                ::CreateDirect3D11DeviceFromDXGIDevice(dxgiDevice.get(), deviceWinRt.put());
+                deviceWinRt_ = deviceWinRt.as<IDirect3DDevice>();
+            }
+        }
+    }
+
+    return deviceWinRt_;
+}
 
 
 void WindowsGraphicsCaptureManager::Add(const std::shared_ptr<WindowsGraphicsCapture>& instance)

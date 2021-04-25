@@ -139,7 +139,7 @@ std::shared_ptr<Window> WindowManager::GetWindowFromPoint(POINT point) const
             const auto& window = pair.second;
 
             // Return the window whose handle is same
-            if (window->GetHandle() == hWnd) 
+            if (window->GetWindowHandle() == hWnd) 
             {
                 return window;
             }
@@ -193,8 +193,8 @@ std::shared_ptr<Window> WindowManager::FindParentWindow(const std::shared_ptr<Wi
         }
 
         if ((
-            other->GetHandle() == window->GetParentHandle() ||
-            other->GetHandle() == window->GetOwnerHandle()
+            other->GetWindowHandle() == window->GetParentHandle() ||
+            other->GetWindowHandle() == window->GetOwnerHandle()
         ) || 
         (
             ((other->GetParentId()  == -1 || other->IsAltTab()) &&
@@ -217,35 +217,17 @@ std::shared_ptr<Window> WindowManager::FindParentWindow(const std::shared_ptr<Wi
 }
 
 
-std::shared_ptr<Window> WindowManager::FindOrAddWindow(HWND hWnd)
+std::shared_ptr<Window> WindowManager::FindOrAddWindow(const Window::Data1 &data)
 {
     const auto it = std::find_if(
         windows_.begin(),
         windows_.end(),
-        [hWnd](const auto& pair) { return pair.second->GetHandle() == hWnd; });
-
-    if (it != windows_.end())
-    {
-        return it->second;
-    }
-
-    const auto id = lastWindowId_++;
-    auto window = std::make_shared<Window>(id);
-    windows_.emplace(id, window);
-
-    return window;
-}
-
-
-std::shared_ptr<Window> WindowManager::FindOrAddDesktop(HMONITOR hMonitor)
-{
-    const auto it = std::find_if(
-        windows_.begin(),
-        windows_.end(),
-        [hMonitor](const auto& pair) 
+        [&](const auto& pair) 
         { 
             const auto& window = pair.second;
-            return window->IsDesktop() && window->data1_.hMonitor == hMonitor; 
+            return data.isDesktop ?
+                (window->IsDesktop() && window->GetMonitorHandle() == data.hMonitor) :
+                (window->GetWindowHandle() == data.hWnd);
         });
 
     if (it != windows_.end())
@@ -254,8 +236,7 @@ std::shared_ptr<Window> WindowManager::FindOrAddDesktop(HMONITOR hMonitor)
     }
 
     const auto id = lastWindowId_++;
-    auto window = std::make_shared<Window>(id);
-    window->SetCaptureMode(CaptureMode::BitBlt);
+    auto window = std::make_shared<Window>(id, data);
     windows_.emplace(id, window);
 
     return window;
@@ -272,24 +253,21 @@ void WindowManager::UpdateWindows()
     }
 
     {
-        std::lock_guard<std::mutex> lock(windowsHandleListMutex_);
+        std::lock_guard<std::mutex> lock(windowsDataListMutex_);
+
         for (auto&& data1 : windowDataList_[0])
         {
-            auto window = data1.isDesktop ?
-                WindowManager::Get().FindOrAddDesktop(data1.hMonitor) :
-                WindowManager::Get().FindOrAddWindow(data1.hWnd);
+            auto window = WindowManager::Get().FindOrAddWindow(data1);
             if (window)
             {
-                {
-                    window->SetData(data1);
-                }
+                window->SetData(data1);
                 window->isAlive_ = true;
 
                 // Newly added
                 if (window->frameCount_ == 0)
                 {
                     auto &data2 = window->data2_;
-                    const auto hWnd = window->GetHandle();
+                    const auto hWnd = window->GetWindowHandle();
 
                     if (!window->IsDesktop())
                     {
@@ -321,7 +299,7 @@ void WindowManager::UpdateWindows()
                         window->parentId_ = parent->GetId();
                     }
 
-                    MessageManager::Get().Add({ MessageType::WindowAdded, window->GetId(), window->GetHandle() });
+                    MessageManager::Get().Add({ MessageType::WindowAdded, window->GetId(), window->GetWindowHandle() });
                 }
                 else
                 {
@@ -345,7 +323,7 @@ void WindowManager::UpdateWindows()
 
         if (!window->isAlive_)
         {
-            MessageManager::Get().Add({ MessageType::WindowRemoved, id, window->GetHandle() });
+            MessageManager::Get().Add({ MessageType::WindowRemoved, id, window->GetWindowHandle() });
             windows_.erase(it++);
         }
         else
@@ -426,7 +404,7 @@ void WindowManager::UpdateWindowHandleList()
         });
 
     {
-        std::lock_guard<std::mutex> lock(windowsHandleListMutex_);
+        std::lock_guard<std::mutex> lock(windowsDataListMutex_);
         std::swap(windowDataList_[0], windowDataList_[1]);
     }
     windowDataList_[1].clear();

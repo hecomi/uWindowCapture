@@ -50,7 +50,7 @@ bool IconTexture::CaptureOnce()
 {
     if (hasCaptured_) return false;
 
-    auto hWnd = window_->GetHandle();
+    auto hWnd = window_->GetWindowHandle();
 
     // TODO: cannot get icon when the window is UWP.
     auto hIcon = reinterpret_cast<HICON>(::GetClassLongPtr(hWnd, GCLP_HICON));
@@ -210,7 +210,7 @@ bool IconTexture::RenderOnce()
 
     context->CopyResource(unityTexture_.load(), texture.Get());
 
-    MessageManager::Get().Add({ MessageType::IconCaptured, window_->GetId(), window_->GetHandle() });
+    MessageManager::Get().Add({ MessageType::IconCaptured, window_->GetId(), window_->GetWindowHandle() });
 
     return true;
 }

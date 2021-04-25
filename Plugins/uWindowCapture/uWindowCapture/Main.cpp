@@ -169,7 +169,7 @@ extern "C"
     {
         if (auto window = GetWindow(id))
         {
-            return window->GetHandle();
+            return window->GetWindowHandle();
         }
         return nullptr;
     }
@@ -564,6 +564,15 @@ extern "C"
         if (auto window = GetWindow(id))
         {
             return window->IsBackground() > 0;
+        }
+        return false;
+    }
+
+    UNITY_INTERFACE_EXPORT bool UNITY_INTERFACE_API UwcIsWindowsGraphicsCaptureAvailable(int id)
+    {
+        if (auto window = GetWindow(id))
+        {
+            return window->IsWindowsGraphicsCaptureAvailable();
         }
         return false;
     }

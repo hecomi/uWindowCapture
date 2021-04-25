@@ -20,6 +20,7 @@ public:
     UploadManager();
     ~UploadManager();
 
+    bool IsReady() const { return isReady_; }
     DevicePtr GetDevice();
     TexturePtr CreateCompatibleSharedTexture(const TexturePtr& texture);
     void RequestUploadWindow(int id);
@@ -31,6 +32,7 @@ public:
 private:
     void CreateDevice();
 
+    bool isReady_ = false;
     DevicePtr device_;
     std::thread initThread_;
     ThreadLoop threadLoop_;

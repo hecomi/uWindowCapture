@@ -16,6 +16,15 @@ using namespace Microsoft::WRL;
 WindowTexture::WindowTexture(Window* window)
     : window_(window)
 {
+    if (window_->IsDesktop())
+    {
+        captureMode_ = CaptureMode::Auto;
+        windowsGraphicsCapture_ = std::make_shared<WindowsGraphicsCapture>(window_->GetMonitorHandle());
+    }
+    else
+    {
+        windowsGraphicsCapture_ = std::make_shared<WindowsGraphicsCapture>(window_->GetWindowHandle());
+    }
 }
 
 
@@ -46,6 +55,27 @@ void WindowTexture::SetCaptureMode(CaptureMode mode)
 
 CaptureMode WindowTexture::GetCaptureMode() const
 {
+    return captureMode_;
+}
+
+
+CaptureMode WindowTexture::GetCaptureModeInternal() const
+{
+    if (captureMode_ == CaptureMode::Auto)
+    {
+        if (IsWindowsGraphicsCaptureAvailable())
+        {
+            return CaptureMode::WindowsGraphicsCapture;
+        }
+        else if (window_->IsDesktop())
+        {
+            return CaptureMode::BitBlt;
+        }
+        else
+        {
+            return CaptureMode::PrintWindow;
+        }
+    }
     return captureMode_;
 }
 
@@ -114,6 +144,12 @@ void WindowTexture::DeleteBitmap()
 }
 
 
+bool WindowTexture::IsWindowsGraphicsCapture() const
+{
+    return GetCaptureModeInternal() == CaptureMode::WindowsGraphicsCapture;
+}
+
+
 bool WindowTexture::Capture()
 {
     if (IsWindowsGraphicsCapture())
@@ -129,7 +165,7 @@ bool WindowTexture::Capture()
 
 bool WindowTexture::CaptureByWin32API()
 {
-    auto hWnd = window_->GetHandle();
+    auto hWnd = window_->GetWindowHandle();
 
     auto hDc = ::GetDC(hWnd);
     ScopedReleaser hDcReleaser([&] { ::ReleaseDC(hWnd, hDc); });
@@ -157,7 +193,13 @@ bool WindowTexture::CaptureByWin32API()
     dpiScaleX_ = std::fmax(static_cast<float>(window_->GetWidth()) / dcWidth, 0.01f);
     dpiScaleY_ = std::fmax(static_cast<float>(window_->GetHeight()) / dcHeight, 0.01f);
 
-    if (captureMode_ == CaptureMode::BitBlt && !window_->IsDesktop())
+    // Use BitBlt when the target is a Desktop
+    if (window_->IsDesktop())
+    {
+        captureMode_ = CaptureMode::BitBlt;
+    }
+
+    if (GetCaptureModeInternal() == CaptureMode::BitBlt && !window_->IsDesktop())
     {
         // Remove frame areas
         const auto frameWidth = window_->GetWidth() - window_->GetClientWidth();
@@ -175,7 +217,7 @@ bool WindowTexture::CaptureByWin32API()
         const UINT preTextureHeight = textureHeight_;
 
         // Remove dropshadow area
-        if (captureMode_ == CaptureMode::PrintWindow)
+        if (GetCaptureModeInternal() == CaptureMode::PrintWindow)
         {
             RECT windowRect;
             ::GetWindowRect(hWnd, &windowRect);
@@ -223,7 +265,7 @@ bool WindowTexture::CaptureByWin32API()
                 }
             }
         }
-        else
+        else // BitBlt
         {
             offsetX_ = 0;
             offsetY_ = 0;
@@ -233,7 +275,7 @@ bool WindowTexture::CaptureByWin32API()
 
         if (textureWidth_ != preTextureWidth || textureHeight_ != preTextureHeight)
         {
-            MessageManager::Get().Add({ MessageType::WindowSizeChanged, window_->GetId(), window_->GetHandle() });
+            MessageManager::Get().Add({ MessageType::WindowSizeChanged, window_->GetId(), window_->GetWindowHandle() });
         }
     }
 
@@ -245,7 +287,7 @@ bool WindowTexture::CaptureByWin32API()
 
     int offsetLeft = 0, offsetRight = 0, offsetTop = 0, offsetBottom = 0;
 
-    switch (captureMode_)
+    switch (GetCaptureModeInternal())
     {
         case CaptureMode::PrintWindow:
         {
@@ -308,7 +350,7 @@ bool WindowTexture::CaptureByWin32API()
 void WindowTexture::DrawCursorByWin32API(HWND hWnd, HDC hDcMem)
 {
     const auto cursorWindow = WindowManager::Get().GetCursorWindow();
-    const bool isCursorWindow = cursorWindow && cursorWindow->GetHandle() == window_->GetHandle();
+    const bool isCursorWindow = cursorWindow && cursorWindow->GetWindowHandle() == window_->GetWindowHandle();
     if (!isCursorWindow && !window_->IsDesktop()) return;
 
     CURSORINFO cursorInfo { 0 };
@@ -325,7 +367,7 @@ void WindowTexture::DrawCursorByWin32API(HWND hWnd, HDC hDcMem)
     int localX = pos.x;
     int localY = pos.y;
 
-    switch (captureMode_)
+    switch (GetCaptureModeInternal())
     {
         case CaptureMode::PrintWindow:
         {
@@ -362,18 +404,6 @@ void WindowTexture::DrawCursorByWin32API(HWND hWnd, HDC hDcMem)
 
 bool WindowTexture::CaptureByWindowsGraphicsCapture()
 {
-    if (!windowsGraphicsCapture_)
-    {
-        if (window_->IsDesktop())
-        {
-            windowsGraphicsCapture_ = std::make_shared<WindowsGraphicsCapture>(window_->GetMonitorHandle());
-        }
-        else
-        {
-            windowsGraphicsCapture_ = std::make_shared<WindowsGraphicsCapture>(window_->GetHandle());
-        }
-    }
-
     if (!windowsGraphicsCapture_->IsStarted())
     {
         windowsGraphicsCapture_->Start();
@@ -556,7 +586,7 @@ bool WindowTexture::Render()
 
     context->CopyResource(unityTexture_.load(), texture.Get());
 
-    MessageManager::Get().Add({ MessageType::WindowCaptured, window_->GetId(), window_->GetHandle() });
+    MessageManager::Get().Add({ MessageType::WindowCaptured, window_->GetId(), window_->GetWindowHandle() });
 
     return true;
 }
@@ -623,4 +653,10 @@ bool WindowTexture::GetPixels(BYTE* output, int x, int y, int width, int height)
     }
 
     return true;
+}
+
+
+bool WindowTexture::IsWindowsGraphicsCaptureAvailable() const
+{
+    return windowsGraphicsCapture_ && windowsGraphicsCapture_->IsAvailable();
 }
