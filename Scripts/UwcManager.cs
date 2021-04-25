@@ -122,6 +122,16 @@ public class UwcManager : MonoBehaviour
         get { return instance.desktops_.Count; }
     }
 
+    static public bool isWindowsGraphicsCaptureSupported
+    {
+        get { return Lib.IsWindowsGraphicsCaptureSupported(); }
+    }
+
+    static public bool isWindowsGraphicsCaptureCursorCaptureEnabledApiSupported
+    {
+        get { return Lib.IsWindowsGraphicsCaptureCursorCaptureEnabledApiSupported(); }
+    }
+
     void Awake()
     {
         Lib.SetDebugMode(debugMode);
