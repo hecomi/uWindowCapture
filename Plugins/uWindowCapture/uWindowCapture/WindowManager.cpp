@@ -50,7 +50,8 @@ void WindowManager::Finalize()
 
 void WindowManager::Update(float dt)
 {
-    if (windowsGraphicsCaptureManager_) {
+    if (windowsGraphicsCaptureManager_) 
+    {
         windowsGraphicsCaptureManager_->Update(dt);
     }
 }

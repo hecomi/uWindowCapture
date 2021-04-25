@@ -67,7 +67,7 @@ private:
 
     std::atomic<ID3D11Texture2D*> unityTexture_ = nullptr;
     Microsoft::WRL::ComPtr<ID3D11Texture2D> sharedTexture_;
-    HANDLE sharedHandle_;
+    HANDLE sharedHandle_ = nullptr;
     std::mutex sharedTextureMutex_;
 
     Buffer<BYTE> buffer_;

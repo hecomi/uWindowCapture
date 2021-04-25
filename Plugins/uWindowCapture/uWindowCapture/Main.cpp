@@ -691,4 +691,14 @@ extern "C"
     {
         return ::GetSystemMetrics(SM_CYVIRTUALSCREEN);
     }
+
+    UNITY_INTERFACE_EXPORT bool UNITY_INTERFACE_API UwcIsWindowsGraphicsCaptureSupported()
+    {
+        return WindowsGraphicsCapture::IsSupported();
+    }
+
+    UNITY_INTERFACE_EXPORT bool UNITY_INTERFACE_API UwcIsWindowsGraphicsCaptureCursorCaptureEnabledApiSupported()
+    {
+        return WindowsGraphicsCapture::IsCursorCaptureEnabledApiSupported();
+    }
 }

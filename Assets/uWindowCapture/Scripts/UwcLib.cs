@@ -223,6 +223,10 @@ public static class Lib
     public static extern int GetScreenWidth();
     [DllImport(name, EntryPoint = "UwcGetScreenHeight")]
     public static extern int GetScreenHeight();
+    [DllImport(name, EntryPoint = "UwcIsWindowsGraphicsCaptureSupported")]
+    public static extern bool IsWindowsGraphicsCaptureSupported();
+    [DllImport(name, EntryPoint = "UwcIsWindowsGraphicsCaptureCursorCaptureEnabledApiSupported")]
+    public static extern bool IsWindowsGraphicsCaptureCursorCaptureEnabledApiSupported();
 
     public static Message[] GetMessages()
     {

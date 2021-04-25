@@ -415,7 +415,10 @@ bool WindowTexture::RecreateSharedTextureIfNeeded()
         return false;
     }
 
-    std::lock_guard<std::mutex> lock(sharedTextureMutex_);
+    if (GetWidth() == 0 || GetHeight() == 0)
+    {
+        return false;
+    }
 
     {
         D3D11_TEXTURE2D_DESC desc;
@@ -428,6 +431,17 @@ bool WindowTexture::RecreateSharedTextureIfNeeded()
         }
     }
 
+    if (!IsWindowsGraphicsCapture())
+    {
+        if (offsetX_ + textureWidth_ > bufferWidth_ || offsetY_ + textureHeight_ > bufferHeight_)
+        {
+            Debug::Error(__FUNCTION__, " => Offsets are invalid.");
+            return false;
+        }
+    }
+
+    std::lock_guard<std::mutex> lock(sharedTextureMutex_);
+
     bool shouldUpdateTexture = true;
 
     if (sharedTexture_)
@@ -438,12 +452,6 @@ bool WindowTexture::RecreateSharedTextureIfNeeded()
         {
             shouldUpdateTexture = false;
         }
-    }
-
-    if (offsetX_ + textureWidth_ > bufferWidth_ || offsetY_ + textureHeight_ > bufferHeight_)
-    {
-        Debug::Error(__FUNCTION__, " => Offsets are invalid.");
-        return false;
     }
 
     const auto& uploader = WindowManager::GetUploadManager();

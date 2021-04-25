@@ -1,50 +1,73 @@
 fileFormatVersion: 2
 guid: 10857d04af36c0e469bde8a246342742
-timeCreated: 1480839364
-licenseType: Pro
 PluginImporter:
-  serializedVersion: 1
+  externalObjects: {}
+  serializedVersion: 2
   iconMap: {}
   executionOrder: {}
+  defineConstraints: []
   isPreloaded: 0
+  isOverridable: 0
+  isExplicitlyReferenced: 0
+  validateReferences: 1
   platformData:
-    Any:
+  - first:
+      : Linux
+    second:
+      enabled: 0
+      settings:
+        CPU: None
+  - first:
+      : LinuxUniversal
+    second:
+      enabled: 1
+      settings:
+        CPU: x86_64
+  - first:
+      : OSXIntel
+    second:
+      enabled: 0
+      settings:
+        CPU: None
+  - first:
+      : OSXIntel64
+    second:
+      enabled: 1
+      settings:
+        CPU: AnyCPU
+  - first:
+      Any: 
+    second:
       enabled: 1
       settings: {}
-    Editor:
+  - first:
+      Editor: Editor
+    second:
       enabled: 0
       settings:
         CPU: x86_64
         DefaultValueInitialized: true
-    Linux:
-      enabled: 0
-      settings:
-        CPU: None
-    Linux64:
-      enabled: 1
-      settings:
-        CPU: x86_64
-    LinuxUniversal:
-      enabled: 1
-      settings:
-        CPU: x86_64
-    OSXIntel:
-      enabled: 0
-      settings:
-        CPU: None
-    OSXIntel64:
+  - first:
+      Standalone: Linux64
+    second:
       enabled: 1
       settings:
         CPU: AnyCPU
-    OSXUniversal:
+  - first:
+      Standalone: OSXUniversal
+    second:
       enabled: 0
       settings:
         CPU: x86_64
-    Win:
+  - first:
+      Standalone: Win
+    second:
       enabled: 0
       settings:
         CPU: None
-    Win64:
+  - first:
+      Standalone: Win64
+    second:
       enabled: 1
       settings:
         CPU: AnyCPU

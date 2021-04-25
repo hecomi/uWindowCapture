@@ -3,7 +3,7 @@
 #include <functional>
 #include <chrono>
 #include <mutex>
-#include <vector>
+#include <set>
 #include <list>
 #include <dxgi.h>
 #include <d3d11.h>
@@ -14,10 +14,9 @@
 class WindowsGraphicsCapture
     : public std::enable_shared_from_this<WindowsGraphicsCapture>
 {
-friend class WindowsGraphicsCaptureManager;
 public:
-    static bool IsAvailable();
-    static bool IsCursorCaptureEnabledApiAvailable();
+    static bool IsSupported();
+    static bool IsCursorCaptureEnabledApiSupported();
 
 public:
     struct Result
@@ -33,19 +32,23 @@ public:
     explicit WindowsGraphicsCapture(HWND hWnd);
     explicit WindowsGraphicsCapture(HMONITOR hMonitor);
     ~WindowsGraphicsCapture();
+    void Update(float dt);
     int GetHeight() const { return size_.Height; }
     int GetWidth() const { return size_.Width; }
     void SetCallback(const Callback& callback) { callback_ = callback; }
     void Start();
     void RequestStop();
     void Stop();
+    bool ShouldStop() const;
     bool IsStarted() const { return isStarted_; }
+    bool IsValid() const { return static_cast<bool>(graphicsCaptureSession_); }
     void EnableCursorCapture(bool enabled);
     Result TryGetLatestResult();
     void ChangePoolSize(int width, int height);
 
 private:
-    void Initialize();
+    void CreateSession();
+    void DestroySession();
 
     const HWND hWnd_;
     const HMONITOR hMonitor_;
@@ -74,7 +77,7 @@ public:
 private:
     using Ptr = std::shared_ptr<WindowsGraphicsCapture>;
     std::list<Ptr> instances_;
-    std::vector<Ptr> removedInstances_;
+    std::set<Ptr> removedInstances_;
     std::mutex instancesMutex_;
     std::mutex removedInstancesMutex_;
 };
