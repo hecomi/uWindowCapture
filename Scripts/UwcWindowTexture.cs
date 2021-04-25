@@ -124,7 +124,7 @@ public class UwcWindowTexture : MonoBehaviour
         }
     }
 
-    public CaptureMode captureMode = CaptureMode.PrintWindow;
+    public CaptureMode captureMode = CaptureMode.Auto;
     public CapturePriority capturePriority = CapturePriority.Auto;
     public WindowTextureCaptureTiming captureRequestTiming = WindowTextureCaptureTiming.OnlyWhenVisible;
     public int captureFrameRate = 30;
@@ -164,9 +164,6 @@ public class UwcWindowTexture : MonoBehaviour
 
             if (window_ != null) {
                 shouldUpdateWindow = false;
-                if (window_.isDesktop || window_.isChild) {
-                    captureMode = window_.captureMode;
-                }
                 window_.onCaptured.AddListener(OnCaptured);
                 window_.RequestCapture(CapturePriority.High);
             }

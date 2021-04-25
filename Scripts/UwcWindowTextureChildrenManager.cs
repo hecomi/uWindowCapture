@@ -8,7 +8,7 @@ namespace uWindowCapture
 public class UwcWindowTextureChildrenManager : MonoBehaviour 
 {
     UwcWindowTexture windowTexture_;
-    Dictionary<int, UwcWindowTexture> children = new Dictionary<int, UwcWindowTexture>();
+    Dictionary<int, UwcWindowTexture> children_ = new Dictionary<int, UwcWindowTexture>();
 
     void Awake()
     {
@@ -39,12 +39,12 @@ public class UwcWindowTextureChildrenManager : MonoBehaviour
             oldWindow.onChildAdded.RemoveListener(OnChildAdded);
             oldWindow.onChildRemoved.RemoveListener(OnChildRemoved);
 
-            foreach (var kv in children) {
+            foreach (var kv in children_) {
                 var windowTexture = kv.Value;
                 Destroy(windowTexture.gameObject);
             }
 
-            children.Clear();
+            children_.Clear();
         }
 
         if (newWindow != null) {
@@ -78,16 +78,21 @@ public class UwcWindowTextureChildrenManager : MonoBehaviour
         childWindowTexture.captureRequestTiming = windowTexture_.captureRequestTiming;
         childWindowTexture.drawCursor = windowTexture_.drawCursor;
 
-        children.Add(window.id, childWindowTexture);
+        children_.Add(window.id, childWindowTexture);
     }
 
     void OnChildRemoved(UwcWindow window)
     {
+        OnChildRemoved(window.id);
+    }
+
+    void OnChildRemoved(int id)
+    {
         UwcWindowTexture child;
-        children.TryGetValue(window.id, out child);
+        children_.TryGetValue(id, out child);
         if (child) {
             Destroy(child.gameObject);
-            children.Remove(window.id);
+            children_.Remove(id);
         }
     }
 
@@ -119,9 +124,8 @@ public class UwcWindowTextureChildrenManager : MonoBehaviour
 
     void UpdateChildren()
     {
-        foreach (var kv in children) {
-            var windowTexture = kv.Value;
-            MoveAndScaleChildWindow(windowTexture);
+        foreach (var kv in children_) {
+            MoveAndScaleChildWindow(kv.Value);
         }
     }
 }

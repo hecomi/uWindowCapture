@@ -20,6 +20,7 @@ public enum CaptureMode
     PrintWindow = 0,
     BitBlt = 1,
     WindowsGraphicsCapture = 2,
+    Auto = 3,
 }
 
 public enum CapturePriority
