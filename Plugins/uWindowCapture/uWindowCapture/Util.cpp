@@ -129,20 +129,35 @@ bool GetWindowTitle(HWND hWnd, std::wstring& outTitle)
 bool GetWindowTitle(HWND hWnd, std::wstring& outTitle, int timeout)
 {
     DWORD_PTR length = 0;
-    if (FAILED(::SendMessageTimeoutW(hWnd, WM_GETTEXTLENGTH, 0, 0, SMTO_ABORTIFHUNG | SMTO_BLOCK, timeout, reinterpret_cast<PDWORD_PTR>(&length))))
-    {
-        return false;
-    }
+    LRESULT lr;
+
+    lr = ::SendMessageTimeoutW(
+        hWnd, 
+        WM_GETTEXTLENGTH, 
+        0, 
+        0, 
+        SMTO_ABORTIFHUNG | SMTO_BLOCK, 
+        timeout, 
+        reinterpret_cast<PDWORD_PTR>(&length));
+    if (FAILED(lr)) return false;
+
     if (length > 256) return false;
 
     std::vector<WCHAR> buf(length + 1);
     DWORD_PTR result;
-    if (FAILED(::SendMessageTimeoutW(hWnd, WM_GETTEXT, buf.size(), reinterpret_cast<LPARAM>(&buf[0]), SMTO_ABORTIFHUNG | SMTO_BLOCK, timeout, reinterpret_cast<PDWORD_PTR>(&result))))
-    {
-        return false;
-    }
+
+    lr = ::SendMessageTimeoutW(
+        hWnd, 
+        WM_GETTEXT, 
+        buf.size(), 
+        reinterpret_cast<LPARAM>(&buf[0]), 
+        SMTO_ABORTIFHUNG | SMTO_BLOCK, 
+        timeout, 
+        reinterpret_cast<PDWORD_PTR>(&result));
+    if (FAILED(lr)) return false;
 
     outTitle = &buf[0];
+
     return true;
 }
 

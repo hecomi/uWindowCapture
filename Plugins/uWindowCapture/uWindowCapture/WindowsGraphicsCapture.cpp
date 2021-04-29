@@ -100,13 +100,10 @@ void WindowsGraphicsCapture::CreateItem()
                 reinterpret_cast<void**>(put_abi(graphicsCaptureItem_)));
         }
     }
-    catch (const std::exception &e)
-    {
-        Debug::Log("WindowsGraphicsCapture::CreateItem() throws an exception :", e.what());
-    }
     catch (...)
     {
-        Debug::Log("WindowsGraphicsCapture::CreateItem() throws an unknown exception.");
+        // Windows Graphics Capture is not supported with this HWND:
+        // Debug::Log("WindowsGraphicsCapture::CreateItem() throws an exception.");
     }
 }
 
@@ -334,14 +331,12 @@ void WindowsGraphicsCaptureManager::Update(float dt)
 {
     std::scoped_lock lock(instancesMutex_);
 
-    std::vector<Ptr> toBeStoppedInstances;
     for (const auto& instance : instances_)
     {
         if (instance->ShouldStop()) 
         {
             std::scoped_lock lock(removedInstancesMutex_);
             removedInstances_.insert(instance);
-            toBeStoppedInstances.push_back(instance);
             continue;
         }
 

@@ -14,6 +14,7 @@ using namespace Microsoft::WRL;
 IconTexture::IconTexture(Window* window)
     : window_(window)
 {
+    InitIcon();
 }
 
 
@@ -22,15 +23,71 @@ IconTexture::~IconTexture()
 }
 
 
+void IconTexture::InitIcon()
+{
+    InitIconHandle();
+
+    if (!hIcon_) return;
+
+    ICONINFO info;
+    if (!::GetIconInfo(hIcon_, &info))
+    {
+        OutputApiError(__FUNCTION__, "GetIconInfo");
+        return;
+    }
+    ScopedReleaser iconReleaser([&] 
+    { 
+        ::DeleteObject(info.hbmColor); 
+        ::DeleteObject(info.hbmMask); 
+    });
+
+    BITMAP bmpColor { 0 };
+    ::GetObject(info.hbmColor, sizeof(bmpColor), &bmpColor);
+    width_ = bmpColor.bmWidth;
+    height_ = bmpColor.bmHeight;
+}
+
+
+void IconTexture::InitIconHandle()
+{
+    // Now we cannot get an icon from UWP app from these methods.
+
+    const auto hWnd = window_->GetWindowHandle();
+
+    hIcon_ = reinterpret_cast<HICON>(::GetClassLongPtr(hWnd, GCLP_HICON));
+    if (hIcon_) return;
+
+    constexpr UINT timeout = 100;
+    const auto lr = ::SendMessageTimeoutW(
+        hWnd, 
+        WM_GETICON, 
+        ICON_BIG, 
+        0, 
+        SMTO_ABORTIFHUNG | SMTO_BLOCK, 
+        timeout, 
+        reinterpret_cast<PDWORD_PTR>(&hIcon_));
+    if (hIcon_ && SUCCEEDED(lr)) return;
+
+    hIcon_ = ::LoadIcon(window_->GetInstance(), IDI_APPLICATION);
+    if (hIcon_) return;
+
+    hIcon_ = ::LoadIcon(0, IDI_APPLICATION);
+    if (hIcon_) return;
+
+    Debug::Error(__FUNCTION__, " => Could not get HICON.");
+    return;
+}
+
+
 UINT IconTexture::GetWidth() const
 {
-    return ::GetSystemMetrics(SM_CXICON);
+    return width_ > 0 ? width_ : ::GetSystemMetrics(SM_CXICON);
 }
 
 
 UINT IconTexture::GetHeight() const
 {
-    return ::GetSystemMetrics(SM_CYICON);
+    return height_ > 0 ? height_ : ::GetSystemMetrics(SM_CYICON);
 }
 
 
@@ -46,34 +103,12 @@ ID3D11Texture2D* IconTexture::GetUnityTexturePtr() const
 }
 
 
-bool IconTexture::CaptureOnce()
+bool IconTexture::Capture()
 {
-    if (hasCaptured_) return false;
-
-    auto hWnd = window_->GetWindowHandle();
-
-    // TODO: cannot get icon when the window is UWP.
-    auto hIcon = reinterpret_cast<HICON>(::GetClassLongPtr(hWnd, GCLP_HICON));
-    if (hIcon == nullptr)
-    {
-        const UINT timeout = 100;
-        const auto hr = ::SendMessageTimeout(hWnd, WM_GETICON, ICON_BIG, 0, SMTO_ABORTIFHUNG | SMTO_BLOCK, timeout, reinterpret_cast<PDWORD_PTR>(&hIcon));
-        if (FAILED(hr))
-        {
-            hIcon = reinterpret_cast<HICON>(::LoadImage(window_->GetInstance(), IDI_APPLICATION, IMAGE_ICON, 0, 0, LR_SHARED));
-            if (hIcon == nullptr)
-            {
-                Debug::Error(__FUNCTION__, " => Could not get HICON.");
-                return false;
-            }
-        }
-    }
-
-    const auto width = GetWidth();
-    const auto height = GetHeight();
+    if (!hIcon_) return false;
 
     ICONINFO info;
-    if (!::GetIconInfo(hIcon, &info))
+    if (!::GetIconInfo(hIcon_, &info))
     {
         OutputApiError(__FUNCTION__, "GetIconInfo");
         return false;
@@ -88,8 +123,8 @@ bool IconTexture::CaptureOnce()
     ScopedReleaser hDcReleaser([&] { ::DeleteDC(hDcMem); });
 
     BITMAPINFOHEADER bmi {};
-    bmi.biWidth       = static_cast<LONG>(width);
-    bmi.biHeight      = -static_cast<LONG>(height);
+    bmi.biWidth       = static_cast<LONG>(width_);
+    bmi.biHeight      = -static_cast<LONG>(height_);
     bmi.biPlanes      = 1;
     bmi.biSize        = sizeof(BITMAPINFOHEADER);
     bmi.biBitCount    = 32;
@@ -98,8 +133,8 @@ bool IconTexture::CaptureOnce()
 
     // Get color image
     Buffer<BYTE> color;
-    color.ExpandIfNeeded(width * height * 4);
-    if (!::GetDIBits(hDcMem, info.hbmColor, 0, height, color.Get(), reinterpret_cast<BITMAPINFO*>(&bmi), DIB_RGB_COLORS))
+    color.ExpandIfNeeded(width_ * height_ * 4);
+    if (!::GetDIBits(hDcMem, info.hbmColor, 0, height_, color.Get(), reinterpret_cast<BITMAPINFO*>(&bmi), DIB_RGB_COLORS))
     {
         OutputApiError(__FUNCTION__, "GetDIBits");
         return false;
@@ -107,8 +142,8 @@ bool IconTexture::CaptureOnce()
     
     // Get mask image
     Buffer<BYTE> mask;
-    mask.ExpandIfNeeded(width * height * 4);
-    if (!::GetDIBits(hDcMem, info.hbmMask, 0, height, mask.Get(), reinterpret_cast<BITMAPINFO*>(&bmi), DIB_RGB_COLORS))
+    mask.ExpandIfNeeded(width_ * height_ * 4);
+    if (!::GetDIBits(hDcMem, info.hbmMask, 0, height_, mask.Get(), reinterpret_cast<BITMAPINFO*>(&bmi), DIB_RGB_COLORS))
     {
         OutputApiError(__FUNCTION__, "GetDIBits");
         return false;
@@ -116,20 +151,20 @@ bool IconTexture::CaptureOnce()
 
     {
         std::lock_guard<std::mutex> lock(bufferMutex_);
-        buffer_.ExpandIfNeeded(width * height * 4);
+        buffer_.ExpandIfNeeded(width_ * height_ * 4);
 
-        auto buffer32 = buffer_.As<UINT>();
-        auto color32 = color.As<UINT>();
-        auto mask32 = mask.As<UINT>();
+        const auto buffer32 = buffer_.As<UINT>();
+        const auto color32 = color.As<UINT>();
+        const auto mask32 = mask.As<UINT>();
 
-        const auto n = width * height;
-        for (UINT x = 0; x < width; ++x) 
+        const auto n = width_ * height_;
+        for (UINT x = 0; x < width_; ++x) 
         {
-            for (UINT y = 0; y < height; ++y)
+            for (UINT y = 0; y < height_; ++y)
             {
-                const auto i = y * width + x;
-                const auto j = (height - 1 - y) * width + x;
-                buffer32[j] = color32[i] ^ mask32[i];
+                const auto i = y * width_ + x;
+                const auto j = (height_ - 1 - y) * width_ + x;
+                buffer32[j] = color32[i];// ^ mask32[i];
             }
         }
     }
@@ -140,10 +175,16 @@ bool IconTexture::CaptureOnce()
 }
 
 
-bool IconTexture::UploadOnce()
+bool IconTexture::CaptureOnce()
 {
-    if (hasUploaded_) return false;
+    if (hasCaptured_) return false;
 
+    return Capture();
+}
+
+
+bool IconTexture::Upload()
+{
     if (!unityTexture_.load() || buffer_.Empty()) return false;
 
     std::lock_guard<std::mutex> lock(sharedTextureMutex_);
@@ -190,10 +231,16 @@ bool IconTexture::UploadOnce()
 }
 
 
-bool IconTexture::RenderOnce()
+bool IconTexture::UploadOnce()
 {
-    if (hasRendered_) return true;
+    if (hasUploaded_) return false;
 
+    return Upload();
+}
+
+
+bool IconTexture::Render()
+{
     if (!unityTexture_.load() || !sharedTexture_ || !sharedHandle_) return false;
 
     std::lock_guard<std::mutex> lock(sharedTextureMutex_);
@@ -213,4 +260,12 @@ bool IconTexture::RenderOnce()
     MessageManager::Get().Add({ MessageType::IconCaptured, window_->GetId(), window_->GetWindowHandle() });
 
     return true;
+}
+
+
+bool IconTexture::RenderOnce()
+{
+    if (hasRendered_) return true;
+
+    return Render();
 }
