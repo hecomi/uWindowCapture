@@ -329,13 +329,13 @@ void WindowsGraphicsCaptureManager::Remove(const std::shared_ptr<WindowsGraphics
 
 void WindowsGraphicsCaptureManager::Update(float dt)
 {
-    std::scoped_lock lock(instancesMutex_);
+    std::scoped_lock instancesLock(instancesMutex_);
 
     for (const auto& instance : instances_)
     {
         if (instance->ShouldStop()) 
         {
-            std::scoped_lock lock(removedInstancesMutex_);
+            std::scoped_lock removedInstancesLock(removedInstancesMutex_);
             removedInstances_.insert(instance);
             continue;
         }
@@ -350,14 +350,17 @@ void WindowsGraphicsCaptureManager::Update(float dt)
 
 void WindowsGraphicsCaptureManager::StopNonUpdatedInstances()
 {
-    std::scoped_lock lock(removedInstancesMutex_);
+    decltype(removedInstances_) instances;
+    {
+        std::scoped_lock lock(removedInstancesMutex_);
+        instances = removedInstances_;
+        removedInstances_.clear();
+    }
 
-    for (auto &instance : removedInstances_)
+    for (auto& instance : instances)
     {
         instance->Stop();
     }
-
-    removedInstances_.clear();
 }
 
 
