@@ -19,7 +19,6 @@ public class UwcWindow
 
         parentWindow = UwcManager.FindParent(id);
         if (parentWindow != null) {
-            Debug.Log("PARENT: " + parentWindow.title);
             parentWindow.onChildAdded.Invoke(this);
         }
     }
