@@ -18,6 +18,7 @@ class IconTexture
 public:
     explicit IconTexture(Window* window);
     ~IconTexture();
+    void InitIcon();
 
     bool IsValid() const { return hIcon_; }
     UINT GetWidth() const;
@@ -34,7 +35,6 @@ public:
     bool RenderOnce();
 
 private:
-    void InitIcon();
     void InitIconHandle();
 
     Window* const window_ = nullptr;
@@ -54,4 +54,5 @@ private:
 
     UINT width_ = 0;
     UINT height_ = 0;
+    bool isExtracted_ = false;
 };

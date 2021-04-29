@@ -14,12 +14,15 @@ using namespace Microsoft::WRL;
 IconTexture::IconTexture(Window* window)
     : window_(window)
 {
-    InitIcon();
 }
 
 
 IconTexture::~IconTexture()
 {
+    if (isExtracted_ && hIcon_)
+    {
+        ::DestroyIcon(hIcon_);
+    }
 }
 
 
@@ -54,22 +57,22 @@ void IconTexture::InitIconHandle()
 
     const auto hWnd = window_->GetWindowHandle();
 
-    hIcon_ = reinterpret_cast<HICON>(::GetClassLongPtr(hWnd, GCLP_HICON));
-    if (hIcon_) return;
+    if (window_->IsAltTab())
+    {
+        hIcon_ = reinterpret_cast<HICON>(::GetClassLongPtr(hWnd, GCLP_HICON));
+        if (hIcon_) return;
 
-    constexpr UINT timeout = 100;
-    const auto lr = ::SendMessageTimeoutW(
-        hWnd, 
-        WM_GETICON, 
-        ICON_BIG, 
-        0, 
-        SMTO_ABORTIFHUNG | SMTO_BLOCK, 
-        timeout, 
-        reinterpret_cast<PDWORD_PTR>(&hIcon_));
-    if (hIcon_ && SUCCEEDED(lr)) return;
-
-    hIcon_ = ::LoadIcon(window_->GetInstance(), IDI_APPLICATION);
-    if (hIcon_) return;
+        constexpr UINT timeout = 100;
+        auto lr = ::SendMessageTimeoutW(
+            hWnd, 
+            WM_GETICON, 
+            ICON_BIG, 
+            0, 
+            SMTO_ABORTIFHUNG | SMTO_BLOCK, 
+            timeout, 
+            reinterpret_cast<PDWORD_PTR>(&hIcon_));
+        if (hIcon_ && SUCCEEDED(lr)) return;
+    }
 
     hIcon_ = ::LoadIcon(0, IDI_APPLICATION);
     if (hIcon_) return;
@@ -131,19 +134,9 @@ bool IconTexture::Capture()
     bmi.biCompression = BI_RGB;
     bmi.biSizeImage   = 0;
 
-    // Get color image
     Buffer<BYTE> color;
     color.ExpandIfNeeded(width_ * height_ * 4);
     if (!::GetDIBits(hDcMem, info.hbmColor, 0, height_, color.Get(), reinterpret_cast<BITMAPINFO*>(&bmi), DIB_RGB_COLORS))
-    {
-        OutputApiError(__FUNCTION__, "GetDIBits");
-        return false;
-    }
-    
-    // Get mask image
-    Buffer<BYTE> mask;
-    mask.ExpandIfNeeded(width_ * height_ * 4);
-    if (!::GetDIBits(hDcMem, info.hbmMask, 0, height_, mask.Get(), reinterpret_cast<BITMAPINFO*>(&bmi), DIB_RGB_COLORS))
     {
         OutputApiError(__FUNCTION__, "GetDIBits");
         return false;
@@ -153,9 +146,9 @@ bool IconTexture::Capture()
         std::lock_guard<std::mutex> lock(bufferMutex_);
         buffer_.ExpandIfNeeded(width_ * height_ * 4);
 
-        const auto buffer32 = buffer_.As<UINT>();
-        const auto color32 = color.As<UINT>();
-        const auto mask32 = mask.As<UINT>();
+        auto* buffer32 = buffer_.As<UINT>();
+        const auto* color32 = color.As<UINT>();
+        bool areAllPixelsAlphaZero = true;
 
         const auto n = width_ * height_;
         for (UINT x = 0; x < width_; ++x) 
@@ -164,7 +157,16 @@ bool IconTexture::Capture()
             {
                 const auto i = y * width_ + x;
                 const auto j = (height_ - 1 - y) * width_ + x;
-                buffer32[j] = color32[i];// ^ mask32[i];
+                buffer32[j] = color32[i];
+                if ((color32[i] & 0xff000000) != 0) areAllPixelsAlphaZero = false;
+            }
+        }
+
+        if (areAllPixelsAlphaZero)
+        {
+            for (UINT i = 0; i < n; ++i)
+            {
+                buffer32[i] |= 0xff000000;
             }
         }
     }
