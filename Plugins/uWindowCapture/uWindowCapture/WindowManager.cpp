@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <oleacc.h>
 #include "WindowManager.h"
 #include "WindowTexture.h"
 #include "Message.h"
@@ -298,6 +299,8 @@ void WindowManager::UpdateWindows()
                     {
                         window->parentId_ = parent->GetId();
                     }
+
+                    window->InitIcon();
 
                     MessageManager::Get().Add({ MessageType::WindowAdded, window->GetId(), window->GetWindowHandle() });
                 }

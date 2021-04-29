@@ -364,9 +364,7 @@ void Window::UpdateIsBackground()
 {
     if (IsApplicationFrameWindow())
     {
-        int attr = 0;
-        ::DwmGetWindowAttribute(GetWindowHandle(), DWMWA_CLOAKED, &attr, sizeof(attr));
-        data2_.isBackground = attr;
+        data2_.isBackground = IsCloakedWindow(GetWindowHandle());
     }
     else
     {
@@ -413,6 +411,12 @@ void Window::Upload()
     }
 
     hasNewWindowTextureCaptured_ = false;
+}
+
+
+void Window::InitIcon()
+{
+    iconTexture_->InitIcon();
 }
 
 

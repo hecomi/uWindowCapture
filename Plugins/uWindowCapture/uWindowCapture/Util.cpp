@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <dwmapi.h>
 #include "Util.h"
 #include "Debug.h"
 
@@ -27,9 +28,19 @@ bool IsFullScreenWindow(HWND hWnd)
 }
 
 
+bool IsCloakedWindow(HWND hWnd)
+{
+     BOOL isCloaked = FALSE;
+     const auto result = ::DwmGetWindowAttribute(hWnd, DWMWA_CLOAKED, &isCloaked, sizeof(BOOL));
+     return SUCCEEDED(result) && isCloaked;
+}
+
+
 bool IsAltTabWindow(HWND hWnd)
 {
     if (!::IsWindowVisible(hWnd)) return false;
+
+    if (IsCloakedWindow(hWnd)) return false;
 
     // Ref: https://blogs.msdn.microsoft.com/oldnewthing/20071008-00/?p=24863/
     HWND hWndWalk = ::GetAncestor(hWnd, GA_ROOTOWNER);

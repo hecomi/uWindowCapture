@@ -97,6 +97,7 @@ public:
     void Upload();
     void Render();
 
+    void InitIcon();
     void CaptureIcon();
     void UploadIcon();
     void RenderIcon();
