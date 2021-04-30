@@ -126,12 +126,6 @@ extern "C"
         WindowManager::Get().Update(dt);
     }
 
-    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcTriggerGpuUpload()
-    {
-        if (WindowManager::IsNull()) return;
-        WindowManager::Get().GetUploadManager()->TriggerGpuUpload();
-    }
-
     UNITY_INTERFACE_EXPORT UINT UNITY_INTERFACE_API UwcGetMessageCount()
     {
         if (MessageManager::IsNull()) return 0;

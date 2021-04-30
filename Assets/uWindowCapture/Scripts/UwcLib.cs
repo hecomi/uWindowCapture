@@ -86,8 +86,6 @@ public static class Lib
     public static extern IntPtr GetRenderEventFunc();
     [DllImport(name, EntryPoint = "UwcUpdate")]
     public static extern void Update(float dt);
-    [DllImport(name, EntryPoint = "UwcTriggerGpuUpload")]
-    public static extern void TriggerGpuUpload();
     [DllImport(name, EntryPoint = "UwcGetMessageCount")]
     private static extern int GetMessageCount();
     [DllImport(name, EntryPoint = "UwcGetMessages")]

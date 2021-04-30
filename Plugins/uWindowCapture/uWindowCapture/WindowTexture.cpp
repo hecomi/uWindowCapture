@@ -437,7 +437,7 @@ bool WindowTexture::Upload()
 
 bool WindowTexture::RecreateSharedTextureIfNeeded()
 {
-    UWC_SCOPE_TIMER(UploadByWin32API)
+    UWC_SCOPE_TIMER(RecreateSharedTextureIfNeeded)
 
     if (!unityTexture_.load()) 
     {
@@ -512,6 +512,8 @@ bool WindowTexture::RecreateSharedTextureIfNeeded()
 
 bool WindowTexture::UploadByWin32API()
 {
+    UWC_SCOPE_TIMER(UploadByWin32API)
+
     std::lock_guard<std::mutex> lock(bufferMutex_);
 
     const auto& uploader = WindowManager::GetUploadManager();
@@ -544,6 +546,7 @@ bool WindowTexture::UploadByWindowsGraphicsCapture()
 
     ComPtr<ID3D11DeviceContext> context;
     uploader->GetDevice()->GetImmediateContext(&context);
+    /*
     context->CopySubresourceRegion(
         sharedTexture_.Get(), 
         D3D11CalcSubresource(0, 0, 1), 
@@ -552,7 +555,8 @@ bool WindowTexture::UploadByWindowsGraphicsCapture()
         0,
         result.pTexture,
         0, 
-        NULL);
+        NULL);*/
+    context->CopyResource(sharedTexture_.Get(), result.pTexture);
     context->Flush();
 
     if (result.hasSizeChanged)

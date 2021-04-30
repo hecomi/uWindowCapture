@@ -27,7 +27,6 @@ public:
     void RequestUploadIcon(int id);
     void StartUploadThread();
     void StopUploadThread();
-    void TriggerGpuUpload();
 
 private:
     void CreateDevice();
@@ -38,5 +37,4 @@ private:
     ThreadLoop threadLoop_;
     WindowQueue windowUploadQueue_;
     WindowQueue iconUploadQueue_;
-    std::atomic<bool> hasUploadTriggered_ = false;
 };

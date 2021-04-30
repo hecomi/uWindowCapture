@@ -2,6 +2,7 @@
 #include "WindowManager.h"
 #include "UploadManager.h"
 #include "Debug.h"
+#include "Util.h"
 #include <inspectable.h>
 #include <winrt/base.h>
 #include <winrt/Windows.Foundation.h>
@@ -229,6 +230,10 @@ void WindowsGraphicsCapture::Update(float dt)
 
 void WindowsGraphicsCapture::EnableCursorCapture(bool enabled)
 {
+    if (isCursorCaptureEnabled_ == enabled) return;
+
+    isCursorCaptureEnabled_ = enabled;
+
     if (!IsCursorCaptureEnabledApiSupported())
     {
         Debug::Log("CursorCaptureEnabled API is not available.");
@@ -244,6 +249,8 @@ void WindowsGraphicsCapture::EnableCursorCapture(bool enabled)
 
 WindowsGraphicsCapture::Result WindowsGraphicsCapture::TryGetLatestResult()
 {
+    UWC_SCOPE_TIMER(TryGetLatestResult)
+
     stopTimer_ = 0.f;
 
     if (!captureFramePool_) return {};

@@ -5,7 +5,7 @@
 #include <chrono>
 #include <Windows.h>
 
-// #define UWC_DEBUG_ON
+#define UWC_DEBUG_ON
 
 
 // Window utilities

@@ -63,6 +63,7 @@ private:
 
     float stopTimer_ = 0.f;
     bool hasStopRequested_ = false;
+    bool isCursorCaptureEnabled_ = true;
 };
 
 

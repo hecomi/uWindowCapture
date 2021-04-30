@@ -20,6 +20,15 @@ using TexturePtr = Microsoft::WRL::ComPtr<ID3D11Texture2D>;
 
 
 
+namespace
+{
+    constexpr auto kLoopMinTime = std::chrono::microseconds(100);
+}
+
+
+// ---
+
+
 UploadManager::UploadManager()
 {
     initThread_ = std::thread([this]
@@ -120,10 +129,6 @@ void UploadManager::StartUploadThread()
 {
     threadLoop_.Start([this] 
     { 
-        // Waiting for being triggered...
-        if (!hasUploadTriggered_) return;
-        hasUploadTriggered_ = false;
-
         // Check window upload
         const int windowId = windowUploadQueue_.Dequeue();
         if (windowId >= 0 && WindowManager::Get().CheckExistence(windowId))
@@ -149,7 +154,7 @@ void UploadManager::StartUploadThread()
         {
             cursor->Upload();
         }
-    }, std::chrono::microseconds(1000));
+    }, kLoopMinTime);
 }
 
 
@@ -168,10 +173,4 @@ void UploadManager::RequestUploadWindow(int id)
 void UploadManager::RequestUploadIcon(int id)
 {
     iconUploadQueue_.Enqueue(id);
-}
-
-
-void UploadManager::TriggerGpuUpload()
-{
-    hasUploadTriggered_ = true;
 }
