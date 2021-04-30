@@ -41,8 +41,8 @@ public class UwcGetBufferExample : MonoBehaviour
         if (!isValid) return;
 
         var window = uwcTexture.window;
-        var width = window.width;
-        var height = window.height;
+        var width = window.rawWidth;
+        var height = window.rawHeight;
 
         if (texture_ == null || width != texture_.width || height != texture_.height) {
             texture_ = new Texture2D(width, height, TextureFormat.RGBA32, false);
