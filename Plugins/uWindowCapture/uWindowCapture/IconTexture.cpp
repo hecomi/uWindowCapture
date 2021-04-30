@@ -375,7 +375,7 @@ bool IconTexture::Upload()
 
     ComPtr<IDXGIResource> dxgiResource;
     sharedTexture_.As(&dxgiResource);
-    if (FAILED(dxgiResource->GetSharedHandle(&sharedHandle_)))
+    if (!dxgiResource || FAILED(dxgiResource->GetSharedHandle(&sharedHandle_)))
     {
         Debug::Error(__FUNCTION__, " => GetSharedHandle() failed.");
         return false;

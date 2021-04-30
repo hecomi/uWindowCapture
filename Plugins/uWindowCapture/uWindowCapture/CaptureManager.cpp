@@ -22,7 +22,7 @@ CaptureManager::CaptureManager()
 {
     windowCaptureThreadLoop_.SetFinalizer([]
     {
-        if (auto& wgcManager = WindowManager::Get().GetWindowsGraphicsCaptureManager())
+        if (auto& wgcManager = WindowManager::GetWindowsGraphicsCaptureManager())
         {
             wgcManager->StopAllInstances();
         }
@@ -61,7 +61,7 @@ CaptureManager::CaptureManager()
             }
         }
 
-        if (auto& wgcManager = WindowManager::Get().GetWindowsGraphicsCaptureManager())
+        if (auto& wgcManager = WindowManager::GetWindowsGraphicsCaptureManager())
         {
             wgcManager->StopNonUpdatedInstances();
         }

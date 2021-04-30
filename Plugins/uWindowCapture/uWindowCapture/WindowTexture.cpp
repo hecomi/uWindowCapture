@@ -470,9 +470,9 @@ bool WindowTexture::RecreateSharedTextureIfNeeded()
         }
     }
 
-    std::lock_guard<std::mutex> lock(sharedTextureMutex_);
-
     bool shouldUpdateTexture = true;
+
+    std::lock_guard<std::mutex> lock(sharedTextureMutex_);
 
     if (sharedTexture_)
     {
@@ -499,7 +499,7 @@ bool WindowTexture::RecreateSharedTextureIfNeeded()
 
         ComPtr<IDXGIResource> dxgiResource;
         sharedTexture_.As(&dxgiResource);
-        if (FAILED(dxgiResource->GetSharedHandle(&sharedHandle_)))
+        if (!dxgiResource || FAILED(dxgiResource->GetSharedHandle(&sharedHandle_)))
         {
             Debug::Error(__FUNCTION__, " => GetSharedHandle() failed.");
             return false;
@@ -523,10 +523,13 @@ bool WindowTexture::UploadByWin32API()
     const int startIndex = offsetX_ * 4 + offsetY_ * rawPitch;
     const auto* start = buffer_.Get(startIndex);
 
-    ComPtr<ID3D11DeviceContext> context;
-    uploader->GetDevice()->GetImmediateContext(&context);
-    context->UpdateSubresource(sharedTexture_.Get(), 0, nullptr, start, rawPitch, 0);
-    context->Flush();
+    {
+        std::lock_guard<std::mutex> lock(sharedTextureMutex_);
+        ComPtr<ID3D11DeviceContext> context;
+        uploader->GetDevice()->GetImmediateContext(&context);
+        context->UpdateSubresource(sharedTexture_.Get(), 0, nullptr, start, rawPitch, 0);
+        context->Flush();
+    }
 
     return true;
 }
@@ -540,24 +543,18 @@ bool WindowTexture::UploadByWindowsGraphicsCapture()
 
     const auto result = windowsGraphicsCapture_->TryGetLatestResult();
     if (!result.pTexture) return false;
+    ScopedReleaser resultReleaser([&] { windowsGraphicsCapture_->ReleaseLatestResult(); });
 
     const auto& uploader = WindowManager::GetUploadManager();
     if (!uploader) return false;
 
-    ComPtr<ID3D11DeviceContext> context;
-    uploader->GetDevice()->GetImmediateContext(&context);
-    /*
-    context->CopySubresourceRegion(
-        sharedTexture_.Get(), 
-        D3D11CalcSubresource(0, 0, 1), 
-        0, 
-        0, 
-        0,
-        result.pTexture,
-        0, 
-        NULL);*/
-    context->CopyResource(sharedTexture_.Get(), result.pTexture);
-    context->Flush();
+    {
+        std::lock_guard<std::mutex> lock(sharedTextureMutex_);
+        ComPtr<ID3D11DeviceContext> context;
+        uploader->GetDevice()->GetImmediateContext(&context);
+        context->CopyResource(sharedTexture_.Get(), result.pTexture);
+        context->Flush();
+    }
 
     if (result.hasSizeChanged)
     {

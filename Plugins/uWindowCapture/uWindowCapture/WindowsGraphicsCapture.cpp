@@ -120,7 +120,7 @@ void WindowsGraphicsCapture::CreatePoolAndSession()
 
     size_ = graphicsCaptureItem_.Size();
 
-    const auto& manager = WindowManager::Get().GetWindowsGraphicsCaptureManager();
+    const auto& manager = WindowManager::GetWindowsGraphicsCaptureManager();
     auto &device = manager->GetDevice();
 
     try
@@ -172,7 +172,7 @@ void WindowsGraphicsCapture::Start()
     if (isStarted_) return;
     isStarted_ = true;
 
-    if (const auto& manager = WindowManager::Get().GetWindowsGraphicsCaptureManager())
+    if (const auto& manager = WindowManager::GetWindowsGraphicsCaptureManager())
     {
         manager->Add(shared_from_this());
     }
@@ -202,7 +202,7 @@ void WindowsGraphicsCapture::Stop()
     if (!isStarted_) return;
     isStarted_ = false;
 
-    if (const auto& manager = WindowManager::Get().GetWindowsGraphicsCaptureManager())
+    if (const auto& manager = WindowManager::GetWindowsGraphicsCaptureManager())
     {
         manager->Remove(shared_from_this());
     }
@@ -261,16 +261,17 @@ WindowsGraphicsCapture::Result WindowsGraphicsCapture::TryGetLatestResult()
 
     std::scoped_lock lock(sessionAndPoolMutex_);
 
+    ReleaseLatestResult();
+
     if (!captureFramePool_) return {};
 
-    Direct3D11CaptureFrame frame = nullptr;
     while (const auto nextFrame = captureFramePool_.TryGetNextFrame())
     {
-        frame = nextFrame;
+        latestCaptureFrame_ = nextFrame;
     }
-    if (!frame) return {};
+    if (!latestCaptureFrame_) return {};
 
-    const auto surface = frame.Surface();
+    const auto surface = latestCaptureFrame_.Surface();
     if (!surface) return {};
 
     auto access = surface.as<IDirect3DDxgiInterfaceAccess>();
@@ -278,12 +279,21 @@ WindowsGraphicsCapture::Result WindowsGraphicsCapture::TryGetLatestResult()
     const auto hr = access->GetInterface(guid_of<ID3D11Texture2D>(), texture.put_void());
     if (FAILED(hr)) return {};
 
-    const auto size = frame.ContentSize();
+    const auto size = latestCaptureFrame_.ContentSize();
     const bool hasSizeChanged = 
         (size_.Width != size.Width) || 
         (size_.Height != size.Height);
 
     return { texture.get(), size.Width, size.Height, hasSizeChanged };
+}
+
+
+void WindowsGraphicsCapture::ReleaseLatestResult()
+{
+    if (latestCaptureFrame_)
+    {
+        latestCaptureFrame_ = nullptr;
+    }
 }
 
 
@@ -293,7 +303,7 @@ void WindowsGraphicsCapture::ChangePoolSize(int width, int height)
 
     if (!captureFramePool_) return;
 
-    const auto& manager = WindowManager::Get().GetWindowsGraphicsCaptureManager();
+    const auto& manager = WindowManager::GetWindowsGraphicsCaptureManager();
     auto &device = manager->GetDevice();
 
     size_ = { width, height };
@@ -312,7 +322,7 @@ IDirect3DDevice & WindowsGraphicsCaptureManager::GetDevice()
 {
     if (!deviceWinRt_)
     {
-        const auto& uploader = WindowManager::Get().GetUploadManager();
+        const auto& uploader = WindowManager::GetUploadManager();
         while (!uploader->IsReady())
         {
             const std::chrono::microseconds waitTime(100);

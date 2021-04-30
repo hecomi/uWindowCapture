@@ -53,6 +53,7 @@ private:
     std::map<int, std::shared_ptr<Window>> windows_;
     int lastWindowId_ = 0;
     std::weak_ptr<Window> cursorWindow_;
+    mutable std::mutex windowsListMutex_;
 
     ThreadLoop windowHandleListThreadLoop_;
 

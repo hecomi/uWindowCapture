@@ -41,11 +41,14 @@ void WindowManager::Initialize()
 void WindowManager::Finalize()
 {
     StopWindowHandleListThread();
+    cursor_.reset();
     captureManager_.reset();
     uploadManager_.reset();
     windowsGraphicsCaptureManager_.reset();
-    cursor_.reset();
-    windows_.clear();
+    {
+        std::scoped_lock lock(windowsListMutex_);
+        windows_.clear();
+    }
 }
 
 
@@ -107,18 +110,22 @@ const std::unique_ptr<Cursor>& WindowManager::GetCursor()
 
 bool WindowManager::CheckExistence(int id) const
 {
+    std::scoped_lock lock(windowsListMutex_);
     return windows_.find(id) != windows_.end();
 }
 
 
 std::shared_ptr<Window> WindowManager::GetWindow(int id) const
 {
+    std::scoped_lock lock(windowsListMutex_);
+
     auto it = windows_.find(id);
     if (it == windows_.end())
     {
         Debug::Error(__FUNCTION__, " => Window whose id is ", id, " does not exist.");
         return nullptr;
     }
+
     return it->second;
 }
 
@@ -126,6 +133,8 @@ std::shared_ptr<Window> WindowManager::GetWindow(int id) const
 std::shared_ptr<Window> WindowManager::GetWindowFromPoint(POINT point) const
 {
     auto hWnd = ::WindowFromPoint(point);
+
+    std::scoped_lock lock(windowsListMutex_);
 
     while (hWnd != NULL)
     {
@@ -248,6 +257,8 @@ void WindowManager::UpdateWindows()
 {
     UWC_SCOPE_TIMER(UpdateWindows);
 
+    std::scoped_lock lock(windowsListMutex_);
+
     for (const auto& pair : windows_)
     {
         pair.second->isAlive_ = false;
@@ -258,7 +269,7 @@ void WindowManager::UpdateWindows()
 
         for (auto&& data1 : windowDataList_[0])
         {
-            auto window = WindowManager::Get().FindOrAddWindow(data1);
+            auto window = FindOrAddWindow(data1);
             if (window)
             {
                 window->SetData(data1);
@@ -422,6 +433,8 @@ void WindowManager::UpdateWindowHandleList()
 
 void WindowManager::RenderWindows()
 {
+    std::scoped_lock lock(windowsListMutex_);
+
     for (auto&& pair : windows_)
     {
         pair.second->Render();

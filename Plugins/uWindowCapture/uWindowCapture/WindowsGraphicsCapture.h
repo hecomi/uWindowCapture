@@ -45,6 +45,8 @@ public:
     bool IsValid() const { return static_cast<bool>(graphicsCaptureSession_); }
     void EnableCursorCapture(bool enabled);
     Result TryGetLatestResult();
+    void ReleaseLatestResult();
+    void ReleaseFrame();
     void ChangePoolSize(int width, int height);
 
 private:
@@ -57,6 +59,7 @@ private:
     winrt::Windows::Graphics::Capture::GraphicsCaptureItem graphicsCaptureItem_ = nullptr;
     winrt::Windows::Graphics::Capture::Direct3D11CaptureFramePool captureFramePool_ = nullptr;
     winrt::Windows::Graphics::Capture::GraphicsCaptureSession graphicsCaptureSession_ = nullptr;
+    winrt::Windows::Graphics::Capture::Direct3D11CaptureFrame latestCaptureFrame_ = nullptr;
     winrt::Windows::Graphics::SizeInt32 size_ = { 0, 0 };
     Callback callback_;
     bool isStarted_ = false;
