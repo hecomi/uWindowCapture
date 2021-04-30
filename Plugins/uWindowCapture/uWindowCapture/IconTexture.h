@@ -2,6 +2,7 @@
 
 #include <Windows.h>
 #include <d3d11.h>
+#include <gdiplus.h>
 #include <wrl/client.h>
 #include <string>
 #include <mutex>
@@ -35,7 +36,9 @@ public:
     bool RenderOnce();
 
 private:
-    void InitIconHandle();
+    void InitIconHandleForWin32App();
+    void InitIconHandleForStoreApp();
+    void CreateIconFromAppLogoPath();
 
     Window* const window_ = nullptr;
     HICON hIcon_ = nullptr;
@@ -54,5 +57,6 @@ private:
 
     UINT width_ = 0;
     UINT height_ = 0;
-    bool isExtracted_ = false;
+    std::wstring appLogoPath_;
+
 };

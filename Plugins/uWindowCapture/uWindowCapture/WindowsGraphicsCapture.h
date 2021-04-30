@@ -40,7 +40,7 @@ public:
     void RequestStop();
     void Stop();
     bool ShouldStop() const;
-    bool IsAvailable() const { return static_cast<bool>(graphicsCaptureItem_); }
+    bool IsAvailable() const;
     bool IsStarted() const { return isStarted_; }
     bool IsValid() const { return static_cast<bool>(graphicsCaptureSession_); }
     void EnableCursorCapture(bool enabled);

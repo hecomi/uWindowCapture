@@ -106,6 +106,47 @@ bool IsApplicationFrameWindow(const std::string& className)
 }
 
 
+DWORD GetStoreAppProcessId(HWND hWnd)
+{
+    struct Info
+    {
+        DWORD windowThreadId = 0;
+        DWORD windowProcessId = 0;
+        DWORD targetThreadId = 0;
+        DWORD targetProcessId = 0;
+    };
+    Info info {};
+    info.windowThreadId = ::GetWindowThreadProcessId(hWnd, &info.windowProcessId);
+
+    static const auto _EnumChildWindowsCallback = [](HWND hWnd, LPARAM lParam) -> BOOL
+    {
+        auto &info = *reinterpret_cast<Info*>(lParam);
+
+        DWORD threadId, processId;
+        threadId = ::GetWindowThreadProcessId(hWnd, &processId);
+        if (processId == info.windowProcessId) return true;
+
+        std::string className;
+        GetWindowClassName(hWnd, className);
+        if (!IsApplicationFrameWindow(className))
+        {
+            info.targetThreadId = threadId;
+            info.targetProcessId = processId;
+        }
+
+        return TRUE;
+    };
+    using EnumChildWindowsCallbackType = BOOL(CALLBACK *)(HWND, LPARAM);
+    static const auto EnumChildWindowsCallback = static_cast<EnumChildWindowsCallbackType>(_EnumChildWindowsCallback);
+    if (!::EnumChildWindows(hWnd, EnumChildWindowsCallback, reinterpret_cast<LPARAM>(&info)))
+    {
+        OutputApiError(__FUNCTION__, "EnumChildWindows");
+    }
+
+    return info.targetProcessId;
+}
+
+
 UINT GetWindowZOrder(HWND hWnd)
 {
     int z = 0;

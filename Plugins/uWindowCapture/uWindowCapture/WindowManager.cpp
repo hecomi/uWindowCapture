@@ -278,7 +278,7 @@ void WindowManager::UpdateWindows()
                         data2.isAltTabWindow = IsAltTabWindow(hWnd);
                         GetWindowClassName(hWnd, data2.className);
                         data2.isApplicationFrameWindow = IsApplicationFrameWindow(data2.className);
-                        data2.isUWP = IsUWP(data2.processId);
+                        data2.isUWP = data2.isApplicationFrameWindow || IsUWP(data2.processId);
                         window->UpdateTitle();
                         window->UpdateIsBackground();
                     }

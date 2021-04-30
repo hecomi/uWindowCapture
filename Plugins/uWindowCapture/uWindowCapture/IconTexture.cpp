@@ -1,3 +1,8 @@
+#include <fstream>
+#include <regex>
+#include <string>
+#include <shlwapi.h>
+#include <gdiplus.h>
 #include "IconTexture.h"
 #include "Window.h"
 #include "WindowManager.h"
@@ -6,6 +11,9 @@
 #include "Unity.h"
 #include "Util.h"
 #include "Message.h"
+
+#pragma comment(lib, "shlwapi")
+#pragma	comment(lib, "gdiplus")
 
 using namespace Microsoft::WRL;
 
@@ -19,7 +27,7 @@ IconTexture::IconTexture(Window* window)
 
 IconTexture::~IconTexture()
 {
-    if (isExtracted_ && hIcon_)
+    if (!appLogoPath_.empty())
     {
         ::DestroyIcon(hIcon_);
     }
@@ -28,7 +36,26 @@ IconTexture::~IconTexture()
 
 void IconTexture::InitIcon()
 {
-    InitIconHandle();
+    try
+    {
+        if (window_->IsUWP())
+        {
+            InitIconHandleForStoreApp();
+        }
+        else
+        {
+            InitIconHandleForWin32App();
+        }
+    }
+    catch (const std::exception &e)
+    {
+        Debug::Error(__FUNCTION__, " => Exception ", e.what());
+    }
+
+    if (!hIcon_)
+    {
+        hIcon_ = ::LoadIcon(0, IDI_APPLICATION);
+    }
 
     if (!hIcon_) return;
 
@@ -51,34 +78,169 @@ void IconTexture::InitIcon()
 }
 
 
-void IconTexture::InitIconHandle()
+void IconTexture::InitIconHandleForWin32App()
 {
     // Now we cannot get an icon from UWP app from these methods.
 
     const auto hWnd = window_->GetWindowHandle();
 
-    if (window_->IsAltTab())
-    {
-        hIcon_ = reinterpret_cast<HICON>(::GetClassLongPtr(hWnd, GCLP_HICON));
-        if (hIcon_) return;
-
-        constexpr UINT timeout = 100;
-        auto lr = ::SendMessageTimeoutW(
-            hWnd, 
-            WM_GETICON, 
-            ICON_BIG, 
-            0, 
-            SMTO_ABORTIFHUNG | SMTO_BLOCK, 
-            timeout, 
-            reinterpret_cast<PDWORD_PTR>(&hIcon_));
-        if (hIcon_ && SUCCEEDED(lr)) return;
-    }
-
-    hIcon_ = ::LoadIcon(0, IDI_APPLICATION);
+    hIcon_ = reinterpret_cast<HICON>(::GetClassLongPtr(hWnd, GCLP_HICON));
     if (hIcon_) return;
+
+    constexpr UINT timeout = 100;
+    auto lr = ::SendMessageTimeoutW(
+        hWnd, 
+        WM_GETICON, 
+        ICON_BIG, 
+        0, 
+        SMTO_ABORTIFHUNG | SMTO_BLOCK, 
+        timeout, 
+        reinterpret_cast<PDWORD_PTR>(&hIcon_));
+    if (hIcon_ && SUCCEEDED(lr)) return;
 
     Debug::Error(__FUNCTION__, " => Could not get HICON.");
     return;
+}
+
+
+void IconTexture::InitIconHandleForStoreApp()
+{
+    DWORD processId = 0;
+    if (window_->IsApplicationFrameWindow())
+    {
+        processId = GetStoreAppProcessId(window_->GetWindowHandle());
+        if (processId == 0)
+        {
+            processId = window_->GetProcessId();
+        }
+    }
+    else
+    {
+        processId = window_->GetProcessId();
+    }
+
+    const auto hProcess = ::OpenProcess(
+        PROCESS_QUERY_LIMITED_INFORMATION,
+        FALSE,
+        processId);
+    if (!hProcess) return;
+    ScopedReleaser processCloser([&] { ::CloseHandle(hProcess); });
+
+    WCHAR dirPathBuf[512];
+    try
+    {
+        DWORD len = 512;
+        if (!::QueryFullProcessImageNameW(hProcess, 0, dirPathBuf, &len))
+        {
+            OutputApiError(__FUNCTION__, "QueryFullProcessImageNameW");
+            return;
+        }
+    }
+    catch (...)
+    {
+        OutputApiError(__FUNCTION__, "QueryFullProcessImageNameW");
+        return;
+    }
+
+    if (!::PathRemoveFileSpecW(dirPathBuf)) return;
+    const std::wstring dirPath = dirPathBuf;
+
+    const auto appManifestPath = dirPath + L"\\AppxManifest.xml";
+    std::wifstream fs(appManifestPath);
+    if (!fs) return;
+
+    std::wstring logoRelativePath;
+    {
+        std::wregex regex(L"<Logo>([^<]+)</Logo>");
+        std::wstring line;
+        while (std::getline(fs, line))
+        {
+            std::wsmatch match {};
+            if (std::regex_search(line, match, regex))
+            {
+                logoRelativePath = match[1].str().c_str();
+                break;
+            }
+        }
+        if (logoRelativePath.empty()) return;
+    }
+
+    const auto logoPath = std::wstring(dirPath) + L"\\" + logoRelativePath;
+    if (::PathFileExistsW(logoPath.c_str()))
+    {
+        appLogoPath_ = logoPath;
+        CreateIconFromAppLogoPath();
+        return;
+    }
+
+    std::wstring logoDirRelativePath;
+    std::wstring logoFileName;
+    std::wstring logoFileExt;
+    {
+        std::wregex regex(L"(.+)\\\\([^\\.\\\\]+?)\\.(.+)$");
+        std::wsmatch match {};
+        if (!std::regex_search(logoRelativePath, match, regex)) return;
+
+        logoDirRelativePath = match[1].str();
+        logoFileName = match[2].str();
+        logoFileExt = match[3].str();
+    }
+
+    const auto searchQuery = 
+        dirPath + L"\\" + 
+        logoDirRelativePath + L"\\" + 
+        logoFileName + L".scale-*." + logoFileExt;
+
+    WIN32_FIND_DATAW fd;
+    auto hFile = ::FindFirstFileW(searchQuery.c_str(), &fd);
+    ScopedReleaser fileCloser([&] { ::FindClose(hFile); });
+
+    int maxScale = 0;
+    do
+    {
+        const std::wstring fileName = fd.cFileName;
+        const auto query = L"\\.scale-([^\\.]+)\\.";
+        std::wregex regex(query);
+        std::wsmatch match {};
+        if (std::regex_search(fileName, match, regex))
+        {
+            const int scale = std::stoi(match[1].str());
+            if (scale > maxScale)
+            {
+                maxScale = scale;
+            }
+        }
+    } 
+    while (FindNextFileW(hFile, &fd));
+
+    if (maxScale == 0) return;
+
+    appLogoPath_ = 
+        dirPath + L"\\" + 
+        logoDirRelativePath + L"\\" +
+        logoFileName + L".scale-" + 
+        std::to_wstring(maxScale) +
+        L"." + logoFileExt;
+    CreateIconFromAppLogoPath();
+}
+
+
+void IconTexture::CreateIconFromAppLogoPath()
+{
+    if (appLogoPath_.empty()) return;
+
+    Gdiplus::GdiplusStartupInput input;
+    ULONG_PTR token;
+    Gdiplus::GdiplusStartup(&token, &input, nullptr);
+    ScopedReleaser gdiShutdowner([&] { Gdiplus::GdiplusShutdown(token); });
+
+    auto image = Gdiplus::Bitmap::FromFile(appLogoPath_.c_str());
+    if (!image || image->GetLastStatus() != Gdiplus::Ok) return;
+    ScopedReleaser imageDeleter([&] { delete image; });
+
+    width_ = image->GetWidth();
+    height_ = image->GetHeight();
+    image->GetHICON(&hIcon_);
 }
 
 

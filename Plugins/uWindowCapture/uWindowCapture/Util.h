@@ -18,6 +18,7 @@ bool GetWindowTitle(HWND hWnd, std::wstring& outTitle, int timeout);
 bool GetWindowClassName(HWND hWnd, std::string& outClassName);
 bool IsUWP(DWORD pid);
 bool IsApplicationFrameWindow(const std::string& className);
+DWORD GetStoreAppProcessId(HWND hWnd);
 
 
 // Releaser

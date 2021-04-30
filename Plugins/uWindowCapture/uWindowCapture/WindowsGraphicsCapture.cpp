@@ -15,14 +15,14 @@
 #include <windows.foundation.h>
 #include <Windows.h>
 
+#pragma comment(lib, "windowsapp")
+
 using namespace winrt;
 using namespace winrt::Windows;
 using namespace winrt::Windows::Graphics::Capture;
 using namespace winrt::Windows::Graphics::DirectX;
 using namespace winrt::Windows::Graphics::DirectX::Direct3D11;
 using namespace ::Windows::Graphics::DirectX::Direct3D11;
-
-#pragma comment(lib, "windowsapp")
 
 
 bool WindowsGraphicsCapture::IsSupported()
@@ -104,6 +104,11 @@ void WindowsGraphicsCapture::CreateItem()
     {
         // Windows Graphics Capture is not supported with this HWND:
         // Debug::Log("WindowsGraphicsCapture::CreateItem() throws an exception.");
+    }
+
+    if (graphicsCaptureItem_)
+    {
+        size_ = graphicsCaptureItem_.Size();
     }
 }
 
@@ -205,6 +210,12 @@ bool WindowsGraphicsCapture::ShouldStop() const
 {
     constexpr float timer = 1.f;
     return stopTimer_ > timer || hasStopRequested_;
+}
+
+
+bool WindowsGraphicsCapture::IsAvailable() const
+{
+    return static_cast<bool>(graphicsCaptureItem_);
 }
 
 
@@ -329,9 +340,13 @@ void WindowsGraphicsCaptureManager::Remove(const std::shared_ptr<WindowsGraphics
 
 void WindowsGraphicsCaptureManager::Update(float dt)
 {
-    std::scoped_lock instancesLock(instancesMutex_);
+    decltype(instances_) instances;
+    {
+        std::scoped_lock lock(instancesMutex_);
+        instances = instances_;
+    }
 
-    for (const auto& instance : instances_)
+    for (const auto& instance : instances)
     {
         if (instance->ShouldStop()) 
         {
