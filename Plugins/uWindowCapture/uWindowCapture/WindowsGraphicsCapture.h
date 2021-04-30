@@ -60,6 +60,7 @@ private:
     winrt::Windows::Graphics::SizeInt32 size_ = { 0, 0 };
     Callback callback_;
     bool isStarted_ = false;
+    std::mutex sessionAndPoolMutex_;
 
     float stopTimer_ = 0.f;
     bool hasStopRequested_ = false;

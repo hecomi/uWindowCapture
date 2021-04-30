@@ -145,6 +145,8 @@ void WindowsGraphicsCapture::CreatePoolAndSession()
 
 void WindowsGraphicsCapture::DestroySession()
 {
+    std::scoped_lock lock(sessionAndPoolMutex_);
+
     if (graphicsCaptureSession_)
     {
         graphicsCaptureSession_.Close();
@@ -174,6 +176,8 @@ void WindowsGraphicsCapture::Start()
     {
         manager->Add(shared_from_this());
     }
+
+    std::scoped_lock lock(sessionAndPoolMutex_);
 
     CreatePoolAndSession();
 
@@ -240,6 +244,8 @@ void WindowsGraphicsCapture::EnableCursorCapture(bool enabled)
         return;
     }
 
+    std::scoped_lock lock(sessionAndPoolMutex_);
+
     if (graphicsCaptureSession_) 
     {
         graphicsCaptureSession_.IsCursorCaptureEnabled(enabled);
@@ -252,6 +258,8 @@ WindowsGraphicsCapture::Result WindowsGraphicsCapture::TryGetLatestResult()
     UWC_SCOPE_TIMER(TryGetLatestResult)
 
     stopTimer_ = 0.f;
+
+    std::scoped_lock lock(sessionAndPoolMutex_);
 
     if (!captureFramePool_) return {};
 
@@ -281,6 +289,8 @@ WindowsGraphicsCapture::Result WindowsGraphicsCapture::TryGetLatestResult()
 
 void WindowsGraphicsCapture::ChangePoolSize(int width, int height)
 {
+    std::scoped_lock lock(sessionAndPoolMutex_);
+
     if (!captureFramePool_) return;
 
     const auto& manager = WindowManager::Get().GetWindowsGraphicsCaptureManager();
