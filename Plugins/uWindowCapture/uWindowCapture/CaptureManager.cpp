@@ -83,6 +83,7 @@ CaptureManager::CaptureManager()
 
 CaptureManager::~CaptureManager()
 {
+    iconCaptureThreadLoop_.Stop();
     windowCaptureThreadLoop_.Stop();
 }
 
