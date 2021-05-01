@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <string>
 #include <chrono>
 #include <thread>
 #include <atomic>
@@ -12,7 +13,7 @@ public:
     using ThreadFunc = std::function<void()>;
     using microseconds = std::chrono::microseconds;
 
-    ThreadLoop();
+    ThreadLoop(const std::wstring& name);
     ~ThreadLoop();
     void Start(
         const ThreadFunc& func,
@@ -25,6 +26,7 @@ public:
     bool HasFunction() const;
 
 private:
+    const std::wstring name_;
     std::thread thread_;
     std::atomic<bool> isRunning_ = false;
     microseconds interval_ = microseconds::zero();

@@ -23,7 +23,8 @@ public:
 };
 
 
-ThreadLoop::ThreadLoop()
+ThreadLoop::ThreadLoop(const std::wstring& name)
+    : name_(name)
 {
 }
 
@@ -60,6 +61,12 @@ void ThreadLoop::Start(const ThreadFunc& func, const microseconds& interval)
 
         if (finalizerFunc_) finalizerFunc_();
     });
+
+    if (!name_.empty())
+    {
+        const auto hThread = static_cast<HANDLE>(thread_.native_handle());
+        ::SetThreadDescription(hThread, name_.c_str());
+    }
 }
 
 

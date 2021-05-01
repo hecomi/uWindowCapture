@@ -25,8 +25,8 @@ public:
     void RequestCaptureIcon(int id);
 
 private:
-    ThreadLoop windowCaptureThreadLoop_;
-    ThreadLoop iconCaptureThreadLoop_;
+    ThreadLoop windowCaptureThreadLoop_ = { L"Window Capture Thread" };
+    ThreadLoop iconCaptureThreadLoop_ = { L"Icon Capture Thread" };
     WindowQueue highPriorityQueue_;
     WindowQueue middlePriorityQueue_;
     WindowQueue lowPriorityQueue_;

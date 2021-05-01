@@ -38,7 +38,7 @@ private:
     void CreateBitmapIfNeeded(HDC hDc, UINT width, UINT height);
     void DeleteBitmap();
 
-    ThreadLoop threadLoop_;
+    ThreadLoop threadLoop_ = { L"Cursor Capture Thread" };
 
     std::atomic<ID3D11Texture2D*> unityTexture_ = nullptr;
     Microsoft::WRL::ComPtr<ID3D11Texture2D> sharedTexture_;
