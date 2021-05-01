@@ -131,7 +131,7 @@ void UploadManager::StartUploadThread()
     { 
         // Check window upload
         const int windowId = windowUploadQueue_.Dequeue();
-        if (windowId >= 0 && WindowManager::Get().CheckExistence(windowId))
+        if (windowId >= 0)
         {
             if (auto window = WindowManager::Get().GetWindow(windowId))
             {
@@ -141,7 +141,7 @@ void UploadManager::StartUploadThread()
 
         // Check icon upload
         const int iconId = iconUploadQueue_.Dequeue();
-        if (iconId >= 0 && WindowManager::Get().CheckExistence(iconId))
+        if (iconId >= 0)
         {
             if (auto window = WindowManager::Get().GetWindow(iconId))
             {

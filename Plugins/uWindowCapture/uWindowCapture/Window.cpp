@@ -20,6 +20,13 @@ Window::~Window()
 }
 
 
+void Window::InitTexture()
+{
+    windowTexture_ = std::make_shared<WindowTexture>(this);
+    iconTexture_ = std::make_shared<IconTexture>(this);
+}
+
+
 void Window::SetData(const Data1& data)
 {
     data1_ = data;
@@ -332,6 +339,18 @@ CaptureMode Window::GetCaptureMode() const
 }
 
 
+bool Window::IsJustAdded() const
+{
+    return frameCount_ == 0;
+}
+
+
+void Window::UpdateFrameCount()
+{
+    ++frameCount_;
+}
+
+
 void Window::RequestUpdateTitle()
 {
     hasTitleUpdateRequested_ = true;
@@ -411,12 +430,6 @@ void Window::Upload()
     }
 
     hasNewWindowTextureCaptured_ = false;
-}
-
-
-void Window::InitIcon()
-{
-    iconTexture_->InitIcon();
 }
 
 

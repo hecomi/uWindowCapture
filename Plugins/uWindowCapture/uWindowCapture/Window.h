@@ -97,7 +97,6 @@ public:
     void Upload();
     void Render();
 
-    void InitIcon();
     void CaptureIcon();
     void UploadIcon();
     void RenderIcon();
@@ -119,15 +118,18 @@ public:
     bool IsWindowsGraphicsCaptureAvailable() const;
 
 private:
+    void InitTexture();
+    void UpdateFrameCount();
     void UpdateTitle();
     void UpdateIsBackground();
+    bool IsJustAdded() const;
 
     const int id_ = -1;
     int parentId_ = -1;
     Data1 data1_ = {};
     Data2 data2_ = {};
-    std::shared_ptr<class WindowTexture> windowTexture_ = std::make_shared<WindowTexture>(this);
-    std::shared_ptr<class IconTexture> iconTexture_ = std::make_shared<IconTexture>(this);
+    std::shared_ptr<class WindowTexture> windowTexture_;
+    std::shared_ptr<class IconTexture> iconTexture_;
 
     int frameCount_ = 0;
 

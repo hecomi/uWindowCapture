@@ -21,7 +21,7 @@ WindowTexture::WindowTexture(Window* window)
         captureMode_ = CaptureMode::Auto;
         windowsGraphicsCapture_ = std::make_shared<WindowsGraphicsCapture>(window_->GetMonitorHandle());
     }
-    else
+    else if (window_->IsAltTab())
     {
         windowsGraphicsCapture_ = std::make_shared<WindowsGraphicsCapture>(window_->GetWindowHandle());
     }

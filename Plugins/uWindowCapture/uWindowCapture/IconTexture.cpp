@@ -22,6 +22,7 @@ using namespace Microsoft::WRL;
 IconTexture::IconTexture(Window* window)
     : window_(window)
 {
+    InitIcon();
 }
 
 

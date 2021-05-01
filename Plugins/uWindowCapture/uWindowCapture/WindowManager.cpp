@@ -122,7 +122,6 @@ std::shared_ptr<Window> WindowManager::GetWindow(int id) const
     auto it = windows_.find(id);
     if (it == windows_.end())
     {
-        Debug::Error(__FUNCTION__, " => Window whose id is ", id, " does not exist.");
         return nullptr;
     }
 
@@ -134,8 +133,6 @@ std::shared_ptr<Window> WindowManager::GetWindowFromPoint(POINT point) const
 {
     auto hWnd = ::WindowFromPoint(point);
 
-    std::scoped_lock lock(windowsListMutex_);
-
     while (hWnd != NULL)
     {
         DWORD thread, process;
@@ -144,25 +141,29 @@ std::shared_ptr<Window> WindowManager::GetWindowFromPoint(POINT point) const
         std::shared_ptr<Window> parent;
         int maxZOrder = INT_MAX;
 
-        for (const auto& pair : windows_)
         {
-            const auto& window = pair.second;
+            std::scoped_lock lock(windowsListMutex_);
 
-            // Return the window whose handle is same
-            if (window->GetWindowHandle() == hWnd) 
+            for (const auto& pair : windows_)
             {
-                return window;
-            }
+                const auto& window = pair.second;
 
-            // Keep windows whose process and thread ids are same
-            if ((window->GetThreadId() == thread) &&
-                (window->GetProcessId() == process))
-            {
-                const int zOrder = window->GetZOrder();
-                if (zOrder > maxZOrder)
+                // Return the window whose handle is same
+                if (window->GetWindowHandle() == hWnd) 
                 {
-                    maxZOrder = zOrder;
-                    parent = window;
+                    return window;
+                }
+
+                // Keep windows whose process and thread ids are same
+                if ((window->GetThreadId() == thread) &&
+                    (window->GetProcessId() == process))
+                {
+                    const int zOrder = window->GetZOrder();
+                    if (zOrder > maxZOrder)
+                    {
+                        maxZOrder = zOrder;
+                        parent = window;
+                    }
                 }
             }
         }
@@ -229,6 +230,8 @@ std::shared_ptr<Window> WindowManager::FindParentWindow(const std::shared_ptr<Wi
 
 std::shared_ptr<Window> WindowManager::FindOrAddWindow(const Window::Data1 &data)
 {
+    std::scoped_lock lock(windowsListMutex_);
+
     const auto it = std::find_if(
         windows_.begin(),
         windows_.end(),
@@ -257,11 +260,13 @@ void WindowManager::UpdateWindows()
 {
     UWC_SCOPE_TIMER(UpdateWindows);
 
-    std::scoped_lock lock(windowsListMutex_);
-
-    for (const auto& pair : windows_)
     {
-        pair.second->isAlive_ = false;
+        std::scoped_lock lock(windowsListMutex_);
+
+        for (const auto& pair : windows_)
+        {
+            pair.second->isAlive_ = false;
+        }
     }
 
     {
@@ -275,8 +280,7 @@ void WindowManager::UpdateWindows()
                 window->SetData(data1);
                 window->isAlive_ = true;
 
-                // Newly added
-                if (window->frameCount_ == 0)
+                if (window->IsJustAdded())
                 {
                     auto &data2 = window->data2_;
                     const auto hWnd = window->GetWindowHandle();
@@ -311,7 +315,7 @@ void WindowManager::UpdateWindows()
                         window->parentId_ = parent->GetId();
                     }
 
-                    window->InitIcon();
+                    window->InitTexture();
 
                     MessageManager::Get().Add({ MessageType::WindowAdded, window->GetId(), window->GetWindowHandle() });
                 }
@@ -325,24 +329,28 @@ void WindowManager::UpdateWindows()
                     window->UpdateIsBackground();
                 }
 
-                window->frameCount_++;
+                window->UpdateFrameCount();
             }
         }
     }
 
-    for (auto it = windows_.begin(); it != windows_.end();)
     {
-        const auto id = it->first;
-        auto& window = it->second;
+        std::scoped_lock lock(windowsListMutex_);
 
-        if (!window->isAlive_)
+        for (auto it = windows_.begin(); it != windows_.end();)
         {
-            MessageManager::Get().Add({ MessageType::WindowRemoved, id, window->GetWindowHandle() });
-            windows_.erase(it++);
-        }
-        else
-        {
-            it++;
+            const auto id = it->first;
+            auto& window = it->second;
+
+            if (!window->isAlive_)
+            {
+                MessageManager::Get().Add({ MessageType::WindowRemoved, id, window->GetWindowHandle() });
+                windows_.erase(it++);
+            }
+            else
+            {
+                it++;
+            }
         }
     }
 }
