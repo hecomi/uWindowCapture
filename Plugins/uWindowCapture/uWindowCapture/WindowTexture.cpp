@@ -18,7 +18,6 @@ WindowTexture::WindowTexture(Window* window)
 {
     if (window_->IsDesktop())
     {
-        captureMode_ = CaptureMode::Auto;
         windowsGraphicsCapture_ = std::make_shared<WindowsGraphicsCapture>(window_->GetMonitorHandle());
     }
     else if (window_->IsAltTab())
@@ -198,12 +197,6 @@ bool WindowTexture::CaptureByWin32API()
     // DPI scale
     dpiScaleX_ = std::fmax(static_cast<float>(window_->GetWidth()) / dcWidth, 0.01f);
     dpiScaleY_ = std::fmax(static_cast<float>(window_->GetHeight()) / dcHeight, 0.01f);
-
-    // Use BitBlt when the target is a Desktop
-    if (window_->IsDesktop())
-    {
-        captureMode_ = CaptureMode::BitBlt;
-    }
 
     if (GetCaptureModeInternal() == CaptureMode::BitBlt && !window_->IsDesktop())
     {
@@ -410,6 +403,8 @@ void WindowTexture::DrawCursorByWin32API(HWND hWnd, HDC hDcMem)
 
 bool WindowTexture::CaptureByWindowsGraphicsCapture()
 {
+    if (!windowsGraphicsCapture_) return false;
+
     if (!windowsGraphicsCapture_->IsStarted())
     {
         windowsGraphicsCapture_->Start();
