@@ -56,7 +56,7 @@ void WindowManager::Update(float dt)
 {
     if (windowsGraphicsCaptureManager_) 
     {
-        windowsGraphicsCaptureManager_->Update(dt);
+        windowsGraphicsCaptureManager_->UpdateFromMainThread(dt);
     }
 }
 

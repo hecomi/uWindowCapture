@@ -51,7 +51,10 @@ void ThreadLoop::Start(const ThreadFunc& func, const microseconds& interval)
 
     thread_ = std::thread([this] 
     {
-        if (initializerFunc_) initializerFunc_();
+        if (initializerFunc_) 
+        {
+            initializerFunc_();
+        }
 
         while (isRunning_)
         {
@@ -59,7 +62,10 @@ void ThreadLoop::Start(const ThreadFunc& func, const microseconds& interval)
             loopFunc_();
         }
 
-        if (finalizerFunc_) finalizerFunc_();
+        if (finalizerFunc_) 
+        {
+            finalizerFunc_();
+        }
     });
 
     if (!name_.empty())

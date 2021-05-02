@@ -5,6 +5,7 @@
 #include <mutex>
 #include <set>
 #include <list>
+#include <atomic>
 #include <dxgi.h>
 #include <d3d11.h>
 #include <winrt/Windows.Graphics.DirectX.Direct3D11.h>
@@ -48,11 +49,12 @@ public:
     void ReleaseLatestResult();
     void ReleaseFrame();
     void ChangePoolSize(int width, int height);
+    const wchar_t * GetDisplayName() const;
 
 private:
     void CreateItem();
-    void CreatePoolAndSession();
-    void DestroySession();
+    bool CreatePoolAndSession();
+    void DestroyPoolAndSession();
 
     const HWND hWnd_;
     const HMONITOR hMonitor_;
@@ -65,9 +67,9 @@ private:
     bool isStarted_ = false;
     std::mutex sessionAndPoolMutex_;
 
-    float stopTimer_ = 0.f;
-    bool hasStopRequested_ = false;
-    bool isCursorCaptureEnabled_ = true;
+    std::atomic<float> stopTimer_ = { 0.f };
+    std::atomic<bool> hasStopRequested_ = { false };
+    std::atomic<bool> isCursorCaptureEnabled_ = { true };
 };
 
 
@@ -76,16 +78,21 @@ class WindowsGraphicsCaptureManager final
 public:
     void Add(const std::shared_ptr<WindowsGraphicsCapture>& instance);
     void Remove(const std::shared_ptr<WindowsGraphicsCapture>& instance);
-    void Update(float dt);
-    void StopNonUpdatedInstances();
+    void UpdateFromMainThread(float dt);
+    void UpdateFromCaptureThread();
     void StopAllInstances();
     winrt::Windows::Graphics::DirectX::Direct3D11::IDirect3DDevice & GetDevice();
 
 private:
+    void UpdateAddInstances();
+    void UpdateRemoveInstances();
+
     using Ptr = std::shared_ptr<WindowsGraphicsCapture>;
     std::list<Ptr> instances_;
-    std::set<Ptr> removedInstances_;
+    std::vector<Ptr> addedInstances_;
+    std::vector<Ptr> removedInstances_;
     std::mutex instancesMutex_;
+    std::mutex addedInstancesMutex_;
     std::mutex removedInstancesMutex_;
     winrt::Windows::Graphics::DirectX::Direct3D11::IDirect3DDevice deviceWinRt_ = nullptr;
 };
