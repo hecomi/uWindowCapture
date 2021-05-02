@@ -409,6 +409,11 @@ bool WindowTexture::CaptureByWindowsGraphicsCapture()
         windowsGraphicsCapture_->Start();
     }
 
+    if (windowsGraphicsCapture_->IsSessionRestartRequested())
+    {
+        windowsGraphicsCapture_->Restart();
+    }
+
     windowsGraphicsCapture_->EnableCursorCapture(GetCursorDraw());
 
     textureWidth_ = windowsGraphicsCapture_->GetWidth();

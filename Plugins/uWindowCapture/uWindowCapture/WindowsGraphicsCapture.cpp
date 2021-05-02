@@ -27,6 +27,35 @@ using namespace winrt::Windows::Graphics::DirectX::Direct3D11;
 using namespace ::Windows::Graphics::DirectX::Direct3D11;
 
 
+bool CallWinRtApiWithExceptionCheck(const std::function<void()> &func, const std::string& name)
+{
+    try
+    {
+        func();
+    }
+    catch (const winrt::hresult_error& e)
+    {
+        const int code = e.code();
+        char buf[32];
+        sprintf_s(buf, "0x%x", code);
+        Debug::Log(name, " throws an exception: ", buf);
+        return false;
+    }
+    catch (const std::exception& e)
+    {
+        Debug::Log(name, " throws an exception: ", e.what());
+        return false;
+    }
+    catch (...)
+    {
+        Debug::Log(name, " throws an unknown exception.");
+        return false;
+    }
+
+    return true;
+}
+
+
 bool WindowsGraphicsCapture::IsSupported()
 {
     return GraphicsCaptureSession::IsSupported();
@@ -44,19 +73,14 @@ bool WindowsGraphicsCapture::IsCursorCaptureEnabledApiSupported()
     if (isChecked) return isEnabled;
     isChecked = true;
 
-    try
+    if (!CallWinRtApiWithExceptionCheck([&]
     {
         isEnabled = ApiInfo::IsPropertyPresent(
             L"Windows.Graphics.Capture.GraphicsCaptureSession",
             L"IsCursorCaptureEnabled");
-    }
-    catch (const std::exception &e)
+    }, "WindowsGraphicsCapture::IsCursorCaptureEnabledApiAvailable()"))
     {
-        Debug::Log("WindowsGraphicsCapture::IsCursorCaptureEnabledApiAvailable() throws an exception :", e.what());
-    }
-    catch (...)
-    {
-        Debug::Log("WindowsGraphicsCapture::IsCursorCaptureEnabledApiAvailable() throws an unknown exception.");
+        return false;
     }
 
     return isEnabled;
@@ -83,7 +107,7 @@ void WindowsGraphicsCapture::CreateItem()
 {
     if (!IsSupported()) return;
 
-    try
+    CallWinRtApiWithExceptionCheck([&]
     {
         const auto factory = get_activation_factory<GraphicsCaptureItem>();
         const auto interop = factory.as<IGraphicsCaptureItemInterop>();
@@ -92,63 +116,47 @@ void WindowsGraphicsCapture::CreateItem()
             interop->CreateForWindow(
                 hWnd_,
                 guid_of<ABI::Windows::Graphics::Capture::IGraphicsCaptureItem>(), 
-                reinterpret_cast<void**>(put_abi(graphicsCaptureItem_)));
+                reinterpret_cast<void**>(put_abi(item_)));
         }
         else
         {
             interop->CreateForMonitor(
                 hMonitor_,
                 guid_of<ABI::Windows::Graphics::Capture::IGraphicsCaptureItem>(), 
-                reinterpret_cast<void**>(put_abi(graphicsCaptureItem_)));
+                reinterpret_cast<void**>(put_abi(item_)));
         }
-    }
-    catch (...)
-    {
-        // Windows Graphics Capture is not supported with this HWND:
-        // Debug::Log("WindowsGraphicsCapture::CreateItem() throws an exception.");
-    }
+    }, "WindowsGraphicsCapture::CreateItem()");
 
-    if (graphicsCaptureItem_)
+    if (item_)
     {
-        graphicsCaptureItem_.DisplayName().c_str();
-        size_ = graphicsCaptureItem_.Size();
+        item_.DisplayName().c_str();
+        size_ = item_.Size();
     }
 }
 
 
 bool WindowsGraphicsCapture::CreatePoolAndSession()
 {
-    if (!graphicsCaptureItem_) return false;
+    if (!item_) return false;
 
-    size_ = graphicsCaptureItem_.Size();
+    size_ = item_.Size();
+    if (size_.Width == 0 || size_.Height == 0) return false;
 
     const auto& manager = WindowManager::GetWindowsGraphicsCaptureManager();
     auto &device = manager->GetDevice();
 
-    try
+    return CallWinRtApiWithExceptionCheck([&]
     {
         std::scoped_lock lock(sessionAndPoolMutex_);
 
-        captureFramePool_ = Direct3D11CaptureFramePool::CreateFreeThreaded(
-            device, 
+        pool_ = Direct3D11CaptureFramePool::CreateFreeThreaded(
+            device,
             DirectXPixelFormat::B8G8R8A8UIntNormalized,
             2,
             size_);
-        graphicsCaptureSession_ = captureFramePool_.CreateCaptureSession(graphicsCaptureItem_);
-        graphicsCaptureSession_.StartCapture();
-    }
-    catch (const std::exception &e)
-    {
-        Debug::Log("WindowsGraphicsCapture::CreatePoolAndSession() throws an exception :", e.what());
-        return false;
-    }
-    catch (...)
-    {
-        Debug::Log("WindowsGraphicsCapture::CreatePoolAndSession() throws an unknown exception.");
-        return false;
-    }
-
-    return true;
+        session_ = pool_.CreateCaptureSession(item_);
+        session_.StartCapture();
+    }, "WindowsGraphicsCapture::CreatePoolAndSession()");
 }
 
 
@@ -158,28 +166,20 @@ void WindowsGraphicsCapture::DestroyPoolAndSession()
 
     std::scoped_lock lock(sessionAndPoolMutex_);
 
-    try
+    CallWinRtApiWithExceptionCheck([&]
     {
-        if (captureFramePool_)
+        if (pool_)
         {
-            captureFramePool_.Close();
-            captureFramePool_ = nullptr;
+            pool_.Close();
+            pool_ = nullptr;
         }
 
-        if (graphicsCaptureSession_)
+        if (session_)
         {
-            graphicsCaptureSession_.Close();
-            graphicsCaptureSession_ = nullptr;
+            session_.Close();
+            session_ = nullptr;
         }
-    }
-    catch (const std::exception &e)
-    {
-        Debug::Log("WindowsGraphicsCapture::DestroyPoolAndSession() throws an exception :", e.what());
-    }
-    catch (...)
-    {
-        Debug::Log("WindowsGraphicsCapture::DestroyPoolAndSession() throws an unknown exception.");
-    }
+    }, "WindowsGraphicsCapture::DestroyPoolAndSession()");
 }
 
 
@@ -196,6 +196,7 @@ void WindowsGraphicsCapture::Start()
     if (CreatePoolAndSession())
     {
         isStarted_ = true;
+        latestFrameTime_ = std::chrono::high_resolution_clock::now();
 
         if (const auto& manager = WindowManager::GetWindowsGraphicsCaptureManager())
         {
@@ -235,9 +236,18 @@ bool WindowsGraphicsCapture::ShouldStop() const
 }
 
 
+void WindowsGraphicsCapture::Restart()
+{
+    Stop();
+    CreateItem();
+    Start();
+    isSessionRestartRequested_ = false;
+}
+
+
 bool WindowsGraphicsCapture::IsAvailable() const
 {
-    return static_cast<bool>(graphicsCaptureItem_);
+    return static_cast<bool>(item_);
 }
 
 
@@ -263,9 +273,9 @@ void WindowsGraphicsCapture::EnableCursorCapture(bool enabled)
 
     std::scoped_lock lock(sessionAndPoolMutex_);
 
-    if (graphicsCaptureSession_) 
+    if (session_) 
     {
-        graphicsCaptureSession_.IsCursorCaptureEnabled(enabled);
+        session_.IsCursorCaptureEnabled(enabled);
     }
 }
 
@@ -280,15 +290,30 @@ WindowsGraphicsCapture::Result WindowsGraphicsCapture::TryGetLatestResult()
 
     std::scoped_lock lock(sessionAndPoolMutex_);
 
-    if (!captureFramePool_) return {};
+    if (!pool_) return {};
 
-    while (const auto nextFrame = captureFramePool_.TryGetNextFrame())
+    while (const auto nextFrame = pool_.TryGetNextFrame())
     {
-        latestCaptureFrame_ = nextFrame;
+        frame_ = nextFrame;
     }
-    if (!latestCaptureFrame_) return {};
 
-    const auto surface = latestCaptureFrame_.Surface();
+    if (frame_)
+    {
+        latestFrameTime_ = std::chrono::high_resolution_clock::now();
+    }
+    else
+    {
+        constexpr std::chrono::milliseconds timeoutThresh(1000);
+        const auto currentTime = std::chrono::high_resolution_clock::now();
+        const auto dt = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - latestFrameTime_);
+        if (dt > timeoutThresh)
+        {
+            isSessionRestartRequested_ = true;
+        }
+        return {};
+    }
+
+    const auto surface = frame_.Surface();
     if (!surface) return {};
 
     auto access = surface.as<IDirect3DDxgiInterfaceAccess>();
@@ -296,7 +321,7 @@ WindowsGraphicsCapture::Result WindowsGraphicsCapture::TryGetLatestResult()
     const auto hr = access->GetInterface(guid_of<ID3D11Texture2D>(), texture.put_void());
     if (FAILED(hr)) return {};
 
-    const auto size = latestCaptureFrame_.ContentSize();
+    const auto size = frame_.ContentSize();
     const bool hasSizeChanged = 
         (size_.Width != size.Width) || 
         (size_.Height != size.Height);
@@ -309,9 +334,9 @@ void WindowsGraphicsCapture::ReleaseLatestResult()
 {
     std::scoped_lock lock(sessionAndPoolMutex_);
 
-    if (latestCaptureFrame_)
+    if (frame_)
     {
-        latestCaptureFrame_ = nullptr;
+        frame_ = nullptr;
     }
 }
 
@@ -320,13 +345,13 @@ void WindowsGraphicsCapture::ChangePoolSize(int width, int height)
 {
     std::scoped_lock lock(sessionAndPoolMutex_);
 
-    if (!captureFramePool_) return;
+    if (!pool_) return;
 
     const auto& manager = WindowManager::GetWindowsGraphicsCaptureManager();
     auto &device = manager->GetDevice();
 
     size_ = { width, height };
-    captureFramePool_.Recreate(
+    pool_.Recreate(
         device, 
         DirectXPixelFormat::B8G8R8A8UIntNormalized,
         2,
@@ -337,9 +362,9 @@ void WindowsGraphicsCapture::ChangePoolSize(int width, int height)
 const wchar_t * WindowsGraphicsCapture::GetDisplayName() const
 {
     static const wchar_t invalid[] = L"";
-    if (!graphicsCaptureItem_) return invalid;
-    if (graphicsCaptureItem_.DisplayName().empty()) return invalid;
-    return graphicsCaptureItem_.DisplayName().c_str();
+    if (!item_) return invalid;
+    if (item_.DisplayName().empty()) return invalid;
+    return item_.DisplayName().c_str();
 }
 
 

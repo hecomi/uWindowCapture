@@ -41,9 +41,11 @@ public:
     void RequestStop();
     void Stop();
     bool ShouldStop() const;
+    bool IsSessionRestartRequested() const { return isSessionRestartRequested_; }
+    void Restart();
     bool IsAvailable() const;
     bool IsStarted() const { return isStarted_; }
-    bool IsValid() const { return static_cast<bool>(graphicsCaptureSession_); }
+    bool IsValid() const { return static_cast<bool>(session_); }
     void EnableCursorCapture(bool enabled);
     Result TryGetLatestResult();
     void ReleaseLatestResult();
@@ -58,18 +60,20 @@ private:
 
     const HWND hWnd_;
     const HMONITOR hMonitor_;
-    winrt::Windows::Graphics::Capture::GraphicsCaptureItem graphicsCaptureItem_ = nullptr;
-    winrt::Windows::Graphics::Capture::Direct3D11CaptureFramePool captureFramePool_ = nullptr;
-    winrt::Windows::Graphics::Capture::GraphicsCaptureSession graphicsCaptureSession_ = nullptr;
-    winrt::Windows::Graphics::Capture::Direct3D11CaptureFrame latestCaptureFrame_ = nullptr;
+    winrt::Windows::Graphics::Capture::GraphicsCaptureItem item_ = nullptr;
+    winrt::Windows::Graphics::Capture::Direct3D11CaptureFramePool pool_ = nullptr;
+    winrt::Windows::Graphics::Capture::GraphicsCaptureSession session_ = nullptr;
+    winrt::Windows::Graphics::Capture::Direct3D11CaptureFrame frame_ = nullptr;
     winrt::Windows::Graphics::SizeInt32 size_ = { 0, 0 };
     Callback callback_;
     bool isStarted_ = false;
     std::mutex sessionAndPoolMutex_;
+    std::chrono::time_point<std::chrono::steady_clock> latestFrameTime_;
 
     std::atomic<float> stopTimer_ = { 0.f };
     std::atomic<bool> hasStopRequested_ = { false };
     std::atomic<bool> isCursorCaptureEnabled_ = { true };
+    std::atomic<bool> isSessionRestartRequested_ = { false };
 };
 
 
