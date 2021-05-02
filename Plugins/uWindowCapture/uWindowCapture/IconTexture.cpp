@@ -48,13 +48,14 @@ void IconTexture::InitIcon()
             InitIconHandleForWin32App();
         }
     }
-    catch (const std::exception &e)
+    catch (const std::exception& e)
     {
         Debug::Error(__FUNCTION__, " => Exception ", e.what());
     }
 
     if (!hIcon_)
     {
+        // Use default icon
         hIcon_ = ::LoadIcon(0, IDI_APPLICATION);
     }
 
@@ -89,7 +90,7 @@ void IconTexture::InitIconHandleForWin32App()
     if (hIcon_) return;
 
     constexpr UINT timeout = 100;
-    auto lr = ::SendMessageTimeoutW(
+    ::SendMessageTimeoutW(
         hWnd, 
         WM_GETICON, 
         ICON_BIG, 
@@ -97,10 +98,6 @@ void IconTexture::InitIconHandleForWin32App()
         SMTO_ABORTIFHUNG | SMTO_BLOCK, 
         timeout, 
         reinterpret_cast<PDWORD_PTR>(&hIcon_));
-    if (hIcon_ && SUCCEEDED(lr)) return;
-
-    Debug::Error(__FUNCTION__, " => Could not get HICON.");
-    return;
 }
 
 
