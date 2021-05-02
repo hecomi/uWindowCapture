@@ -304,13 +304,18 @@ public class UwcWindowTexture : MonoBehaviour
 
     void UpdateCaptureTimer()
     {
-        captureTimer_ += Time.deltaTime;
+        if (captureFrameRate < 0) {
+            captureTimer_ = 0f;
+            isCaptureRequested_ = true;
+        } else { 
+            captureTimer_ += Time.deltaTime;
 
-        float T = 1f / captureFrameRate;
-        if (captureTimer_ < T) return;
+            float T = 1f / captureFrameRate;
+            if (captureTimer_ < T) return;
 
-        while (captureTimer_  > T) {
-            captureTimer_ -= T;
+            while (captureTimer_  > T) {
+                captureTimer_ -= T;
+            }
         }
 
         isCaptureRequested_ = true;
