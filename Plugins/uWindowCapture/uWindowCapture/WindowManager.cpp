@@ -294,7 +294,6 @@ void WindowManager::UpdateWindows()
                         GetWindowClassName(hWnd, data2.className);
                         data2.isApplicationFrameWindow = IsApplicationFrameWindow(data2.className);
                         data2.isUWP = data2.isApplicationFrameWindow || IsUWP(data2.processId);
-                        window->UpdateTitle();
                         window->UpdateIsBackground();
                     }
                     else
@@ -307,7 +306,6 @@ void WindowManager::UpdateWindows()
                         data2.isUWP = false;
                         data2.isBackground = false;
                         data2.className = "";
-                        window->UpdateTitle();
                     }
 
                     if (auto parent = FindParentWindow(window))
@@ -316,6 +314,7 @@ void WindowManager::UpdateWindows()
                     }
 
                     window->InitTexture();
+                    window->UpdateTitle();
 
                     MessageManager::Get().Add({ MessageType::WindowAdded, window->GetId(), window->GetWindowHandle() });
                 }

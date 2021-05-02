@@ -20,6 +20,7 @@ enum class CaptureMode
 
 
 class Window;
+class WindowsGraphicsCapture;
 
 
 class WindowTexture
@@ -52,6 +53,7 @@ public:
     bool GetPixels(BYTE* output, int x, int y, int width, int height) const;
 
     bool IsWindowsGraphicsCaptureAvailable() const;
+    const std::shared_ptr<WindowsGraphicsCapture> & GetWindowsGraphicsCapture() const;
 
 private:
     CaptureMode GetCaptureModeInternal() const;
@@ -67,7 +69,7 @@ private:
 
     const Window* const window_;
     CaptureMode captureMode_ = CaptureMode::Auto;
-    std::shared_ptr<class WindowsGraphicsCapture> windowsGraphicsCapture_;
+    std::shared_ptr<WindowsGraphicsCapture> windowsGraphicsCapture_;
 
     std::atomic<ID3D11Texture2D*> unityTexture_ = nullptr;
     Microsoft::WRL::ComPtr<ID3D11Texture2D> sharedTexture_;

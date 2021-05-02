@@ -150,6 +150,12 @@ bool WindowTexture::IsWindowsGraphicsCapture() const
 }
 
 
+const std::shared_ptr<WindowsGraphicsCapture> & WindowTexture::GetWindowsGraphicsCapture() const
+{
+    return windowsGraphicsCapture_;
+}
+
+
 bool WindowTexture::Capture()
 {
     if (IsWindowsGraphicsCapture())

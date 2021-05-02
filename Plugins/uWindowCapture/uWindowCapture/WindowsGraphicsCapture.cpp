@@ -27,6 +27,10 @@ using namespace winrt::Windows::Graphics::DirectX::Direct3D11;
 using namespace ::Windows::Graphics::DirectX::Direct3D11;
 
 
+namespace
+{
+
+
 bool CallWinRtApiWithExceptionCheck(const std::function<void()> &func, const std::string& name)
 {
     try
@@ -54,6 +58,12 @@ bool CallWinRtApiWithExceptionCheck(const std::function<void()> &func, const std
 
     return true;
 }
+
+
+}
+
+
+// ---
 
 
 bool WindowsGraphicsCapture::IsSupported()

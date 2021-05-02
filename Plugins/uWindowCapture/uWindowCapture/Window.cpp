@@ -361,8 +361,18 @@ void Window::UpdateTitle()
 {
     if (!IsDesktop())
     {
-        constexpr UINT timeout = 100 /* milliseconds */;
-        GetWindowTitle(data1_.hWnd, data2_.title, timeout);
+        if (windowTexture_->IsWindowsGraphicsCaptureAvailable())
+        {
+            if (const auto& wgc = windowTexture_->GetWindowsGraphicsCapture())
+            {
+                data2_.title = wgc->GetDisplayName();
+            }
+        }
+        else
+        {
+            constexpr UINT timeout = 100 /* milliseconds */;
+            GetWindowTitle(data1_.hWnd, data2_.title, timeout);
+        }
     }
     else
     {
