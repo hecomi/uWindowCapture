@@ -75,6 +75,15 @@ CaptureMode WindowTexture::GetCaptureModeInternal() const
             return CaptureMode::PrintWindow;
         }
     }
+
+    if (captureMode_ == CaptureMode::PrintWindow)
+    {
+        if (window_->IsDesktop())
+        {
+            return CaptureMode::BitBlt;
+        }
+    }
+
     return captureMode_;
 }
 
