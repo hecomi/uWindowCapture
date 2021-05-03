@@ -468,7 +468,7 @@ bool WindowTexture::RecreateSharedTextureIfNeeded()
     {
         D3D11_TEXTURE2D_DESC desc;
         unityTexture_.load()->GetDesc(&desc);
-        if (desc.Width != GetWidth() && desc.Height != GetHeight())
+        if (desc.Width != GetWidth() || desc.Height != GetHeight())
         {
             MessageManager::Get().Add({ MessageType::TextureSizeError, window_->GetId(), nullptr });
             return false;
