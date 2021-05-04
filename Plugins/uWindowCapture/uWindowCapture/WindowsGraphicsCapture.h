@@ -39,7 +39,7 @@ public:
     void SetCallback(const Callback& callback) { callback_ = callback; }
     void Start();
     void RequestStop();
-    void Stop();
+    void Stop(bool removeFromManager = true);
     bool ShouldStop() const;
     bool IsSessionRestartRequested() const { return isSessionRestartRequested_; }
     void Restart();

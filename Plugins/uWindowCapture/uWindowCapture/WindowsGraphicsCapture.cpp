@@ -210,7 +210,7 @@ void WindowsGraphicsCapture::DestroyPoolAndSession()
 
 WindowsGraphicsCapture::~WindowsGraphicsCapture()
 {
-    Stop();
+    Stop(false);
 }
 
 
@@ -237,7 +237,7 @@ void WindowsGraphicsCapture::RequestStop()
 }
 
 
-void WindowsGraphicsCapture::Stop()
+void WindowsGraphicsCapture::Stop(bool removeFromManager)
 {
     hasStopRequested_ = false;
     stopTimer_ = 0.f;
@@ -247,9 +247,12 @@ void WindowsGraphicsCapture::Stop()
 
     DestroyPoolAndSession();
 
-    if (const auto& manager = WindowManager::GetWindowsGraphicsCaptureManager())
+    if (removeFromManager)
     {
-        manager->Remove(shared_from_this());
+        if (const auto& manager = WindowManager::GetWindowsGraphicsCaptureManager())
+        {
+            manager->Remove(shared_from_this());
+        }
     }
 }
 
