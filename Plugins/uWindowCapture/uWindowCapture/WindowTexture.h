@@ -70,6 +70,7 @@ private:
     const Window* const window_;
     CaptureMode captureMode_ = CaptureMode::Auto;
     std::shared_ptr<WindowsGraphicsCapture> windowsGraphicsCapture_;
+    bool isPrintWindowFailed_ = false;
 
     std::atomic<ID3D11Texture2D*> unityTexture_ = nullptr;
     Microsoft::WRL::ComPtr<ID3D11Texture2D> sharedTexture_;

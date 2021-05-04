@@ -20,7 +20,7 @@ WindowTexture::WindowTexture(Window* window)
     {
         windowsGraphicsCapture_ = std::make_shared<WindowsGraphicsCapture>(window_->GetMonitorHandle());
     }
-    else if (window_->IsAltTab())
+    else// if (window_->IsAltTab())
     {
         windowsGraphicsCapture_ = std::make_shared<WindowsGraphicsCapture>(window_->GetWindowHandle());
     }
@@ -67,6 +67,10 @@ CaptureMode WindowTexture::GetCaptureModeInternal() const
             return CaptureMode::WindowsGraphicsCapture;
         }
         else if (window_->IsDesktop())
+        {
+            return CaptureMode::BitBlt;
+        }
+        else if (isPrintWindowFailed_)
         {
             return CaptureMode::BitBlt;
         }
@@ -303,6 +307,7 @@ bool WindowTexture::CaptureByWin32API()
             if (!::PrintWindow(hWnd, hDcMem, PW_RENDERFULLCONTENT)) 
             {
                 OutputApiError(__FUNCTION__, "PrintWindow");
+                isPrintWindowFailed_ = true;
                 return false;
             }
             break;
