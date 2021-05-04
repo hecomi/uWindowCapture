@@ -68,7 +68,22 @@ bool CallWinRtApiWithExceptionCheck(const std::function<void()> &func, const std
 
 bool WindowsGraphicsCapture::IsSupported()
 {
-    return GraphicsCaptureSession::IsSupported();
+    using ApiInfo = winrt::Windows::Foundation::Metadata::ApiInformation;
+
+    static bool isChecked = false;
+    static bool isAvailable = false;
+    if (isChecked) return isAvailable;
+    isChecked = true;
+
+    if (!CallWinRtApiWithExceptionCheck([&]
+    {
+        isAvailable = ApiInfo::IsApiContractPresent(L"Windows.Foundation.UniversalApiContract", 8);
+    }, "WindowsGraphicsCapture::IsSupported()"))
+    {
+        return false;
+    }
+
+    return isAvailable;
 }
 
 
