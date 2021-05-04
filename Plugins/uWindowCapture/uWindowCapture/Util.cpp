@@ -67,15 +67,6 @@ bool IsAltTabWindow(HWND hWnd)
         return true;
     }
 
-    // Exclude task tray programs
-    TITLEBARINFO titleBar;
-    titleBar.cbSize = sizeof(TITLEBARINFO);
-    ::GetTitleBarInfo(hWnd, &titleBar);
-    if (titleBar.rgstate[0] & STATE_SYSTEM_INVISIBLE)
-    {
-        return false;
-    }
-
     return true;
 }
 
