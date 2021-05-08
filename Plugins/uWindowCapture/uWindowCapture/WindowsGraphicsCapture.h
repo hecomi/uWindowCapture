@@ -54,7 +54,7 @@ public:
     const wchar_t * GetDisplayName() const;
 
 private:
-    void CreateItem();
+    bool CreateItem();
     bool CreatePoolAndSession();
     void DestroyPoolAndSession();
 
@@ -68,11 +68,13 @@ private:
     Callback callback_;
     bool isStarted_ = false;
     std::mutex sessionAndPoolMutex_;
-    std::chrono::time_point<std::chrono::steady_clock> latestFrameTime_;
+
+    std::atomic<bool> isCursorCaptureEnabled_ = { true };
 
     std::atomic<float> stopTimer_ = { 0.f };
     std::atomic<bool> hasStopRequested_ = { false };
-    std::atomic<bool> isCursorCaptureEnabled_ = { true };
+
+    std::atomic<float> restartTimer_ = { 0.f };
     std::atomic<bool> isSessionRestartRequested_ = { false };
 };
 

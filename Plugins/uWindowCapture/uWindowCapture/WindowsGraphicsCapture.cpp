@@ -128,9 +128,9 @@ WindowsGraphicsCapture::WindowsGraphicsCapture(HMONITOR hMonitor)
 }
 
 
-void WindowsGraphicsCapture::CreateItem()
+bool WindowsGraphicsCapture::CreateItem()
 {
-    if (!IsSupported()) return;
+    if (!IsSupported()) return false;
 
     CallWinRtApiWithExceptionCheck([&]
     {
@@ -152,11 +152,12 @@ void WindowsGraphicsCapture::CreateItem()
         }
     }, "WindowsGraphicsCapture::CreateItem()");
 
-    if (item_)
-    {
-        item_.DisplayName().c_str();
-        size_ = item_.Size();
-    }
+    if (!item_) return false;
+
+    item_.DisplayName().c_str();
+    size_ = item_.Size();
+
+    return true;
 }
 
 
@@ -221,7 +222,7 @@ void WindowsGraphicsCapture::Start()
     if (CreatePoolAndSession())
     {
         isStarted_ = true;
-        latestFrameTime_ = std::chrono::high_resolution_clock::now();
+        restartTimer_ = 0.f;
 
         if (const auto& manager = WindowManager::GetWindowsGraphicsCaptureManager())
         {
@@ -267,7 +268,7 @@ bool WindowsGraphicsCapture::ShouldStop() const
 void WindowsGraphicsCapture::Restart()
 {
     Stop();
-    CreateItem();
+    if (!CreateItem()) return;
     Start();
     isSessionRestartRequested_ = false;
 }
@@ -284,6 +285,7 @@ void WindowsGraphicsCapture::Update(float dt)
     if (!IsStarted()) return;
 
     stopTimer_ = stopTimer_ + dt;
+    restartTimer_ = restartTimer_ + dt;
 }
 
 
@@ -327,14 +329,12 @@ WindowsGraphicsCapture::Result WindowsGraphicsCapture::TryGetLatestResult()
 
     if (frame_)
     {
-        latestFrameTime_ = std::chrono::high_resolution_clock::now();
+        restartTimer_ = 0.f;
     }
     else
     {
-        constexpr std::chrono::milliseconds timeoutThresh(1000);
-        const auto currentTime = std::chrono::high_resolution_clock::now();
-        const auto dt = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - latestFrameTime_);
-        if (dt > timeoutThresh)
+        constexpr float timeoutThresh = 1.f;
+        if (restartTimer_ > timeoutThresh)
         {
             isSessionRestartRequested_ = true;
         }
@@ -457,6 +457,7 @@ void WindowsGraphicsCaptureManager::UpdateFromMainThread(float dt)
 
 void WindowsGraphicsCaptureManager::UpdateFromCaptureThread()
 {
+    UpdateRemoveInstances();
     UpdateAddInstances();
 
     {
@@ -513,6 +514,7 @@ void WindowsGraphicsCaptureManager::UpdateRemoveInstances()
 
 void WindowsGraphicsCaptureManager::StopAllInstances()
 {
+    UpdateRemoveInstances();
     UpdateAddInstances();
 
     {
