@@ -34,7 +34,7 @@ private:
     bool isReady_ = false;
     DevicePtr device_;
     std::thread initThread_;
-    ThreadLoop threadLoop_ = { L"Upload Thread" };
+    ThreadLoop threadLoop_ = { L"uWindowCapture - Upload Thread" };
     WindowQueue windowUploadQueue_;
     WindowQueue iconUploadQueue_;
 };

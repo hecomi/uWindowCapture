@@ -16,13 +16,16 @@ using namespace Microsoft::WRL;
 WindowTexture::WindowTexture(Window* window)
     : window_(window)
 {
-    if (window_->IsDesktop())
+    if (const auto& wgcManager = WindowManager::GetWindowsGraphicsCaptureManager())
     {
-        windowsGraphicsCapture_ = std::make_shared<WindowsGraphicsCapture>(window_->GetMonitorHandle());
-    }
-    else// if (window_->IsAltTab())
-    {
-        windowsGraphicsCapture_ = std::make_shared<WindowsGraphicsCapture>(window_->GetWindowHandle());
+        if (window_->IsDesktop())
+        {
+            windowsGraphicsCapture_ = wgcManager->Create(window_->GetMonitorHandle());
+        }
+        else
+        {
+            windowsGraphicsCapture_ = wgcManager->Create(window_->GetWindowHandle());
+        }
     }
 }
 
@@ -31,6 +34,14 @@ WindowTexture::~WindowTexture()
 {
     std::lock_guard<std::mutex> lock(bufferMutex_);
     DeleteBitmap();
+
+    if (auto wgc = windowsGraphicsCapture_.lock())
+    {
+        if (const auto& wgcManager = WindowManager::GetWindowsGraphicsCaptureManager())
+        {
+            wgcManager->Destroy(wgc);
+        }
+    }
 }
 
 
@@ -162,9 +173,9 @@ bool WindowTexture::IsWindowsGraphicsCapture() const
 }
 
 
-const std::shared_ptr<WindowsGraphicsCapture> & WindowTexture::GetWindowsGraphicsCapture() const
+std::shared_ptr<WindowsGraphicsCapture> WindowTexture::GetWindowsGraphicsCapture() const
 {
-    return windowsGraphicsCapture_;
+    return windowsGraphicsCapture_.lock();
 }
 
 
@@ -417,22 +428,19 @@ void WindowTexture::DrawCursorByWin32API(HWND hWnd, HDC hDcMem)
 
 bool WindowTexture::CaptureByWindowsGraphicsCapture()
 {
-    if (!windowsGraphicsCapture_) return false;
+    auto wgc = windowsGraphicsCapture_.lock();
 
-    if (!windowsGraphicsCapture_->IsStarted())
+    if (!wgc) return false;
+
+    if (!wgc->IsStarted())
     {
-        windowsGraphicsCapture_->Start();
+        wgc->RequestStart();
     }
 
-    if (windowsGraphicsCapture_->IsSessionRestartRequested())
-    {
-        windowsGraphicsCapture_->Restart();
-    }
+    wgc->EnableCursorCapture(GetCursorDraw());
 
-    windowsGraphicsCapture_->EnableCursorCapture(GetCursorDraw());
-
-    textureWidth_ = windowsGraphicsCapture_->GetWidth();
-    textureHeight_ = windowsGraphicsCapture_->GetHeight();
+    textureWidth_ = wgc->GetWidth();
+    textureHeight_ = wgc->GetHeight();
     offsetX_ = 0;
     offsetY_ = 0;
 
@@ -521,6 +529,7 @@ bool WindowTexture::RecreateSharedTextureIfNeeded()
         if (!dxgiResource || FAILED(dxgiResource->GetSharedHandle(&sharedHandle_)))
         {
             Debug::Error(__FUNCTION__, " => GetSharedHandle() failed.");
+            sharedTexture_.Reset();
             return false;
         }
     }
@@ -558,15 +567,17 @@ bool WindowTexture::UploadByWindowsGraphicsCapture()
 {
     UWC_SCOPE_TIMER(UploadByWindowsGraphicsCapture)
 
-    if (!windowsGraphicsCapture_) return false;
+    auto wgc = windowsGraphicsCapture_.lock();
+    if (!wgc) return false;
 
-    const auto result = windowsGraphicsCapture_->TryGetLatestResult();
+    const auto result = wgc->TryGetLatestResult();
     if (!result.pTexture) return false;
-    ScopedReleaser resultReleaser([&] { windowsGraphicsCapture_->ReleaseLatestResult(); });
+    ScopedReleaser resultReleaser([&] { wgc->ReleaseLatestResult(); });
 
     const auto& uploader = WindowManager::GetUploadManager();
     if (!uploader) return false;
 
+    try
     {
         std::lock_guard<std::mutex> lock(sharedTextureMutex_);
         ComPtr<ID3D11DeviceContext> context;
@@ -574,12 +585,17 @@ bool WindowTexture::UploadByWindowsGraphicsCapture()
         context->CopyResource(sharedTexture_.Get(), result.pTexture);
         context->Flush();
     }
+    catch (...)
+    {
+        Debug::Error(__FUNCTION__, " => CopyResource() threw an exception.");
+        return false;
+    }
 
     if (result.hasSizeChanged)
     {
         const auto w = result.width;
         const auto h = result.height;
-        windowsGraphicsCapture_->ChangePoolSize(w, h);
+        wgc->ChangePoolSize(w, h);
     }
 
     return true;
@@ -604,7 +620,14 @@ bool WindowTexture::Render()
         return false;
     }
 
-    context->CopyResource(unityTexture_.load(), texture.Get());
+    try
+    {
+        context->CopyResource(unityTexture_.load(), texture.Get());
+    }
+    catch (...)
+    {
+        Debug::Error(__FUNCTION__, " => CopyResource() threw an exception.");
+    }
 
     MessageManager::Get().Add({ MessageType::WindowCaptured, window_->GetId(), window_->GetWindowHandle() });
 
@@ -678,5 +701,6 @@ bool WindowTexture::GetPixels(BYTE* output, int x, int y, int width, int height)
 
 bool WindowTexture::IsWindowsGraphicsCaptureAvailable() const
 {
-    return windowsGraphicsCapture_ && windowsGraphicsCapture_->IsAvailable();
+    auto wgc = windowsGraphicsCapture_.lock();
+    return wgc && wgc->IsAvailable();
 }

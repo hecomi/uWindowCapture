@@ -53,7 +53,7 @@ public:
     bool GetPixels(BYTE* output, int x, int y, int width, int height) const;
 
     bool IsWindowsGraphicsCaptureAvailable() const;
-    const std::shared_ptr<WindowsGraphicsCapture> & GetWindowsGraphicsCapture() const;
+    std::shared_ptr<WindowsGraphicsCapture> GetWindowsGraphicsCapture() const;
 
 private:
     CaptureMode GetCaptureModeInternal() const;
@@ -69,7 +69,7 @@ private:
 
     const Window* const window_;
     CaptureMode captureMode_ = CaptureMode::Auto;
-    std::shared_ptr<WindowsGraphicsCapture> windowsGraphicsCapture_;
+    std::weak_ptr<WindowsGraphicsCapture> windowsGraphicsCapture_;
     bool isPrintWindowFailed_ = false;
 
     std::atomic<ID3D11Texture2D*> unityTexture_ = nullptr;

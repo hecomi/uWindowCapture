@@ -363,7 +363,7 @@ void Window::UpdateTitle()
     {
         if (windowTexture_->IsWindowsGraphicsCaptureAvailable())
         {
-            if (const auto& wgc = windowTexture_->GetWindowsGraphicsCapture())
+            if (const auto wgc = windowTexture_->GetWindowsGraphicsCapture())
             {
                 data2_.title = wgc->GetDisplayName();
             }

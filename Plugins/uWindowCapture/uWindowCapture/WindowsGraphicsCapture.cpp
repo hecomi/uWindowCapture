@@ -42,17 +42,17 @@ bool CallWinRtApiWithExceptionCheck(const std::function<void()> &func, const std
         const int code = e.code();
         char buf[32];
         sprintf_s(buf, "0x%x", code);
-        Debug::Log(name, " throws an exception: ", buf);
+        Debug::Error(name, " threw an exception: ", buf);
         return false;
     }
     catch (const std::exception& e)
     {
-        Debug::Log(name, " throws an exception: ", e.what());
+        Debug::Error(name, " threw an exception: ", e.what());
         return false;
     }
     catch (...)
     {
-        Debug::Log(name, " throws an unknown exception.");
+        Debug::Error(name, " threw an unknown exception.");
         return false;
     }
 
@@ -132,6 +132,8 @@ bool WindowsGraphicsCapture::CreateItem()
 {
     if (!IsSupported()) return false;
 
+    std::scoped_lock lock(itemMutex_);
+
     CallWinRtApiWithExceptionCheck([&]
     {
         const auto factory = get_activation_factory<GraphicsCaptureItem>();
@@ -154,7 +156,6 @@ bool WindowsGraphicsCapture::CreateItem()
 
     if (!item_) return false;
 
-    item_.DisplayName().c_str();
     size_ = item_.Size();
 
     return true;
@@ -163,13 +164,17 @@ bool WindowsGraphicsCapture::CreateItem()
 
 bool WindowsGraphicsCapture::CreatePoolAndSession()
 {
+    std::scoped_lock lock(itemMutex_);
+
     if (!item_) return false;
 
     size_ = item_.Size();
     if (size_.Width == 0 || size_.Height == 0) return false;
 
     const auto& manager = WindowManager::GetWindowsGraphicsCaptureManager();
-    auto &device = manager->GetDevice();
+    if (!manager) return false;
+
+    auto& device = manager->GetDevice();
 
     return CallWinRtApiWithExceptionCheck([&]
     {
@@ -192,98 +197,96 @@ void WindowsGraphicsCapture::DestroyPoolAndSession()
 
     std::scoped_lock lock(sessionAndPoolMutex_);
 
-    CallWinRtApiWithExceptionCheck([&]
+    if (pool_)
     {
-        if (pool_)
-        {
-            pool_.Close();
-            pool_ = nullptr;
-        }
+        CallWinRtApiWithExceptionCheck(
+            [&] { pool_.Close(); }, 
+            "WindowsGraphicsCapture::DestroyPoolAndSession() - Pool");
+    }
 
-        if (session_)
-        {
-            session_.Close();
-            session_ = nullptr;
-        }
-    }, "WindowsGraphicsCapture::DestroyPoolAndSession()");
+    if (session_)
+    {
+        CallWinRtApiWithExceptionCheck(
+            [&] { session_.Close(); }, 
+            "WindowsGraphicsCapture::DestroyPoolAndSession() - Session");
+    }
+
+    pool_ = nullptr;
+    session_ = nullptr;
 }
 
 
 WindowsGraphicsCapture::~WindowsGraphicsCapture()
 {
-    Stop(false);
+}
+
+
+void WindowsGraphicsCapture::RequestStart()
+{
+    isStartRequested_ = true;
 }
 
 
 void WindowsGraphicsCapture::Start()
 {
+    isStartRequested_ = false;
+    stopTimer_ = 0.f;
+
     if (isStarted_) return;
 
     if (CreatePoolAndSession())
     {
         isStarted_ = true;
         restartTimer_ = 0.f;
-
-        if (const auto& manager = WindowManager::GetWindowsGraphicsCaptureManager())
-        {
-            manager->Add(shared_from_this());
-        }
     }
 }
 
 
-void WindowsGraphicsCapture::RequestStop()
+void WindowsGraphicsCapture::Stop()
 {
-    hasStopRequested_ = true;
-}
-
-
-void WindowsGraphicsCapture::Stop(bool removeFromManager)
-{
-    hasStopRequested_ = false;
     stopTimer_ = 0.f;
 
     if (!isStarted_) return;
     isStarted_ = false;
 
     DestroyPoolAndSession();
-
-    if (removeFromManager)
-    {
-        if (const auto& manager = WindowManager::GetWindowsGraphicsCaptureManager())
-        {
-            manager->Remove(shared_from_this());
-        }
-    }
 }
 
 
 bool WindowsGraphicsCapture::ShouldStop() const
 {
     constexpr float timer = 1.f;
-    return stopTimer_ > timer || hasStopRequested_;
+    return stopTimer_ > timer;
+}
+
+
+bool WindowsGraphicsCapture::ShouldRestart() const
+{
+    return isRestartRequested_;
 }
 
 
 void WindowsGraphicsCapture::Restart()
 {
+    restartTimer_ = 0.f;
+    isRestartRequested_ = false;
+
     Stop();
     if (!CreateItem()) return;
     Start();
-    isSessionRestartRequested_ = false;
 }
 
 
 bool WindowsGraphicsCapture::IsAvailable() const
 {
-    return static_cast<bool>(item_);
+    std::scoped_lock lock(itemMutex_);
+
+    return item_ != nullptr;
 }
 
 
 void WindowsGraphicsCapture::Update(float dt)
 {
-    if (!IsStarted()) return;
-
     stopTimer_ = stopTimer_ + dt;
     restartTimer_ = restartTimer_ + dt;
 }
@@ -316,8 +319,6 @@ WindowsGraphicsCapture::Result WindowsGraphicsCapture::TryGetLatestResult()
 
     stopTimer_ = 0.f;
 
-    ReleaseLatestResult();
-
     std::scoped_lock lock(sessionAndPoolMutex_);
 
     if (!pool_) return {};
@@ -327,22 +328,20 @@ WindowsGraphicsCapture::Result WindowsGraphicsCapture::TryGetLatestResult()
         frame_ = nextFrame;
     }
 
-    if (frame_)
+    if (!frame_)
     {
-        restartTimer_ = 0.f;
-    }
-    else
-    {
-        constexpr float timeoutThresh = 1.f;
-        if (restartTimer_ > timeoutThresh)
+        constexpr float timer = 1.f;
+        if (restartTimer_ > timer)
         {
-            isSessionRestartRequested_ = true;
+            isRestartRequested_ = true;
         }
         return {};
-    }
+    };
 
     const auto surface = frame_.Surface();
     if (!surface) return {};
+
+    restartTimer_ = 0.f;
 
     auto access = surface.as<IDirect3DDxgiInterfaceAccess>();
     com_ptr<ID3D11Texture2D> texture;
@@ -376,9 +375,11 @@ void WindowsGraphicsCapture::ChangePoolSize(int width, int height)
     if (!pool_) return;
 
     const auto& manager = WindowManager::GetWindowsGraphicsCaptureManager();
-    auto &device = manager->GetDevice();
+    if (!manager) return;
 
+    auto &device = manager->GetDevice();
     size_ = { width, height };
+
     pool_.Recreate(
         device, 
         DirectXPixelFormat::B8G8R8A8UIntNormalized,
@@ -389,6 +390,8 @@ void WindowsGraphicsCapture::ChangePoolSize(int width, int height)
 
 const wchar_t * WindowsGraphicsCapture::GetDisplayName() const
 {
+    std::scoped_lock lock(itemMutex_);
+
     static const wchar_t invalid[] = L"";
     if (!item_) return invalid;
     if (item_.DisplayName().empty()) return invalid;
@@ -427,106 +430,115 @@ IDirect3DDevice & WindowsGraphicsCaptureManager::GetDevice()
 }
 
 
-void WindowsGraphicsCaptureManager::Add(const std::shared_ptr<WindowsGraphicsCapture>& instance)
+std::shared_ptr<WindowsGraphicsCapture> WindowsGraphicsCaptureManager::Create(HWND hWnd)
 {
-    std::scoped_lock lock(addedInstancesMutex_);
-    addedInstances_.push_back(instance);
+    auto instance = std::make_shared<WindowsGraphicsCapture>(hWnd);
+    if (!instance->IsAvailable()) return nullptr;
+
+    std::scoped_lock lock(allInstancesMutex_);
+    allInstances_.push_back(instance);
+
+    return instance;
 }
 
 
-void WindowsGraphicsCaptureManager::Remove(const std::shared_ptr<WindowsGraphicsCapture>& instance)
+std::shared_ptr<WindowsGraphicsCapture> WindowsGraphicsCaptureManager::Create(HMONITOR hMonitor)
 {
-    std::scoped_lock lock(removedInstancesMutex_);
-    removedInstances_.push_back(instance);
+    auto instance = std::make_shared<WindowsGraphicsCapture>(hMonitor);
+    if (!instance->IsAvailable()) return nullptr;
+
+    std::scoped_lock lock(allInstancesMutex_);
+    allInstances_.push_back(instance);
+
+    return instance;
+}
+
+
+void WindowsGraphicsCaptureManager::Destroy(const std::shared_ptr<WindowsGraphicsCapture> &instance)
+{
+    std::scoped_lock lock(allInstancesMutex_);
+    allInstances_.remove(instance);
 }
 
 
 void WindowsGraphicsCaptureManager::UpdateFromMainThread(float dt)
 {
-    std::scoped_lock instancesLock(instancesMutex_);
+    std::scoped_lock lock(activeInstancesMutex_);
 
-    for (const auto& instance : instances_)
+    for (const auto& instance : activeInstances_)
     {
-        if (instance && instance->IsValid())
-        {
-            instance->Update(dt);
-        }
+        instance->Update(dt);
     }
 }
 
 
 void WindowsGraphicsCaptureManager::UpdateFromCaptureThread()
 {
-    UpdateRemoveInstances();
-    UpdateAddInstances();
+    StartInstances();
+    RestartInstances();
+    StopInstances();
+}
 
+
+void WindowsGraphicsCaptureManager::StartInstances()
+{
+    std::scoped_lock lock(allInstancesMutex_);
+
+    for (const auto& instance : allInstances_)
     {
-        std::scoped_lock instancesLock(instancesMutex_);
-        for (const auto& instance : instances_)
+        if (instance->isStartRequested_)
         {
-            if (instance && instance->ShouldStop())
+            instance->Start();
+
+            if (instance->IsStarted())
             {
-                instance->Stop();
+                std::scoped_lock lock(activeInstancesMutex_);
+                activeInstances_.push_back(instance);
             }
         }
     }
-
-    UpdateRemoveInstances();
 }
 
 
-void WindowsGraphicsCaptureManager::UpdateAddInstances()
+void WindowsGraphicsCaptureManager::RestartInstances()
 {
-    std::scoped_lock addedInstancesLock(addedInstancesMutex_);
-    std::scoped_lock instancesLock(instancesMutex_);
-    for (const auto& instance : addedInstances_)
+    std::scoped_lock lock(activeInstancesMutex_);
+
+    for (const auto& instance : activeInstances_)
     {
-        instances_.push_back(instance);
+        if (instance->ShouldRestart())
+        {
+            instance->Restart();
+        }
     }
-    addedInstances_.clear();
 }
 
 
-void WindowsGraphicsCaptureManager::UpdateRemoveInstances()
+void WindowsGraphicsCaptureManager::StopInstances()
 {
-    std::scoped_lock removedInstancesLock(removedInstancesMutex_);
-    std::scoped_lock instancesLock(instancesMutex_);
-    for (const auto& instance : removedInstances_)
+    std::scoped_lock lock(activeInstancesMutex_);
+
+    for (auto it = activeInstances_.begin(); it != activeInstances_.end();)
     {
-        instances_.erase(
-            std::remove(
-                instances_.begin(),
-                instances_.end(),
-                instance),
-            instances_.end());
+        auto instance = *it;
+        if (instance->ShouldStop())
+        {
+            instance->Stop();
+            it = activeInstances_.erase(it);
+            continue;
+        }
+        ++it;
     }
-
-    instances_.erase(
-        std::remove_if(
-            instances_.begin(),
-            instances_.end(),
-            [](const auto &instance) { return !instance; }),
-        instances_.end());
-
-    removedInstances_.clear();
 }
 
 
 void WindowsGraphicsCaptureManager::StopAllInstances()
 {
-    UpdateRemoveInstances();
-    UpdateAddInstances();
+    std::scoped_lock lock(activeInstancesMutex_);
 
+    for (const auto& instance : activeInstances_)
     {
-        std::scoped_lock instancesLock(instancesMutex_);
-        for (const auto& instance : instances_)
-        {
-            if (instance && instance->IsValid())
-            {
-                instance->Stop();
-            }
-        }
+        instance->Stop();
     }
-
-    UpdateRemoveInstances();
+    activeInstances_.clear();
 }

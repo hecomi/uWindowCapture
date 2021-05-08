@@ -15,6 +15,7 @@
 class WindowsGraphicsCapture
     : public std::enable_shared_from_this<WindowsGraphicsCapture>
 {
+friend class WindowsGraphicsCaptureManager;
 public:
     static bool IsSupported();
     static bool IsCursorCaptureEnabledApiSupported();
@@ -28,24 +29,15 @@ public:
         bool hasSizeChanged = false;
     };
 
-    using Callback = std::function<void(const Result &)>;
-
     explicit WindowsGraphicsCapture(HWND hWnd);
     explicit WindowsGraphicsCapture(HMONITOR hMonitor);
     ~WindowsGraphicsCapture();
     void Update(float dt);
     int GetHeight() const { return size_.Height; }
     int GetWidth() const { return size_.Width; }
-    void SetCallback(const Callback& callback) { callback_ = callback; }
-    void Start();
-    void RequestStop();
-    void Stop(bool removeFromManager = true);
-    bool ShouldStop() const;
-    bool IsSessionRestartRequested() const { return isSessionRestartRequested_; }
-    void Restart();
+    void RequestStart();
     bool IsAvailable() const;
     bool IsStarted() const { return isStarted_; }
-    bool IsValid() const { return static_cast<bool>(session_); }
     void EnableCursorCapture(bool enabled);
     Result TryGetLatestResult();
     void ReleaseLatestResult();
@@ -54,6 +46,11 @@ public:
     const wchar_t * GetDisplayName() const;
 
 private:
+    bool ShouldStop() const;
+    bool ShouldRestart() const;
+    void Restart();
+    void Start();
+    void Stop();
     bool CreateItem();
     bool CreatePoolAndSession();
     void DestroyPoolAndSession();
@@ -65,40 +62,39 @@ private:
     winrt::Windows::Graphics::Capture::GraphicsCaptureSession session_ = nullptr;
     winrt::Windows::Graphics::Capture::Direct3D11CaptureFrame frame_ = nullptr;
     winrt::Windows::Graphics::SizeInt32 size_ = { 0, 0 };
-    Callback callback_;
-    bool isStarted_ = false;
+    mutable std::mutex itemMutex_;
     std::mutex sessionAndPoolMutex_;
-
+    std::atomic<bool> isStarted_ = false;
     std::atomic<bool> isCursorCaptureEnabled_ = { true };
-
+    std::atomic<bool> isStartRequested_ = { false };
     std::atomic<float> stopTimer_ = { 0.f };
-    std::atomic<bool> hasStopRequested_ = { false };
-
+    std::atomic<bool> isRestartRequested_ = { false };
     std::atomic<float> restartTimer_ = { 0.f };
-    std::atomic<bool> isSessionRestartRequested_ = { false };
 };
 
 
 class WindowsGraphicsCaptureManager final
 {
 public:
-    void Add(const std::shared_ptr<WindowsGraphicsCapture>& instance);
-    void Remove(const std::shared_ptr<WindowsGraphicsCapture>& instance);
+    std::shared_ptr<WindowsGraphicsCapture> Create(HWND hWnd);
+    std::shared_ptr<WindowsGraphicsCapture> Create(HMONITOR hMonitor);
+    void Destroy(const std::shared_ptr<WindowsGraphicsCapture>& instance);
+
     void UpdateFromMainThread(float dt);
     void UpdateFromCaptureThread();
+
     void StopAllInstances();
     winrt::Windows::Graphics::DirectX::Direct3D11::IDirect3DDevice & GetDevice();
 
 private:
-    void UpdateAddInstances();
-    void UpdateRemoveInstances();
+    void StartInstances();
+    void RestartInstances();
+    void StopInstances();
 
     using Ptr = std::shared_ptr<WindowsGraphicsCapture>;
-    std::list<Ptr> instances_;
-    std::vector<Ptr> addedInstances_;
-    std::vector<Ptr> removedInstances_;
-    std::mutex instancesMutex_;
-    std::mutex addedInstancesMutex_;
-    std::mutex removedInstancesMutex_;
+    std::list<Ptr> allInstances_;
+    std::list<Ptr> activeInstances_;
+    std::mutex allInstancesMutex_;
+    std::mutex activeInstancesMutex_;
     winrt::Windows::Graphics::DirectX::Direct3D11::IDirect3DDevice deviceWinRt_ = nullptr;
 };

@@ -55,7 +55,7 @@ private:
     std::weak_ptr<Window> cursorWindow_;
     mutable std::mutex windowsListMutex_;
 
-    ThreadLoop windowHandleListThreadLoop_ = { L"Window Handle List Thread" };
+    ThreadLoop windowHandleListThreadLoop_ = { L"uWindowCapture - Window Handle List Thread" };
 
     std::vector<Window::Data1> windowDataList_[2];
     mutable std::mutex windowsDataListMutex_;
