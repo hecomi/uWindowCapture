@@ -75,3 +75,4 @@ crashlytics-build.properties
 .DS_Store
 /Assets/Extensions*
 /*.log
+.vsconfig

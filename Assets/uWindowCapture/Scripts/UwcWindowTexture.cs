@@ -31,7 +31,11 @@ public class UwcWindowTexture : MonoBehaviour
         set
         {
             searchTiming_ = value;
-            shouldUpdateWindow = true;
+            if (searchTiming_ == WindowSearchTiming.Manual) {
+                shouldUpdateWindow = false;
+            } else {
+                shouldUpdateWindow = true;
+            }
         }
     }
 
@@ -134,6 +138,7 @@ public class UwcWindowTexture : MonoBehaviour
 
     public WindowTextureScaleControlType scaleControlType = WindowTextureScaleControlType.BaseScale;
     public float scalePer1000Pixel = 1f;
+    public bool updateScaleForcely = false;
 
     static HashSet<UwcWindowTexture> list_ = new HashSet<UwcWindowTexture>();
     public static HashSet<UwcWindowTexture> list
@@ -264,7 +269,7 @@ public class UwcWindowTexture : MonoBehaviour
 
     void UpdateScale()
     {
-        if (!isValid || window.isChild) return;
+        if (!isValid || (!updateScaleForcely && window.isChild)) return;
 
         var scale = transform.localScale;
 
