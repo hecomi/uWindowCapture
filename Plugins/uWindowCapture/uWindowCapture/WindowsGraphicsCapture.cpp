@@ -31,7 +31,7 @@ namespace
 {
 
 
-bool CallWinRtApiWithExceptionCheck(const std::function<void()> &func, const std::string& name)
+bool CallWinRtApiWithExceptionCheck(const std::function<void()> &func, const std::string& name) noexcept
 {
     try
     {
@@ -40,14 +40,15 @@ bool CallWinRtApiWithExceptionCheck(const std::function<void()> &func, const std
     catch (const winrt::hresult_error& e)
     {
         const int code = e.code();
-        char buf[32];
-        sprintf_s(buf, "0x%x", code);
-        Debug::Error(name, " threw an exception: ", buf);
+        char buf[256];
+        sprintf_s(buf, 256, "0x%x", code);
+        const auto msg = winrt::to_string(e.message());
+        Debug::Error(name, " threw an WinRT exception: ", buf, " ", msg);
         return false;
     }
     catch (const std::exception& e)
     {
-        Debug::Error(name, " threw an exception: ", e.what());
+        Debug::Error(name, " threw an std exception: ", e.what());
         return false;
     }
     catch (...)
@@ -394,7 +395,15 @@ const wchar_t * WindowsGraphicsCapture::GetDisplayName() const
 
     static const wchar_t invalid[] = L"";
     if (!item_) return invalid;
-    if (item_.DisplayName().empty()) return invalid;
+
+    if (!CallWinRtApiWithExceptionCheck([&]
+    {
+        const auto displayName = item_.DisplayName();
+    }, "WindowsGraphicsCapture::GetDisplayName()"))
+    {
+        return invalid;
+    }
+
     return item_.DisplayName().c_str();
 }
 
