@@ -1,0 +1,20 @@
+{
+    "name":"com.hecomi.uwindowcapture",
+    "version": "1.0.2",
+    "displayName": "uWindowCapture",
+    "author": {
+        "name": "hecomi",
+        "url": "https://github.com/hecomi"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/hecomi/uWindowCapture"
+    },
+    "samples": [
+        {
+            "displayName": "Samples",
+            "description": "Collection of samples for uWindowCapture.",
+            "path": "Samples~"
+        }
+    ]
+}

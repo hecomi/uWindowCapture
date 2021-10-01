@@ -1,0 +1,16 @@
+{
+    "name": "Hecomi.uWindowCapture.Samples",
+    "rootNamespace": "",
+    "references": [
+        "GUID:56dd35f9b6f21364494ed8365264cbf6"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
