@@ -58,15 +58,26 @@ public class UwcWindowListItem : MonoBehaviour
 
     public void OnClick()
     {
-        var manager = list.windowTextureManager;
         if (windowTexture == null) {
-            windowTexture = manager.AddWindowTexture(window);
-            image_.color = selected;
+            AddWindow();
         } else {
-            manager.RemoveWindowTexture(window);
-            windowTexture = null;
-            image_.color = notSelected;
+            RemoveWindow();
         }
+    }
+
+    void AddWindow()
+    {
+        var manager = list.windowTextureManager;
+        windowTexture = manager.AddWindowTexture(window);
+        image_.color = selected;
+    }
+
+    public void RemoveWindow()
+    {
+        var manager = list.windowTextureManager;
+        manager.RemoveWindowTexture(window);
+        windowTexture = null;
+        image_.color = notSelected;
     }
 }
 
