@@ -92,6 +92,8 @@ public static class Lib
     private static extern IntPtr GetMessages_Internal();
     [DllImport(name, EntryPoint = "UwcClearMessages")]
     private static extern void ClearMessages();
+    [DllImport(name, EntryPoint = "UwcExcludeRemovedWindowEvents")]
+    private static extern void ExcludeRemovedWindowEvents();
     [DllImport(name, EntryPoint = "UwcCheckWindowExistence")]
     public static extern bool CheckWindowExistence(int id);
     [DllImport(name, EntryPoint = "UwcGetWindowHandle")]
@@ -229,6 +231,8 @@ public static class Lib
 
     public static Message[] GetMessages()
     {
+        ExcludeRemovedWindowEvents();
+
         var count = GetMessageCount();
         var messages = new Message[count];
 
