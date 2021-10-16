@@ -138,6 +138,12 @@ extern "C"
         return MessageManager::Get().GetHeadPointer();
     }
 
+    UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcExcludeRemovedWindowEvents()
+    {
+        if (MessageManager::IsNull()) return;
+        MessageManager::Get().ExcludeRemovedWindowEvents();
+    }
+
     UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UwcClearMessages()
     {
         if (MessageManager::IsNull()) return;

@@ -40,6 +40,7 @@ class MessageManager
 public:
     void Add(Message message);
     void ClearAll();
+    void ExcludeRemovedWindowEvents();
     UINT GetCount() const;
     const Message* GetHeadPointer() const;
 

@@ -1,3 +1,4 @@
+#include <set>
 #include "Message.h"
 
 
@@ -31,4 +32,31 @@ void MessageManager::ClearAll()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     messages_.clear();
+}
+
+
+void MessageManager::ExcludeRemovedWindowEvents()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    std::set<int> removedWinedowIds; 
+    for (const auto& message : messages_)
+    {
+        if (message.type == MessageType::WindowRemoved)
+        {
+            removedWinedowIds.insert(message.windowId);
+        }
+    }
+
+    for (auto it = messages_.begin(); it != messages_.end();)
+    {
+        const auto& message = *it;
+        if (removedWinedowIds.find(message.windowId) != removedWinedowIds.end() && 
+            message.type != MessageType::WindowRemoved)
+        {
+            it = messages_.erase(it);
+            continue;
+        }
+        ++it;
+    }
 }
