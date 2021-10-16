@@ -35,6 +35,8 @@ public class UwcWindowList : MonoBehaviour
 
         window.RequestCaptureIcon();
         window.RequestCapture(CapturePriority.Low);
+
+        listItem.OnClick();
     }
 
     void OnWindowRemoved(UwcWindow window)
@@ -42,6 +44,7 @@ public class UwcWindowList : MonoBehaviour
         UwcWindowListItem listItem;
         items_.TryGetValue(window.id, out listItem);
         if (listItem) {
+            listItem.RemoveWindow();
             Destroy(listItem.gameObject);
         }
     }
