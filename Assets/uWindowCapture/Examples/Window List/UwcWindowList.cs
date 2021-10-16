@@ -35,8 +35,6 @@ public class UwcWindowList : MonoBehaviour
 
         window.RequestCaptureIcon();
         window.RequestCapture(CapturePriority.Low);
-
-        listItem.OnClick();
     }
 
     void OnWindowRemoved(UwcWindow window)
