@@ -1,0 +1,27 @@
+{
+    "name":"com.hecomi.uwindowcapture",
+    "version": "1.1.0",
+    "displayName": "uWindowCapture",
+    "description": "This allows you to use Windows Graphics Capture / PrintWindow / BitBlt in Windows to capture multiple windows individually and easily use them as Texture2D in Unity.",
+    "license": "MIT License",
+    "author": {
+        "name": "hecomi",
+        "url": "https://tips.hecomi.com"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/hecomi/uWindowCapture"
+    },
+    "keywords": [
+        "screen-capture",
+        "windows-graphics-capture",
+        "native-plugin"
+    ],
+    "samples": [
+        {
+            "displayName": "Samples",
+            "description": "Collection of samples for uWindowCapture.",
+            "path": "Samples~"
+        }
+    ]
+}
