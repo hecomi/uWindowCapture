@@ -1,8 +1,6 @@
 uWindowCapture
 ===================
 
-![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)
-
 **uWindowCapture** is an Unity asset to capture windows and make them available in Unity as `Texture2D`.
 
 
