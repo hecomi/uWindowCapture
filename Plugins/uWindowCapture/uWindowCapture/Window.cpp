@@ -365,14 +365,16 @@ void Window::UpdateTitle()
         {
             if (const auto wgc = windowTexture_->GetWindowsGraphicsCapture())
             {
-                data2_.title = wgc->GetDisplayName();
+                if (wgc->IsStarted())
+                {
+                    data2_.title = wgc->GetDisplayName();
+                    return;
+                }
             }
         }
-        else
-        {
-            constexpr UINT timeout = 100 /* milliseconds */;
-            GetWindowTitle(data1_.hWnd, data2_.title, timeout);
-        }
+
+        constexpr UINT timeout = 100 /* milliseconds */;
+        GetWindowTitle(data1_.hWnd, data2_.title, timeout);
     }
     else
     {

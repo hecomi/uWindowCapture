@@ -117,7 +117,6 @@ WindowsGraphicsCapture::WindowsGraphicsCapture(HWND hWnd)
     : hWnd_(hWnd)
     , hMonitor_(NULL)
 {
-    CreateItem();
 }
 
 
@@ -125,7 +124,6 @@ WindowsGraphicsCapture::WindowsGraphicsCapture(HMONITOR hMonitor)
     : hMonitor_(hMonitor)
     , hWnd_(NULL)
 {
-    CreateItem();
 }
 
 
@@ -235,10 +233,13 @@ void WindowsGraphicsCapture::Start()
 
     if (isStarted_) return;
 
-    if (CreatePoolAndSession())
+    if (CreateItem())
     {
-        isStarted_ = true;
-        restartTimer_ = 0.f;
+        if (CreatePoolAndSession())
+        {
+            isStarted_ = true;
+            restartTimer_ = 0.f;
+        }
     }
 }
 
@@ -251,6 +252,7 @@ void WindowsGraphicsCapture::Stop()
     isStarted_ = false;
 
     DestroyPoolAndSession();
+    item_ = nullptr;
 }
 
 
@@ -275,14 +277,6 @@ void WindowsGraphicsCapture::Restart()
     Stop();
     if (!CreateItem()) return;
     Start();
-}
-
-
-bool WindowsGraphicsCapture::IsAvailable() const
-{
-    std::scoped_lock lock(itemMutex_);
-
-    return item_ != nullptr;
 }
 
 
@@ -442,7 +436,6 @@ IDirect3DDevice & WindowsGraphicsCaptureManager::GetDevice()
 std::shared_ptr<WindowsGraphicsCapture> WindowsGraphicsCaptureManager::Create(HWND hWnd)
 {
     auto instance = std::make_shared<WindowsGraphicsCapture>(hWnd);
-    if (!instance->IsAvailable()) return nullptr;
 
     std::scoped_lock lock(allInstancesMutex_);
     allInstances_.push_back(instance);
@@ -454,7 +447,6 @@ std::shared_ptr<WindowsGraphicsCapture> WindowsGraphicsCaptureManager::Create(HW
 std::shared_ptr<WindowsGraphicsCapture> WindowsGraphicsCaptureManager::Create(HMONITOR hMonitor)
 {
     auto instance = std::make_shared<WindowsGraphicsCapture>(hMonitor);
-    if (!instance->IsAvailable()) return nullptr;
 
     std::scoped_lock lock(allInstancesMutex_);
     allInstances_.push_back(instance);

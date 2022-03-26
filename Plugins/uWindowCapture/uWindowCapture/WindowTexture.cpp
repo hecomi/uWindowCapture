@@ -702,5 +702,5 @@ bool WindowTexture::GetPixels(BYTE* output, int x, int y, int width, int height)
 bool WindowTexture::IsWindowsGraphicsCaptureAvailable() const
 {
     auto wgc = windowsGraphicsCapture_.lock();
-    return wgc && wgc->IsAvailable();
+    return wgc != nullptr;
 }
