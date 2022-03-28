@@ -169,7 +169,12 @@ bool WindowsGraphicsCapture::CreatePoolAndSession()
 
     if (!item_) return false;
 
-    size_ = item_.Size();
+    bool ret = CallWinRtApiWithExceptionCheck([&]
+    {
+        size_ = item_.Size();
+    }, "WindowsGraphicsCapture::CreatePoolAndSession() - Size");
+    if (!ret) return false;
+
     if (size_.Width == 0 || size_.Height == 0) return false;
 
     const auto& manager = WindowManager::GetWindowsGraphicsCaptureManager();
@@ -188,7 +193,7 @@ bool WindowsGraphicsCapture::CreatePoolAndSession()
             size_);
         session_ = pool_.CreateCaptureSession(item_);
         session_.StartCapture();
-    }, "WindowsGraphicsCapture::CreatePoolAndSession()");
+    }, "WindowsGraphicsCapture::CreatePoolAndSession() - Capture");
 }
 
 
