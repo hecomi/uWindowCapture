@@ -36,7 +36,6 @@ public:
     int GetHeight() const { return size_.Height; }
     int GetWidth() const { return size_.Width; }
     void RequestStart();
-    bool IsAvailable() const;
     bool IsStarted() const { return isStarted_; }
     void EnableCursorCapture(bool enabled);
     Result TryGetLatestResult();
