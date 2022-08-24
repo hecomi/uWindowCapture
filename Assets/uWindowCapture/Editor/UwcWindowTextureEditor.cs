@@ -47,6 +47,7 @@ public class UwcWindowTextureEditor : Editor
     SerializedProperty captureRequestTiming;
     SerializedProperty captureFrameRate;
     SerializedProperty drawCursor;
+    SerializedProperty defaultTexture;
     SerializedProperty scaleControlType;
     SerializedProperty scalePer1000Pixel;
 
@@ -60,6 +61,7 @@ public class UwcWindowTextureEditor : Editor
         captureRequestTiming = serializedObject.FindProperty("captureRequestTiming");
         captureFrameRate = serializedObject.FindProperty("captureFrameRate");
         drawCursor = serializedObject.FindProperty("drawCursor");
+        defaultTexture = serializedObject.FindProperty("defaultTexture");
         scaleControlType = serializedObject.FindProperty("scaleControlType");
         scalePer1000Pixel = serializedObject.FindProperty("scalePer1000Pixel");
     }
@@ -150,6 +152,7 @@ public class UwcWindowTextureEditor : Editor
         EditorGUILayout.PropertyField(captureRequestTiming);
         EditorGUILayout.PropertyField(captureFrameRate);
         EditorGUILayout.PropertyField(drawCursor);
+        EditorGUILayout.PropertyField(defaultTexture);
 
         EditorGUILayout.Space();
     }
