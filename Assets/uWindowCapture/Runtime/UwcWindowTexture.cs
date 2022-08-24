@@ -133,6 +133,7 @@ public class UwcWindowTexture : MonoBehaviour
     public WindowTextureCaptureTiming captureRequestTiming = WindowTextureCaptureTiming.OnlyWhenVisible;
     public int captureFrameRate = 30;
     public bool drawCursor = true;
+    public Texture defaultTexture = null;
     public bool updateTitle = true;
     public bool searchAnotherWindowWhenInvalid = false;
 
@@ -226,7 +227,7 @@ public class UwcWindowTexture : MonoBehaviour
         UpdateTargetWindow();
 
         if (!isValid) {
-            material_.mainTexture = null;
+            material_.mainTexture = defaultTexture;
             return;
         }
 
